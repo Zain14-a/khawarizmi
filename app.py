@@ -62,6 +62,18 @@ MODELS = {
     },
 }
 
+# ⚡ نموذجنا الحصري "Al-Khwarizmi Flash" — سريع وخفيف، يُقدَّم تحت اسمنا الخاص لتمييز الموقع
+if os.getenv("OPENROUTER_API_KEY"):
+    MODELS = {
+        "khwarizmi-flash": {
+            "label": "⚡ Al-Khwarizmi Flash",
+            "desc": "نموذجنا الخاص — سريع وخفيف، مدرب لخدمتك",
+            "provider": "openrouter",
+            "id": "nex-agi/nex-n2.5-mini:free",
+        },
+        **MODELS,
+    }
+
 # نماذج مفتوحة المصدر عبر Groq — تظهر إذا انحط مفتاح GROQ_API_KEY في .env
 if os.getenv("GROQ_API_KEY"):
     MODELS.update({
