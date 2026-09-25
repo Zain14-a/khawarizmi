@@ -58,6 +58,8 @@ body{display:flex;background:var(--bg);color:var(--text);overflow:hidden}
 #scrollFab{position:fixed;left:16px;bottom:16px;z-index:45;width:44px;height:44px;border-radius:50%;border:1px solid var(--border);background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(15,118,110,.35);transition:transform .15s,opacity .15s;font-family:inherit}
 #scrollFab:hover{transform:scale(1.08)}
 #scrollFab:active{transform:scale(.94)}
+#scrollFab.pop{animation:fabPop .45s ease}
+@keyframes fabPop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.18)}100%{transform:scale(1);opacity:1}}
 #scrollFab.hidden{display:none}
 #modelMenu button{display:flex;flex-direction:column;gap:2px;width:100%;text-align:right;padding:9px 11px;border:none;border-radius:8px;background:none;font-family:inherit;cursor:pointer;color:var(--text);font-size:.85rem;font-weight:600;transition:background .12s}
 #modelMenu button small{color:var(--muted);font-weight:400;font-size:.73rem}
@@ -794,6 +796,10 @@ function syncFab() {
   scrollFab.classList.remove('hidden');
   scrollFab.innerHTML = ic(canDown ? 'arrowDown' : 'arrowUp', 22);
   scrollFab.title = canDown ? 'انزل لأسفل قائمة النماذج' : 'ارجع لأعلى قائمة النماذج';
+  // قفزة انتباه عند أول ظهور
+  scrollFab.classList.remove('pop');
+  void scrollFab.offsetWidth;
+  scrollFab.classList.add('pop');
 }
 scrollFab.onclick = () => {
   const atBottom = modelMenu.scrollHeight - modelMenu.scrollTop - modelMenu.clientHeight <= 8;
