@@ -88,15 +88,15 @@ if OPENROUTER_ENABLED:
 # نماذج مفتوحة المصدر عبر Groq — تظهر إذا انحط مفتاح GROQ_API_KEY في .env
 if os.getenv("GROQ_API_KEY"):
     MODELS.update({
-        "al-khwarizmi": {
-            "label": "Al-Khwarizmi",
-            "desc": "نموذج الموقع المجاني — 1000+ طلب/يوم، مجاني وبلا بطاقة ⚡",
+        "groq-gpt-oss-120b": {
+            "label": "GPT-OSS 120B",
+            "desc": "مفتوح المصدر — من OpenAI (عبر Groq) — أقوى",
             "provider": "groq",
             "id": "openai/gpt-oss-120b",
         },
-        "groq-gpt-oss-20b": {
-            "label": "GPT-OSS 20B",
-            "desc": "مفتوح المصدر — أسرع وأخف (عبر Groq)",
+        "al-khwarizmi": {
+            "label": "Al-Khwarizmi",
+            "desc": "نموذج GPT-OSS 20B — مجاني ~2000 طلب/يوم ⚡",
             "provider": "groq",
             "id": "openai/gpt-oss-20b",
         },
