@@ -184,6 +184,12 @@ if os.getenv("MISTRAL_API_KEY"):
     })
 if os.getenv("TOGETHER_API_KEY"):
     MODELS.update({
+        "al-khwarizmi-together": {
+            "label": "Al-Khwarizmi (قوي)",
+            "desc": "نموذج الموقع — 10,000+ طلب/يوم مجاناً ⚡",
+            "provider": "together",
+            "id": "meta-llama/Llama-3.1-8B-Instruct",
+        },
         "together-llama-3.1": {
             "label": "Llama 3.1 8B",
             "desc": "مفتوح المصدر — من Meta",
