@@ -407,30 +407,59 @@ MAX_MSG_LEN = 4000    # أقصى طول للرسالة الواحدة
 
 # ===== حماية الحصص المجانية: حد استخدام لكل مستخدم =====
 # يمنع أي حساب واحد من حرق ميزانية المزوّدين المجانية على الجميع.
-# يُعدَّل من لوحة Render بمتغيرات: RATE_LIMIT_PER_HOUR و RATE_LIMIT_PER_DAY
-RATE_LIMIT_PER_HOUR = int(os.getenv("RATE_LIMIT_PER_HOUR", "60") or 60)
-RATE_LIMIT_PER_DAY = int(os.getenv("RATE_LIMIT_PER_DAY", "300") or 300)
+# ===== ميزانية النموذج وتوزيع عادل =====
+# الموديل المجاني (Groq) يعطي ~2000 طلب/يوم — عشان محدش يحرق الكل،
+# كل مستخدم له حد يومي، والحد ينقص تلقائياً لما الميزانية تقل.
+DAILY_BUDGET = int(os.getenv("DAILY_BUDGET", "2000") or 2000)
+_USER_DAILY_LIMIT = int(os.getenv("USER_DAILY_LIMIT", "15") or 15)
+_USER_HOURLY_LIMIT = int(os.getenv("USER_HOURLY_LIMIT", "5") or 5)
 _USER_CALLS: dict = {}   # البريد -> قائمة أوقات الطلبات (ثواني)
+_TOTAL_USED = 0          # إجمالي الطلبات اليوم (تتبّع الميزانية)
 _RATE_LOCK = threading.Lock()
+_BUDGET_LOCK = threading.Lock()
+
+
+def _get_dynamic_limits():
+    """تحديد الحدود ديناميكياً حسب الميزانية المتبقية — توزيع عادل بين المستخدمين"""
+    with _BUDGET_LOCK:
+        remaining = max(0, DAILY_BUDGET - _TOTAL_USED)
+    # لو الميزانية أقل من 30% — حدّ صارم (3 طلبات/يوم)
+    # لو أقل من 50% — حدّ متوسط (8 طلبات/يوم)
+    # لو أكثر من 50% — الحدّ العادي
+    if remaining < DAILY_BUDGET * 0.3:
+        return 3, remaining
+    elif remaining < DAILY_BUDGET * 0.5:
+        return 8, remaining
+    else:
+        return _USER_DAILY_LIMIT, remaining
 
 
 def _check_user_rate(email: str):
-    """هل يُسمح برسالة جديدة؟ — وفق حدود الساعة واليوم مع تنظيف السجلات القديمة"""
+    """هل يُسمح برسالة جديدة؟ — حدّ ساعة + يوم ديناميكي + توزيع عادل"""
     now = time.time()
     with _RATE_LOCK:
         stamps = [t for t in _USER_CALLS.get(email, []) if now - t < 86400]
         _USER_CALLS[email] = stamps
-        if sum(1 for t in stamps if now - t < 3600) >= RATE_LIMIT_PER_HOUR:
-            return False, f"وصلت حد {RATE_LIMIT_PER_HOUR} رسائل بالساعة — ارجع بعد شوي"
-        if len(stamps) >= RATE_LIMIT_PER_DAY:
-            return False, f"وصلت حد {RATE_LIMIT_PER_DAY} رسائل اليوم — يُجدَّد تلقائياً"
+        # الحد بالساعة
+        if sum(1 for t in stamps if now - t < 3600) >= _USER_HOURLY_LIMIT:
+            return False, f"وصلت الحد — {_USER_HOURLY_LIMIT} رسالة بالساعة. الموديل مشغول، جرب بعد شوي"
+        # الحد اليومي الديناميكي
+        per_user_limit, remaining = _get_dynamic_limits()
+        if len(stamps) >= per_user_limit:
+            if remaining < DAILY_BUDGET * 0.3:
+                return False, f"🫡 الموديل قريب يخلص — وصلت الحد اليومي ({per_user_limit}). جرب بعد دقيقة أو بكرا"
+            return False, f"وصلت الحد اليومي — {per_user_limit} رسالة. يُجدَّد تلقائياً"
         return True, None
 
 
 def _record_user_call(email: str) -> None:
-    """تسجيل طلب جديد في سجل المستخدم"""
+    """تسجيل طلب جديد + تتبّع الميزانية"""
     with _RATE_LOCK:
         _USER_CALLS.setdefault(email, []).append(time.time())
+    with _BUDGET_LOCK:
+        global _TOTAL_USED
+        if _TOTAL_USED < DAILY_BUDGET:
+            _TOTAL_USED += 1
 
 
 # ===== إدارة المستخدمين =====
