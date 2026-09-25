@@ -124,6 +124,36 @@ if os.getenv("OPENROUTER_API_KEY"):
             "provider": "openrouter",
             "id": "qwen/qwen3.8-27b:free",
         },
+        "or-north-code": {
+            "label": "North Mini Code",
+            "desc": "مفتوح المصدر — للبرمجة من Cohere (عبر OpenRouter)",
+            "provider": "openrouter",
+            "id": "cohere/north-mini-code:free",
+        },
+        "or-liquid-mini": {
+            "label": "LFM 2.5 2.6B",
+            "desc": "مفتوح المصدر — خفيف وسريع من Liquid (عبر OpenRouter)",
+            "provider": "openrouter",
+            "id": "liquid/lfm-2.5-2.6b:free",
+        },
+        "or-ling-fin": {
+            "label": "Ling 3.0 Flash (مالية)",
+            "desc": "مفتوح المصدر — متخصص مالي من InclusionAI (عبر OpenRouter)",
+            "provider": "openrouter",
+            "id": "inclusionai/ling-3.0-flash-fin:free",
+        },
+        "or-ling-sante": {
+            "label": "Ling 3.0 Flash (صحة)",
+            "desc": "مفتوح المصدر — متخصص صحي من InclusionAI (عبر OpenRouter)",
+            "provider": "openrouter",
+            "id": "inclusionai/ling-3.0-flash-sante:free",
+        },
+        "or-nex-pro": {
+            "label": "Nex N2.5 Pro",
+            "desc": "مفتوح المصدر — النسخة الأقوى من فلاشنا (عبر OpenRouter)",
+            "provider": "openrouter",
+            "id": "nex-agi/nex-n2.5-pro:free",
+        },
     })
 
 # ===== عملاء المزوّدين (يُبنى العميل عند أول استخدام) =====
