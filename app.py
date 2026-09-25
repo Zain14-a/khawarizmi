@@ -95,8 +95,8 @@ if os.getenv("GROQ_API_KEY"):
             "id": "openai/gpt-oss-120b",
         },
         "al-khwarizmi": {
-            "label": "Al-Khwarizmi",
-            "desc": "نموذج GPT-OSS 20B — مجاني ~2000 طلب/يوم ⚡",
+            "label": "Al-Khwarizmi Flash",
+            "desc": "مطوّر بـ Light Co من فلسطين — مجاني ~2000 طلب/يوم ⚡",
             "provider": "groq",
             "id": "openai/gpt-oss-20b",
         },
