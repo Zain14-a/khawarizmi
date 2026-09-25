@@ -148,6 +148,19 @@ if os.getenv("NVIDIA_API_KEY"):
         },
     })
 
+# نموذجك الخاص "Al-Khwarizmi Local" — يعمل على جهازك أو كولاب عبر بوابة خاصة
+# يظهر إذا ضبطت COLABC_URL (رابط النفق) و COLABC_KEY (المفتاح السري) في .env
+if os.getenv("COLABC_URL") and os.getenv("COLABC_KEY"):
+    MODELS.update({
+        "khwarizmi-local": {
+            "label": "Al-Khwarizmi Local",
+            "desc": "نموذجك الخاص — يشتغل على جهازك/كولاب",
+            "provider": "colab",
+            "id": "khwarizmi",
+            "icon": "bolt",
+        },
+    })
+
 # نماذج مفتوحة المصدر عبر OpenRouter — تظهر إذا انحط مفتاح OPENROUTER_API_KEY في .env
 if os.getenv("OPENROUTER_API_KEY"):
     MODELS.update({
@@ -236,6 +249,11 @@ PROVIDER_CONFIGS = {
         "base_url": "https://integrate.api.nvidia.com/v1",
         "key_env": "NVIDIA_API_KEY",
         "timeout": 40,
+    },
+    "colab": {
+        "base_url": os.getenv("COLABC_URL", ""),   # رابط نفق Cloudflare من جهازك/كولاب
+        "key_env": "COLABC_KEY",
+        "timeout": 60,
     },
 }
 
@@ -618,7 +636,7 @@ def chat_api():
         by_provider.setdefault(e.get("provider", "?"), []).append((mid, e))
     interleaved: list = []
     while any(by_provider.values()):
-        for p in ("gemini", "openrouter", "groq", "nvidia", "cerebras"):
+        for p in ("gemini", "openrouter", "groq", "nvidia", "colab", "cerebras"):
             if by_provider.get(p):
                 interleaved.append(by_provider[p].pop(0))
     ordered: list = []
