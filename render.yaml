@@ -1,0 +1,18 @@
+# Blueprint نشر Render — يُستخدم عند "New + → Blueprint" بعد ربط مستودع GitHub
+# (أو يمكن إدخال الإعدادات يدوياً كما في README)
+services:
+  - type: web
+    name: khawarizmi
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn wsgi:application --bind 0.0.0.0:$PORT --workers 1 --timeout 180"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false

@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الخوارزمي — مساعد ذكي</title>
+<link rel="icon" type="image/svg+xml" href="/static/logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Tajawal','Segoe UI',Tahoma,sans-serif}
+:root{--bg:#ffffff;--panel:#fafafa;--border:#e4e4e7;--text:#18181b;--muted:#71717a;--accent:#0f766e;--accent2:#115e59;--bubble:#f4f4f5}
+html,body{height:100%}
+body{display:flex;background:var(--bg);color:var(--text);overflow:hidden}
+/* الشريط الجانبي */
+#sidebar{width:272px;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:margin .25s}
+#sidebar.hidden{margin-right:-272px}
+.side-head{display:flex;align-items:center;gap:11px;padding:18px 16px 16px}
+.logo{width:36px;height:36px;border-radius:10px;flex-shrink:0}
+.wordmark{font-weight:700;font-size:1.28rem;letter-spacing:-.3px}
+#newChat{margin:4px 12px 12px;padding:10px;border:1px solid var(--border);border-radius:9px;background:#fff;color:var(--text);font-family:inherit;font-size:.87rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s}
+#newChat:hover{background:var(--bubble)}
+.list-label{font-size:.7rem;color:var(--muted);padding:0 16px 8px}
+#chatList{flex:1;overflow-y:auto;padding:0 8px;display:flex;flex-direction:column;gap:2px}
+.chat-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:8px;cursor:pointer;color:#52525b;font-size:.86rem;transition:background .12s}
+.chat-item:hover{background:var(--bubble);color:var(--text)}
+.chat-item.active{background:#eef2f1;color:var(--accent);font-weight:600}
+.chat-item span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-item button{background:none;border:none;color:#a1a1aa;cursor:pointer;opacity:0;font-size:.85rem;font-family:inherit}
+.chat-item:hover button{opacity:1}
+.chat-item button:hover{color:#dc2626}
+.side-user{border-top:1px solid var(--border);padding:12px;display:flex;align-items:center;gap:10px}
+.u-avatar{width:34px;height:34px;border-radius:50%;background:var(--border);color:#52525b;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.u-info{flex:1;min-width:0}
+.u-name{font-size:.84rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.u-mail{font-size:.7rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:right}
+#logout{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.78rem;font-family:inherit;padding:6px 8px;border-radius:7px;transition:background .15s,color .15s}
+#logout:hover{background:#fee2e2;color:#dc2626}
+/* المنطقة الرئيسية */
+#main{flex:1;display:flex;flex-direction:column;min-width:0}
+#topbar{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);background:#fff}
+#toggle{background:none;border:none;font-size:1.1rem;color:var(--muted);cursor:pointer;padding:6px 8px;border-radius:7px;transition:background .15s,color .15s}
+#toggle:hover{background:var(--bubble);color:var(--text)}
+.top-title{font-weight:700;font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.spacer{flex:1}
+/* قائمة تبديل الموديل */
+.model-wrap{position:relative}
+#modelBtn{display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--border);border-radius:9px;background:#fff;color:var(--text);font-family:inherit;font-size:.83rem;font-weight:500;cursor:pointer;transition:background .15s}
+#modelBtn:hover{background:var(--bubble)}
+#modelBtn .dot{width:7px;height:7px;border-radius:50%;background:#22c55e;flex-shrink:0}
+#modelMenu{position:absolute;top:calc(100% + 6px);left:0;width:270px;background:#fff;border:1px solid var(--border);border-radius:11px;box-shadow:0 8px 24px rgba(0,0,0,.08);padding:6px;z-index:30}
+#modelMenu.hidden{display:none}
+#modelMenu button{display:flex;flex-direction:column;gap:2px;width:100%;text-align:right;padding:9px 11px;border:none;border-radius:8px;background:none;font-family:inherit;cursor:pointer;color:var(--text);font-size:.85rem;font-weight:600;transition:background .12s}
+#modelMenu button small{color:var(--muted);font-weight:400;font-size:.73rem}
+#modelMenu button:hover{background:var(--bubble)}
+#modelMenu button.active{background:#eef2f1;color:var(--accent)}
+/* شاشة الترحيب */
+#welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center;overflow-y:auto}
+.w-logo{width:54px;height:54px;border-radius:14px;background:var(--accent);color:#fff;font-size:1.4rem;font-weight:700;display:flex;align-items:center;justify-content:center;margin-bottom:6px}
+#welcome h1{font-size:1.4rem;font-weight:700}
+#welcome p{color:var(--muted);font-size:.9rem}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,260px));gap:10px;margin-top:18px}
+.card{text-align:right;padding:14px 16px;background:#fff;border:1px solid var(--border);border-radius:11px;cursor:pointer;font-family:inherit;color:var(--text);transition:border-color .15s,background .15s}
+.card:hover{border-color:#a1a1aa;background:var(--panel)}
+.card b{display:block;font-size:.87rem;margin-bottom:3px}
+.card small{color:var(--muted);font-size:.75rem}
+/* المحادثة */
+#chat{flex:1;overflow-y:auto;display:none;flex-direction:column;gap:24px;padding:32px 20px 20px;width:100%;max-width:820px;margin:0 auto}
+.row{display:flex;gap:14px;align-items:flex-start}
+.row.user{flex-direction:row-reverse}
+.avatar{width:36px;height:36px;border-radius:10px;background:#f0fdf4;border:1px solid #bbf7d0;padding:2px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.bubble{min-width:0;line-height:1.95;font-size:.95rem;word-break:break-word}
+.row.user .bubble{background:var(--accent);color:#ffffff;padding:12px 18px;border-radius:18px 18px 4px 18px;max-width:78%;box-shadow:0 2px 8px rgba(15,118,110,.2);font-weight:500}
+.bot-text{width:100%;padding-top:2px;color:#18181b}
+.bot-text pre{margin:0;direction:ltr;text-align:left}
+.bot-text code{font-family:'Fira Code',Consolas,'Courier New',monospace;font-size:.87em;background:#f4f4f5;border:1px solid #e4e4e7;padding:2px 7px;border-radius:6px;color:#0f766e}
+.bot-text pre code{background:none;border:none;padding:0;color:#e6e6e6;font-size:.86rem;line-height:1.65}
+.bot-text ul,.bot-text ol{padding-right:24px;margin:8px 0}
+.bot-text li{margin:3px 0}
+.bot-text p{margin:6px 0}
+.bot-text h1,.bot-text h2,.bot-text h3{margin:14px 0 6px;color:#09090b}
+/* شريط إجراءات الرسالة */
+.msg-actions{display:flex;gap:8px;margin-top:8px;opacity:0;transition:opacity .15s}
+.row:hover .msg-actions{opacity:1}
+.action-btn{background:none;border:1px solid #e4e4e7;border-radius:6px;padding:3px 8px;font-size:.72rem;color:var(--muted);cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:4px;background:#fff;transition:all .15s}
+.action-btn:hover{background:#f4f4f5;color:var(--text);border-color:#d4d4d8}
+
+/* صناديق الكود */
+.codebox{background:#1e1e24;border:1px solid #2e2e38;border-radius:12px;overflow:hidden;margin:14px 0;direction:ltr;box-shadow:0 4px 14px rgba(0,0,0,.08)}
+.codebox-head{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;background:#18181c;border-bottom:1px solid #272730;font-size:.75rem;color:#a1a1aa;font-family:'Fira Code',Consolas,monospace}
+.code-lang{font-weight:600;text-transform:uppercase;color:#7ee8c7;letter-spacing:.5px;font-size:.72rem}
+.codebox-head button{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#e4e4e7;padding:4px 11px;border-radius:6px;cursor:pointer;font-size:.73rem;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:4px}
+.codebox-head button:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.25)}
+.codebox pre{padding:16px;overflow-x:auto;margin:0;background:#1e1e24}
+.codebox pre code{font-family:'Fira Code',Consolas,monospace;tab-size:4;background:none;border:none;color:#e6e6e6}
+
+/* مؤشر الكتابة */
+.typing-wrap{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:#f4f4f5;border-radius:12px;border:1px solid #e4e4e7}
+.typing-dots{display:inline-flex;gap:5px}
+.typing-dots i{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:blink 1.2s infinite ease-in-out}
+.typing-dots i:nth-child(2){animation-delay:.2s}
+.typing-dots i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,60%,100%{opacity:.25;transform:scale(.85)}30%{opacity:1;transform:scale(1.15)}}
+.typing-text{font-size:.78rem;color:var(--muted);font-weight:500}
+
+/* بطاقة الصورة المولدة */
+.generated-image-card{background:#ffffff;border:1px solid #e4e4e7;border-radius:14px;overflow:hidden;margin:10px 0;box-shadow:0 4px 16px rgba(0,0,0,.06);max-width:540px}
+.img-container{position:relative;background:#09090b;min-height:280px;display:flex;align-items:center;justify-content:center}
+.img-container img{width:100%;height:auto;display:block;border-radius:0}
+.img-loader{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#18181b;color:#e4e4e7;font-size:.85rem}
+.img-card-info{padding:12px 14px;background:#fafafa;border-top:1px solid #e4e4e7;display:flex;flex-direction:column;gap:8px}
+.img-prompt-text{font-size:.83rem;color:#27272a;line-height:1.6}
+.img-meta-row{display:flex;align-items:center;justify-content:space-between;font-size:.72rem;color:var(--muted)}
+.img-badge{background:#eef2f1;color:var(--accent);font-weight:600;padding:2px 8px;border-radius:6px;border:1px solid rgba(15,118,110,.2)}
+.img-actions-row{display:flex;gap:6px}
+.img-btn{background:#fff;border:1px solid #d4d4d8;color:#27272a;padding:5px 12px;border-radius:7px;cursor:pointer;font-size:.75rem;font-family:inherit;display:inline-flex;align-items:center;gap:4px;text-decoration:none;transition:all .15s}
+.img-btn:hover{background:#f4f4f5;border-color:#a1a1aa}
+.img-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.img-btn.primary:hover{background:var(--accent2)}
+
+/* زر توليد صورة في شريط الأدوات */
+.tool-btn{background:none;border:1px solid #e4e4e7;border-radius:8px;padding:4px 9px;font-size:.75rem;color:var(--muted);font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:4px;background:#fafafa;transition:all .15s}
+.tool-btn:hover{background:#eef2f1;color:var(--accent);border-color:var(--accent)}
+.tool-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* نافذة توليد الصور السريعة (Modal) */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:100;padding:16px}
+.modal-overlay.open{display:flex}
+.modal-box{width:100%;max-width:480px;background:#fff;border-radius:18px;border:1px solid #e4e4e7;box-shadow:0 12px 36px rgba(0,0,0,.15);padding:24px;display:flex;flex-direction:column;gap:16px}
+.modal-head{display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:8px;color:#18181b}
+.modal-close{background:none;border:none;font-size:1.2rem;color:var(--muted);cursor:pointer;padding:4px;line-height:1}
+.modal-close:hover{color:#dc2626}
+.modal-label{font-size:.82rem;font-weight:600;color:#3f3f46;margin-bottom:6px;display:block}
+.modal-textarea{width:100%;padding:10px 12px;border:1px solid #d4d4d8;border-radius:10px;font-family:inherit;font-size:.9rem;outline:none;resize:vertical;min-height:75px}
+.modal-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(15,118,110,.1)}
+.modal-select{width:100%;padding:9px 12px;border:1px solid #d4d4d8;border-radius:9px;font-family:inherit;font-size:.85rem;background:#fff}
+.img-key-hint{font-size:.75rem;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:7px 10px;margin-top:8px;line-height:1.5}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}
+
+/* صندوق الكتابة */
+#composer{padding:12px 20px 18px;width:100%;max-width:820px;margin:0 auto}
+.box{display:flex;flex-direction:column;background:#ffffff;border:1.5px solid #d4d4d8;border-radius:18px;padding:12px 14px 10px;box-shadow:0 3px 12px rgba(0,0,0,.04);transition:all .2s ease}
+.box:focus-within{border-color:var(--accent);box-shadow:0 4px 18px rgba(15,118,110,.12),0 0 0 3px rgba(15,118,110,.08)}
+#input{width:100%;background:none;border:none;outline:none;font-family:inherit;font-size:.97rem;color:var(--text);resize:none;max-height:190px;min-height:24px;padding:2px 4px;line-height:1.7}
+#input::placeholder{color:#a1a1aa}
+.box-footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:4px}
+.box-tools{display:flex;align-items:center;gap:6px}
+.tool-pill{font-size:.72rem;color:var(--muted);background:#f4f4f5;border:1px solid #e4e4e7;border-radius:6px;padding:2px 7px;font-family:inherit}
+#send{width:34px;height:34px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:.95rem;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+#send:hover:not(:disabled){background:var(--accent2);transform:scale(1.05)}
+#send:disabled{background:#e4e4e7;color:#a1a1aa;cursor:not-allowed;transform:none}
+.hint{text-align:center;font-size:.72rem;color:#a1a1aa;margin-top:10px}
+@media(max-width:768px){
+#sidebar{position:fixed;top:0;bottom:0;right:0;z-index:40;box-shadow:-4px 0 16px rgba(0,0,0,.06)}
+.cards{grid-template-columns:1fr;width:100%;max-width:340px}
+#composer{padding:10px 12px 14px}
+#chat{padding:20px 12px 12px}
+}
+
+/* ===== شاشة الكود الجانبية (مثل Claude) ===== */
+#codePanel{position:fixed;top:0;right:0;bottom:0;width:520px;max-width:55vw;background:#1e1e24;border-left:1px solid #2e2e38;z-index:50;display:none;flex-direction:column;box-shadow:-8px 0 32px rgba(0,0,0,.2);animation:slideIn .2s ease}
+#codePanel.open{display:flex}
+@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+#codePanel .code-panel-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#18181c;border-bottom:1px solid #2e2e38;font-size:.8rem;font-family:'Fira Code',Consolas,monospace;color:#a1a1aa}
+#codePanel .code-panel-head .file-name{display:flex;align-items:center;gap:8px}
+#codePanel .code-panel-head .dot{width:10px;height:10px;border-radius:50%}
+#codePanel .code-panel-head .dot.r{background:#ff5f57}
+#codePanel .code-panel-head .dot.y{background:#febc2e}
+#codePanel .code-panel-head .dot.g{background:#28c840}
+#codePanel .code-panel-actions{display:flex;gap:6px}
+#codePanel .code-panel-actions button{background:none;border:1px solid #2e2e38;color:#a1a1aa;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:.73rem;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:4px}
+#codePanel .code-panel-actions button:hover{background:#2e2e38;color:#fff;border-color:#444}
+#codePanel .code-panel-body{flex:1;overflow:auto;padding:0;margin:0;direction:ltr;font-family:'Fira Code',Consolas,'Courier New',monospace;font-size:.85rem;line-height:1.7;color:#e4e4e7;background:#1e1e24}
+#codePanel .code-panel-body pre{margin:0;padding:16px;overflow-x:auto;color:#e4e4e7}
+#codePanel .code-panel-body code{font-family:inherit;background:none;padding:0;color:#e4e4e7}
+#codePanel .line-num{display:inline-block;width:3em;text-align:right;color:#8b949e;user-select:none;margin-right:1em;padding:0}
+#codePanel .code-line{display:block;min-height:1.7em;color:#f0f0f0}
+.code-lang-badge{background:rgba(15,118,110,.2);color:#7ee8c7;border-radius:6px;padding:2px 8px;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.code-view-btn{display:inline-flex;align-items:center;gap:4px;background:rgba(15,118,110,.15);border:1px solid rgba(15,118,110,.3);color:#7ee8c7;padding:3px 10px;border-radius:6px;cursor:pointer;font-size:.73rem;font-family:inherit;transition:all .15s;margin-top:4px}
+.code-view-btn:hover{background:rgba(15,118,110,.3);border-color:rgba(15,118,110,.5)}
+#codeOverlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:49;display:none;backdrop-filter:blur(2px)}
+#codeOverlay.open{display:block}
+.code-inline-wrap{position:relative;margin:10px 0}
+#chat .code-line{display:block;min-height:1.7em;color:#f0f0f0;font-family:'Fira Code',Consolas,'Courier New',monospace;font-size:.85rem;line-height:1.7;direction:ltr;text-align:left}
+#chat .code-line .line-num{display:inline-block;width:3em;text-align:right;color:#8b949e;user-select:none;margin-right:1em;padding:0;opacity:.7}
+.code-inline-wrap .copy-code-btn{position:absolute;top:8px;left:8px;background:#2e2e38;border:none;color:#a1a1aa;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:.7rem;font-family:inherit;display:flex;align-items:center;gap:4px;opacity:0;transition:opacity .15s}
+.code-inline-wrap:hover .copy-code-btn{opacity:1}
+.code-inline-wrap .copy-code-btn:hover{background:#444;color:#fff}
+</style>
+</head>
+<body>
+
+<!-- الشريط الجانبي -->
+<aside id="sidebar">
+  <div class="side-head">
+    <img class="logo" src="/static/logo.svg" alt="الخوارزمي">
+    <span class="wordmark">الخوارزمي</span>
+  </div>
+  <button id="newChat">+ محادثة جديدة</button>
+  <div class="list-label">المحادثات</div>
+  <div id="chatList"></div>
+  <div class="side-user">
+    <div class="u-avatar">{{ (name or email)[:1] }}</div>
+    <div class="u-info">
+      <div class="u-name">{{ name or email }}</div>
+      <div class="u-mail">{{ email }}</div>
+    </div>
+    <button id="logout">خروج</button>
+  </div>
+</aside>
+
+<!-- المنطقة الرئيسية -->
+<main id="main">
+  <header id="topbar">
+    <button id="toggle" title="إظهار/إخفاء القائمة">☰</button>
+    <div class="top-title" id="topTitle">محادثة جديدة</div>
+    <div class="spacer"></div>
+    <div class="model-wrap">
+      <button id="modelBtn"><span class="dot"></span><span id="modelLabel">Gemini 2.5 Flash</span></button>
+      <div id="modelMenu" class="hidden"></div>
+    </div>
+  </header>
+
+  <!-- شاشة الترحيب -->
+  <div id="welcome">
+    <img class="w-logo" src="/static/logo.svg" alt="">
+    <h1>كيف بقدر أساعدك اليوم؟</h1>
+    <p>اسأل الخوارزمي عن أي شي — كتابة، برمجة، شرح، تخطيط وأكثر</p>
+    <div class="cards">
+      <button class="card"><b>اشرحلي فكرة معقدة</b><small>تبسيط المواضيع الصعبة بأسلوب سهل</small></button>
+      <button class="card"><b>ساعدني بالكتابة</b><small>رسائل، مقالات، ومحتوى إبداعي</small></button>
+      <button class="card"><b>اكتبلي كود برمجي</b><small>بأي لغة مع الشرح خطوة بخطوة</small></button>
+      <button class="card img-card-trigger"><b>🎨 ولّد صورة بالذكاء الاصطناعي</b><small>عبر نموذج FLUX.1 المفتوح</small></button>
+    </div>
+  </div>
+
+  <!-- منطقة المحادثة -->
+  <div id="chat"></div>
+
+  <!-- صندوق الكتابة -->
+  <div id="composer">
+    <div class="box">
+      <textarea id="input" rows="1" placeholder="اكتب رسالتك للخوارزمي... أو اكتب: /image وصف الصورة"></textarea>
+      <div class="box-footer">
+        <div class="box-tools">
+          <button type="button" class="tool-btn" id="openImgModalBtn" title="توليد صورة بالذكاء الاصطناعي">
+            <span>🎨</span>
+            <span>توليد صورة</span>
+          </button>
+          <span class="tool-pill">Shift+Enter لسطر جديد</span>
+        </div>
+        <button id="send" title="إرسال (Enter)">➤</button>
+      </div>
+    </div>
+    <p class="hint">الخوارزمي يدعم المحادثة وتوليد الصور عبر نماذج مفتوحة المصدر (FLUX.1, FLUX.2, Z-Image وغيرها)</p>
+  </div>
+</main>
+
+<!-- نافذة توليد الصور السريعة (Modal) -->
+<div class="modal-overlay" id="imgModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">
+        <span>🎨</span>
+        <span>توليد صورة بالذكاء الاصطناعي</span>
+      </div>
+      <button class="modal-close" id="closeImgModalBtn">&times;</button>
+    </div>
+    <div>
+      <label class="modal-label" for="imgPromptInput">صف الصورة التي تريد توليدها:</label>
+      <textarea id="imgPromptInput" class="modal-textarea" placeholder="مثال: قطة رائد فضاء في الفضاء الخارجي بأسلوب سينمائي واقعي..."></textarea>
+    </div>
+    <div>
+      <label class="modal-label" for="imgModelSelect">النموذج مفتوح المصدر:</label>
+      <select id="imgModelSelect" class="modal-select">
+        <option value="flux" selected>FLUX.1 Schnell — الأعلى دقة وواقعية (مجاني بالكامل)</option>
+      </select>
+      <p class="img-key-hint">🎨 موقع مجاني 100% — توليد الصور عبر FLUX.1 مفتوح المصدر بدون أي مفاتيح</p>
+    </div>
+    <div class="modal-footer">
+      <button class="img-btn" id="cancelImgModalBtn">إلغاء</button>
+      <button class="img-btn primary" id="submitImgModalBtn">توليد الآن 🚀</button>
+    </div>
+  </div>
+</div>
+
+<!-- شاشة الكود الجانبية -->
+<div id="codeOverlay" onclick="closeCodePanel()"></div>
+<div id="codePanel">
+  <div class="code-panel-head">
+    <div class="file-name">
+      <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+      <span id="codeFileName">code.py</span>
+      <span class="code-lang-badge" id="codeLangBadge">py</span>
+    </div>
+    <div class="code-panel-actions">
+      <button onclick="copyCodePanel()" title="نسخ الكود">📋 نسخ</button>
+      <button onclick="downloadCode()" title="تحميل الملف">⬇️ تحميل</button>
+      <button onclick="closeCodePanel()" title="إغلاق">✕</button>
+    </div>
+  </div>
+  <div class="code-panel-body" id="codePanelBody">
+    <pre id="codePanelPre"></pre>
+  </div>
+</div>
+
+<script>
+const chat = document.getElementById('chat');
+const welcome = document.getElementById('welcome');
+const input = document.getElementById('input');
+const sendBtn = document.getElementById('send');
+const chatList = document.getElementById('chatList');
+const sidebar = document.getElementById('sidebar');
+const topTitle = document.getElementById('topTitle');
+const modelBtn = document.getElementById('modelBtn');
+const modelMenu = document.getElementById('modelMenu');
+const modelLabel = document.getElementById('modelLabel');
+
+// ===== النماذج (تُحمّل ديناميكياً من السيرفر) =====
+let models = [
+  { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', desc: 'الأذكى — من جوجل (مجاني)' },
+  { id: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite', desc: 'الأسرع — من جوجل (مجاني)' },
+];
+let model = localStorage.getItem('khawarizmi_model');
+
+function buildModelMenu() {
+  if (!models.some(m => m.id === model)) model = models[0].id;
+  modelMenu.innerHTML = '';
+  models.forEach(m => {
+    const b = document.createElement('button');
+    b.dataset.model = m.id;
+    const s = document.createElement('span');
+    s.textContent = m.label;
+    const sm = document.createElement('small');
+    sm.textContent = m.desc;
+    b.append(s, sm);
+    b.onclick = () => {
+      model = m.id;
+      localStorage.setItem('khawarizmi_model', model);
+      updateModelUI();
+      modelMenu.classList.add('hidden');
+    };
+    modelMenu.appendChild(b);
+  });
+  updateModelUI();
+}
+
+function updateModelUI() {
+  const m = models.find(x => x.id === model) || models[0];
+  modelLabel.textContent = m.label;
+  if (m.kind === 'image') {
+    input.placeholder = 'اكتب وصف الصورة التي تريد توليدها... (بالعربي أو الإنجليزي)';
+  } else {
+    input.placeholder = 'اكتب رسالتك للخوارزمي... أو اكتب: /image وصف الصورة';
+  }
+  modelMenu.querySelectorAll('button').forEach(b => {
+    b.classList.toggle('active', b.dataset.model === model);
+  });
+}
+
+async function loadModels() {
+  try {
+    const res = await fetch('/api/models');
+    if (res.ok) {
+      const list = await res.json();
+      if (Array.isArray(list) && list.length) models = list;
+    }
+  } catch (e) {}
+  buildModelMenu();
+}
+
+modelBtn.onclick = e => {
+  e.stopPropagation();
+  modelMenu.classList.toggle('hidden');
+};
+document.addEventListener('click', e => {
+  if (!modelMenu.contains(e.target) && !modelBtn.contains(e.target)) {
+    modelMenu.classList.add('hidden');
+  }
+});
+
+// ===== المحادثات =====
+let chats = JSON.parse(localStorage.getItem('khawarizmi_chats') || '[]');
+let current = null;
+
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const save = () => localStorage.setItem('khawarizmi_chats', JSON.stringify(chats.slice(0, 30)));
+
+function renderList() {
+  chatList.innerHTML = '';
+  chats.forEach(c => {
+    const d = document.createElement('div');
+    d.className = 'chat-item' + (current && current.id === c.id ? ' active' : '');
+    const title = document.createElement('span');
+    title.textContent = c.title;
+    const del = document.createElement('button');
+    del.textContent = '🗑';
+    del.title = 'حذف';
+    del.onclick = e => { e.stopPropagation(); delChat(c.id); };
+    d.append(title, del);
+    d.onclick = () => loadChat(c.id);
+    chatList.appendChild(d);
+  });
+}
+
+function newChat() {
+  current = { id: uid(), title: 'محادثة جديدة', messages: [] };
+  topTitle.textContent = 'محادثة جديدة';
+  renderList();
+  renderChat();
+  input.focus();
+}
+
+function loadChat(id) {
+  current = chats.find(c => c.id === id) || null;
+  topTitle.textContent = current ? current.title : 'محادثة جديدة';
+  renderList();
+  renderChat();
+  if (innerWidth <= 768) sidebar.classList.add('hidden');
+}
+
+function delChat(id) {
+  chats = chats.filter(c => c.id !== id);
+  if (current && current.id === id) newChat();
+  save();
+  renderList();
+}
+
+function md(text) {
+  try {
+    if (window.marked && window.DOMPurify) {
+      marked.setOptions({
+        breaks: true,
+        gfm: true,
+        highlight: function(code, lang) {
+          if (window.hljs) {
+            if (lang && hljs.getLanguage(lang)) {
+              try { return hljs.highlight(code, { language: lang }).value; } catch (e) {}
+            }
+            try { return hljs.highlightAuto(code).value; } catch (e) {}
+          }
+          return code;
+        }
+      });
+      return DOMPurify.sanitize(marked.parse(text));
+    }
+  } catch (e) {}
+  const d = document.createElement('div');
+  d.textContent = text;
+  return d.innerHTML.replace(/\n/g, '<br>');
+}
+
+function enhanceCodeBlocks(container) {
+  container.querySelectorAll('pre').forEach(pre => {
+    if (pre.closest('.codebox') || pre.closest('#codePanel')) return;
+    const code = pre.querySelector('code');
+    let lang = 'code';
+    if (code) {
+      for (const cls of code.classList) {
+        if (cls.startsWith('language-')) {
+          lang = cls.replace('language-', '');
+          break;
+        }
+      }
+    }
+    const codeText = code ? code.textContent : pre.textContent;
+    const wrap = document.createElement('div');
+    wrap.className = 'codebox';
+    const head = document.createElement('div');
+    head.className = 'codebox-head';
+    const label = document.createElement('span');
+    label.className = 'code-lang';
+    label.textContent = lang;
+    const btn = document.createElement('button');
+    btn.innerHTML = '<span>📋</span> <span>نسخ</span>';
+    btn.onclick = () => {
+      const textToCopy = code ? code.innerText : pre.innerText;
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        btn.innerHTML = '<span>✓</span> <span>تم النسخ</span>';
+        setTimeout(() => { btn.innerHTML = '<span>📋</span> <span>نسخ</span>'; }, 1800);
+      });
+    };
+    head.append(label, btn);
+    pre.parentNode.insertBefore(wrap, pre);
+    wrap.append(head, pre);
+
+    // زر فتح في المحرر الجانبي
+    const viewBtn = document.createElement('button');
+    viewBtn.innerHTML = '<span>👁</span> فتح في المحرر';
+    viewBtn.style.cssText = 'background:rgba(15,118,110,.15);border:1px solid rgba(15,118,110,.3);color:#7ee8c7;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:.73rem;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:4px;margin-right:4px;';
+    viewBtn.onmouseover = () => { viewBtn.style.background = 'rgba(15,118,110,.3)'; viewBtn.style.borderColor = 'rgba(15,118,110,.5)'; };
+    viewBtn.onmouseout = () => { viewBtn.style.background = 'rgba(15,118,110,.15)'; viewBtn.style.borderColor = 'rgba(15,118,110,.3)'; };
+    viewBtn.onclick = (e) => { e.stopPropagation(); openCodePanel(codeText, lang); };
+    head.insertBefore(viewBtn, btn);
+  });
+}
+
+// ===== العرض =====
+function renderChat() {
+  const empty = !current || current.messages.length === 0;
+  welcome.style.display = empty ? 'flex' : 'none';
+  chat.style.display = empty ? 'none' : 'flex';
+  chat.innerHTML = '';
+  if (current) {
+    current.messages.forEach(m => {
+      if (m.isImage && m.imageData) {
+        addImageBubble(m.imageData);
+      } else {
+        addBubble(m.role, m.content);
+      }
+    });
+  }
+}
+
+function addBubble(role, text) {
+  const row = document.createElement('div');
+  row.className = 'row ' + role;
+  if (role === 'assistant') {
+    row.innerHTML = `
+      <img class="avatar" src="/static/logo.svg" alt="الخوارزمي">
+      <div class="bot-wrap" style="flex:1;min-width:0;">
+        <div class="bubble bot-text"></div>
+        <div class="msg-actions">
+          <button class="action-btn copy-msg" title="نسخ الرد"><span>📋</span> نسخ الرد</button>
+        </div>
+      </div>
+    `;
+    const b = row.querySelector('.bubble');
+    b.innerHTML = md(text);
+    enhanceCodeBlocks(b);
+    row.querySelector('.copy-msg').onclick = (e) => {
+      const btn = e.currentTarget;
+      navigator.clipboard.writeText(text).then(() => {
+        btn.innerHTML = '<span>✓</span> تم النسخ';
+        setTimeout(() => { btn.innerHTML = '<span>📋</span> نسخ الرد'; }, 1800);
+      });
+    };
+  } else {
+    row.innerHTML = '<div class="bubble"></div>';
+    row.querySelector('.bubble').textContent = text;
+  }
+  chat.appendChild(row);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function setBusy(b) {
+  sendBtn.disabled = b;
+  input.disabled = b;
+  if (!b) input.focus();
+}
+
+function addImageBubble(imageItem) {
+  const row = document.createElement('div');
+  row.className = 'row assistant';
+  const imgUrl = imageItem.image_url;
+  const promptText = imageItem.original_prompt || imageItem.prompt;
+  const modelText = imageItem.model_label || 'FLUX.1 Schnell';
+  const enPrompt = imageItem.enhanced_prompt || promptText;
+
+  row.innerHTML = `
+    <img class="avatar" src="/static/logo.svg" alt="الخوارزمي">
+    <div class="bot-wrap" style="flex:1;min-width:0;">
+      <div class="generated-image-card">
+        <div class="img-container">
+          <div class="img-loader">
+            <span class="typing-dots"><i></i><i></i><i></i></span>
+            <span>جارٍ رسم الصورة عبر ${modelText}...</span>
+          </div>
+          <img src="${imgUrl}" alt="${promptText}" style="opacity:0;transition:opacity .3s ease;" onload="this.style.opacity='1'; this.previousElementSibling.style.display='none';">
+        </div>
+        <div class="img-card-info">
+          <div class="img-prompt-text">🎨 <strong>الوصف:</strong> ${promptText}</div>
+          <div class="img-meta-row">
+            <span class="img-badge">نموذج: ${modelText}</span>
+            <div class="img-actions-row">
+              <a href="${imgUrl}" target="_blank" download="khawarizmi-art.jpg" class="img-btn">
+                <span>⬇️</span> تحميل بدقة كاملة
+              </a>
+              <button class="img-btn copy-prompt-btn" type="button">
+                <span>📋</span> نسخ الوصف
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  row.querySelector('.copy-prompt-btn').onclick = (e) => {
+    const btn = e.currentTarget;
+    navigator.clipboard.writeText(enPrompt).then(() => {
+      btn.innerHTML = '<span>✓</span> تم النسخ';
+      setTimeout(() => { btn.innerHTML = '<span>📋</span> نسخ الوصف'; }, 1800);
+    });
+  };
+  chat.appendChild(row);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+// ===== توليد الصور =====
+async function generateImage(userPrompt, chosenModel = 'flux') {
+  userPrompt = userPrompt.trim();
+  if (!userPrompt || sendBtn.disabled) return;
+  if (!current) newChat();
+
+  if (current.messages.length === 0) {
+    current.title = ('🎨 ' + userPrompt).slice(0, 30);
+    topTitle.textContent = current.title;
+    chats.unshift(current);
+    save();
+    renderList();
+  }
+
+  welcome.style.display = 'none';
+  chat.style.display = 'flex';
+  addBubble('user', '🎨 توليد صورة: ' + userPrompt);
+  current.messages.push({ role: 'user', content: '🎨 توليد صورة: ' + userPrompt });
+  save();
+
+  input.value = '';
+  input.style.height = 'auto';
+  setBusy(true);
+
+  const t = document.createElement('div');
+  t.className = 'row assistant';
+  t.innerHTML = `
+    <img class="avatar" src="/static/logo.svg" alt="الخوارزمي">
+    <div class="bubble">
+      <div class="typing-wrap">
+        <span class="typing-dots"><i></i><i></i><i></i></span>
+        <span class="typing-text">هندسة الوصف... ⏳</span>
+      </div>
+    </div>
+  `;
+  chat.appendChild(t);
+  chat.scrollTop = chat.scrollHeight;
+
+  // عدّاد حي بالثواني حتى تحس إنه في شغل يصير
+  const startT = Date.now();
+  const liveText = t.querySelector('.typing-text');
+  const imgTimer = setInterval(() => {
+    const s = Math.floor((Date.now() - startT) / 1000);
+    liveText.textContent = `جارٍ رسم الصورة... ${s}ث — قد يستغرق 20-40 ثانية ⏳`;
+  }, 1000);
+
+  try {
+    const res = await fetch('/api/generate-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: userPrompt, model: chosenModel }),
+    });
+    if (res.status === 401) { location.href = '/login'; return; }
+    const data = await res.json();
+    clearInterval(imgTimer);
+    t.remove();
+
+    if (data.image_url) {
+      addImageBubble(data);
+      current.messages.push({
+        role: 'assistant',
+        content: `![${userPrompt}](${data.image_url})`,
+        isImage: true,
+        imageData: data,
+      });
+      save();
+    } else {
+      addBubble('assistant', data.error || 'تعذر توليد الصورة، يرجى المحاولة مرة أخرى.');
+    }
+  } catch (err) {
+    clearInterval(imgTimer);
+    t.remove();
+    addBubble('assistant', 'حدث خطأ أثناء الاتصال بسيرفر توليد الصور.');
+  }
+  setBusy(false);
+}
+async function send(text) {
+  text = text.trim();
+  if (!text || sendBtn.disabled) return;
+
+  // إذا النموذج المختار هو توليد الصور: حوّل الرسالة لصورة
+  const activeM = models.find(x => x.id === model);
+  if (activeM && activeM.kind === 'image') {
+    const imgPrompt = text.replace(/^(\/image|\/img|صورة:|ارسم:)\s*/i, '');
+    if (imgPrompt.trim()) return generateImage(imgPrompt);
+  }
+
+  // التحقق إذا كان الطلب أمر توليد صورة
+  const lower = text.toLowerCase();
+  if (lower.startsWith('/image ') || lower.startsWith('/img ') || lower.startsWith('صورة: ') || lower.startsWith('ارسم: ')) {
+    const promptPart = text.replace(/^(\/image|\/img|صورة:|ارسم:)\s*/i, '');
+    if (promptPart.trim()) {
+      return generateImage(promptPart);
+    }
+  }
+
+  if (!current) newChat();
+
+  if (current.messages.length === 0) {
+    current.title = text.slice(0, 30);
+    topTitle.textContent = current.title;
+    chats.unshift(current);
+    save();
+    renderList();
+  }
+
+  welcome.style.display = 'none';
+  chat.style.display = 'flex';
+  addBubble('user', text);
+  current.messages.push({ role: 'user', content: text });
+  save();
+
+  input.value = '';
+  input.style.height = 'auto';
+  setBusy(true);
+
+  const t = document.createElement('div');
+  t.className = 'row assistant';
+  t.innerHTML = `
+    <img class="avatar" src="/static/logo.svg" alt="الخوارزمي">
+    <div class="bubble">
+      <div class="typing-wrap">
+        <span class="typing-dots"><i></i><i></i><i></i></span>
+        <span class="typing-text">الخوارزمي يكتب الآن...</span>
+      </div>
+    </div>
+  `;
+  chat.appendChild(t);
+  chat.scrollTop = chat.scrollHeight;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: current.messages, model }),
+    });
+    if (res.status === 401) { location.href = '/login'; return; }
+    const data = await res.json();
+    if (data.image) {
+      t.remove();
+      addImageBubble(data.image);
+      current.messages.push({
+        role: 'assistant',
+        content: `![${data.image.original_prompt}](${data.image.image_url})`,
+        isImage: true,
+        imageData: data.image,
+      });
+      save();
+      setBusy(false);
+      return;
+    }
+    const reply = data.reply || data.error || 'صار خطأ غير متوقع';
+    // ===== تأثير الكتابة التدريجي =====
+    await typewriterEffect(reply, t);
+    if (data.reply) {
+      current.messages.push({ role: 'assistant', content: data.reply });
+      save();
+    }
+  } catch (e) {
+    t.remove();
+    addBubble('assistant', 'ما قدرت أوصل للسيرفر — تأكد إنه شغّال');
+  }
+  setBusy(false);
+}
+
+// ===== تأثير الكتابة التدريجي (Typewriter) =====
+async function typewriterEffect(text, bubbleEl) {
+  const typingWrap = bubbleEl.querySelector('.typing-wrap');
+  if (typingWrap) typingWrap.style.display = 'none';
+  const b = bubbleEl.querySelector('.bubble');
+  if (!b) return;
+  b.style.position = 'relative';
+  // ننشئ عنصر الكود اللي هيظهر تدريجياً
+  const codeContainer = document.createElement('div');
+  codeContainer.className = 'code-inline-wrap';
+  codeContainer.style.cssText = 'margin-top:8px;';
+  
+  // نكشف إذا الكود موجود
+  const codeMatch = text.match(/```(\w*)\n([\s\S]*?)```/);
+  const hasCode = !!codeMatch;
+  let displayedText = '';
+  const md = marked ? marked.parse(text) : text.replace(/\n/g, '<br>');
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = md;
+  
+  // نستخرج النص العادي من الـ markdown
+  const plainText = text.replace(/```[\s\S]*?```/g, '').trim();
+  const codeBlock = codeMatch ? codeMatch[0] : null;
+  const codeLang = codeMatch ? (codeMatch[1] || 'text') : 'text';
+  const codeContent = codeMatch ? codeMatch[2].trim() : '';
+
+  if (hasCode && codeBlock) {
+    // نعرض النص العادي أولاً
+    const textPart = plainText ? plainText : '';
+    if (textPart) {
+      await typeCharacterByCharacter(textPart, b);
+    }
+    // نضيف زر فتح الكود
+    const viewBtn = document.createElement('button');
+    viewBtn.className = 'code-view-btn';
+    viewBtn.innerHTML = '👁 عرض الكود في المحرر';
+    viewBtn.onclick = () => openCodePanel(codeContent, codeLang);
+    viewBtn.style.marginTop = '8px';
+    b.appendChild(viewBtn);
+    
+    // نعرض الكود تدريجياً سطراً بسطر (ملوّن عبر highlight.js)
+    let coloredLines = [];
+    try {
+      if (window.hljs) {
+        let hl = '';
+        if (hljs.getLanguage(codeLang || '')) {
+          hl = hljs.highlight(codeContent, { language: codeLang }).value;
+        } else {
+          hl = hljs.highlightAuto(codeContent).value;
+        }
+        const tmp = document.createElement('div');
+        tmp.innerHTML = hl;
+        coloredLines = tmp.innerHTML.split('\n');
+      } else {
+        coloredLines = codeContent.split('\n').map(l => l.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
+      }
+    } catch (e) {
+      coloredLines = codeContent.split('\n').map(l => l.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
+    }
+    for (let i = 0; i < coloredLines.length; i++) {
+      const num = i + 1;
+      const lineSpan = document.createElement('span');
+      lineSpan.className = 'code-line';
+      lineSpan.innerHTML = `<span class="line-num">${num}</span>${coloredLines[i] || ' '}`;
+      lineSpan.style.cssText = 'opacity:0;transition:opacity .15s;display:block;color:#f0f0f0;font-family:\'Fira Code\',Consolas,monospace;';
+      codeContainer.appendChild(lineSpan);
+      setTimeout(() => { lineSpan.style.opacity = '1'; }, 30);
+      await sleep(15);
+    }
+    codeContainer.style.cssText = 'background:#1e1e24;border-radius:10px;padding:12px 12px 12px 4px;margin-top:8px;border:1px solid #2e2e38;color:#f0f0f0;direction:ltr;text-align:left;overflow-x:auto;';
+    b.appendChild(codeContainer);
+    
+    // زر نسخ
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'copy-code-btn';
+    copyBtn.innerHTML = '📋 نسخ الكود';
+    copyBtn.style.cssText = 'position:absolute;top:4px;left:4px;background:#2e2e38;border:none;color:#a1a1aa;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:.7rem;font-family:inherit;';
+    copyBtn.onclick = () => {
+      navigator.clipboard.writeText(codeContent).then(() => {
+        copyBtn.innerHTML = '✓ تم النسخ';
+        setTimeout(() => { copyBtn.innerHTML = '📋 نسخ الكود'; }, 1500);
+      }).catch(() => {});
+    };
+    b.style.position = 'relative';
+    b.appendChild(copyBtn);
+  } else {
+    // بدون كود — نكتب حرف بحرف
+    await typeCharacterByCharacter(text, b);
+  }
+}
+
+function typeCharacterByCharacter(text, container) {
+  return new Promise((resolve) => {
+    let i = 0;
+    const span = document.createElement('span');
+    container.appendChild(span);
+    const speed = text.length > 200 ? 8 : 15; // سرعة أبطأ للنصوص الطويلة
+    
+    function typeNext() {
+      if (i < text.length) {
+        span.textContent += text[i];
+        i++;
+        chat.scrollTop = chat.scrollHeight;
+        setTimeout(typeNext, speed);
+      } else {
+        resolve();
+      }
+    }
+    typeNext();
+  });
+}
+
+function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+// ===== الأحداث =====
+sendBtn.onclick = () => send(input.value);
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input.value); }
+});
+input.addEventListener('input', () => {
+  input.style.height = 'auto';
+  input.style.height = Math.min(input.scrollHeight, 170) + 'px';
+});
+// ===== نافذة توليد الصور السريعة (Modal) =====
+const imgModal = document.getElementById('imgModal');
+const openImgModalBtn = document.getElementById('openImgModalBtn');
+const closeImgModalBtn = document.getElementById('closeImgModalBtn');
+const cancelImgModalBtn = document.getElementById('cancelImgModalBtn');
+const submitImgModalBtn = document.getElementById('submitImgModalBtn');
+const imgPromptInput = document.getElementById('imgPromptInput');
+const imgModelSelect = document.getElementById('imgModelSelect');
+
+function openImgModal(initialText = '') {
+  imgPromptInput.value = initialText || input.value.trim() || '';
+  imgModal.classList.add('open');
+  imgPromptInput.focus();
+}
+
+function closeImgModal() {
+  imgModal.classList.remove('open');
+}
+
+openImgModalBtn.onclick = () => openImgModal();
+closeImgModalBtn.onclick = closeImgModal;
+cancelImgModalBtn.onclick = closeImgModal;
+imgModal.onclick = (e) => { if (e.target === imgModal) closeImgModal(); };
+
+submitImgModalBtn.onclick = () => {
+  const prompt = imgPromptInput.value.trim();
+  if (!prompt) return;
+  const m = imgModelSelect.value;
+  closeImgModal();
+  generateImage(prompt, m);
+};
+
+imgPromptInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    submitImgModalBtn.click();
+  }
+});
+
+// بطاقة التوليد السريع بشاشة الترحيب
+document.querySelectorAll('.card').forEach(c => {
+  c.onclick = () => {
+    if (c.classList.contains('img-card-trigger')) {
+      openImgModal('منظر طبيعي ساحر لقلعة عربية قديمة تحت النجوم');
+    } else {
+      send(c.querySelector('b').textContent);
+    }
+  };
+});
+document.getElementById('newChat').onclick = newChat;
+document.getElementById('toggle').onclick = () => sidebar.classList.toggle('hidden');
+document.getElementById('logout').onclick = async () => {
+  await fetch('/api/logout', { method: 'POST' });
+  location.href = '/login';
+};
+
+// ===== وظائف شاشة الكود الجانبية =====
+let currentCodeContent = '';
+let currentCodeLang = 'py';
+
+function openCodePanel(code, lang) {
+  currentCodeContent = code;
+  currentCodeLang = lang || 'py';
+  const extMap = {python:'py',javascript:'js',typescript:'ts',html:'html',css:'css',json:'json',bash:'sh',sql:'sql',cpp:'cpp',java:'java',rust:'rs',go:'go',ruby:'rb',php:'php',swift:'swift',kotlin:'kt',scala:'scala',dart:'dart',perl:'pl',r:'r',markdown:'md',text:'txt'};
+  const ext = extMap[lang || 'text'] || lang;
+  document.getElementById('codeFileName').textContent = 'code.' + ext;
+  document.getElementById('codeLangBadge').textContent = ext;
+
+  // توليد HTML ملوّن عبر highlight.js (مع إجبار خلفية داكنة)
+  let colored = '';
+  try {
+    if (window.hljs) {
+      if (lang && hljs.getLanguage(lang)) {
+        colored = hljs.highlight(code, { language: lang }).value;
+      } else {
+        colored = hljs.highlightAuto(code).value;
+      }
+    } else {
+      colored = code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+  } catch (e) {
+    colored = code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  colored = '<code class="hljs" style="background:#1e1e24;color:#e6e6e6;">' + colored + '</code>';
+
+  // تقسيم الكود الملوّن لأسطر مع أرقام
+  const temp = document.createElement('div');
+  temp.innerHTML = colored;
+  const lines = temp.querySelector('code').innerHTML.split('\n');
+  let html = '';
+  lines.forEach((line, i) => {
+    const num = i + 1;
+    html += '<span class="code-line"><span class="line-num">' + num + '</span>' + (line || '&nbsp;') + '</span>';
+  });
+  document.getElementById('codePanelPre').innerHTML = '<pre>' + html + '</pre>';
+  document.getElementById('codePanel').classList.add('open');
+  document.getElementById('codeOverlay').classList.add('open');
+}
+
+function closeCodePanel() {
+  document.getElementById('codePanel').classList.remove('open');
+  document.getElementById('codeOverlay').classList.remove('open');
+}
+
+function copyCodePanel() {
+  navigator.clipboard.writeText(currentCodeContent).then(() => {
+    const btn = document.querySelector('.code-panel-actions button:nth-child(1)');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✓ تم النسخ';
+    setTimeout(() => { btn.innerHTML = orig; }, 1800);
+  }).catch(() => {});
+}
+
+function downloadCode() {
+  const extMap = {python:'py',javascript:'js',typescript:'ts',html:'html',css:'css',json:'json',bash:'sh',sql:'sql',cpp:'cpp',java:'java',rust:'rs',go:'go',ruby:'rb',php:'php',swift:'swift',kotlin:'kt',scala:'scala',dart:'dart',perl:'pl',r:'r',markdown:'md',text:'txt'};
+  const ext = extMap[currentCodeLang] || 'txt';
+  const blob = new Blob([currentCodeContent], {type: 'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'code.' + ext;
+  a.click();
+}
+
+// ===== البداية =====
+if (innerWidth <= 768) sidebar.classList.add('hidden');
+loadModels();
+renderList();
+newChat();
+</script>
+</body>
+</html>
+
+

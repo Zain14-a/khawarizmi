@@ -1,0 +1,25 @@
+# يحافظ على موقع Render مستيقظاً — يرسل طلباً كل 12 دقيقة
+# (بدون هذا: Render المجاني ينيّم الموقع بعد 15 دقيقة خمول،
+#  وأول زائر ينتظر 30-60 ثانية حتى يصحى)
+#
+# ⚙️ بعد إنشاء خدمة Render، عيّن متغير المستودع RENDER_URL
+#    (Settings → Secrets and variables → Actions → Variables)
+#    القيمة: https://اسم-خدمتك.onrender.com
+name: Keep Render Awake
+
+on:
+  schedule:
+    - cron: "*/12 * * * *"   # كل 12 دقيقة
+  workflow_dispatch:          # زر تشغيل يدوي
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: إرسال طلب للموقع
+        run: |
+          if [ -z "${{ vars.RENDER_URL }}" ]; then
+            echo "⚠️ RENDER_URL غير مضبوط — أضفه من إعدادات المستودع"
+            exit 0
+          fi
+          curl -s -o /dev/null -w "%{http_code}" "${{ vars.RENDER_URL }}"

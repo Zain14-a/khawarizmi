@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تسجيل الدخول — الخوارزمي</title>
+<link rel="icon" type="image/svg+xml" href="/static/logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Tajawal','Segoe UI',Tahoma,sans-serif}
+body{min-height:100vh;background:#f4f4f5;color:#18181b;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{width:100%;max-width:400px;background:#fff;border:1px solid #e4e4e7;border-radius:14px;padding:36px 32px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.logo{width:48px;height:48px;border-radius:12px;margin:0 auto 10px;display:block}
+.brand-name{text-align:center;font-weight:700;font-size:1.35rem;margin-bottom:22px}
+h1{font-size:1.25rem;text-align:center;margin-bottom:6px}
+.sub{text-align:center;color:#71717a;font-size:.88rem;margin-bottom:22px}
+label{display:block;font-size:.83rem;font-weight:500;color:#3f3f46;margin-bottom:6px}
+input{width:100%;padding:11px 14px;border:1px solid #d4d4d8;border-radius:9px;font-size:.95rem;font-family:inherit;color:#18181b;background:#fff;margin-bottom:16px;transition:border-color .15s}
+input:focus{outline:none;border-color:#0f766e;box-shadow:0 0 0 3px rgba(15,118,110,.1)}
+button.primary{width:100%;padding:12px;background:#0f766e;color:#fff;border:none;border-radius:9px;font-size:.95rem;font-weight:600;font-family:inherit;cursor:pointer;transition:background .15s}
+button.primary:hover{background:#115e59}
+button.primary:disabled{background:#a1a1aa;cursor:not-allowed}
+.msg{font-size:.85rem;text-align:center;margin-bottom:12px;min-height:20px}
+.msg.err{color:#dc2626}
+.switch{text-align:center;font-size:.85rem;color:#71717a;margin-top:18px}
+.switch a{color:#0f766e;font-weight:600;cursor:pointer;text-decoration:none}
+.switch a:hover{text-decoration:underline}
+.footer{text-align:center;font-size:.72rem;color:#a1a1aa;margin-top:22px}
+</style>
+</head>
+<body>
+<div class="card">
+  <img class="logo" src="/static/logo.svg" alt="الخوارزمي">
+  <div class="brand-name">الخوارزمي</div>
+  <h1 id="title">تسجيل الدخول</h1>
+  <p class="sub" id="subtitle">مرحباً بعودتك إلى الخوارزمي</p>
+  <div class="msg" id="msg"></div>
+  <form id="form" novalidate>
+    <div id="nameWrap" style="display:none">
+      <label for="name">الاسم</label>
+      <input id="name" type="text" placeholder="اسمك" autocomplete="name">
+    </div>
+    <label for="email">البريد الإلكتروني</label>
+    <input id="email" type="email" placeholder="you@example.com" autocomplete="email" dir="ltr">
+    <label for="password">كلمة المرور</label>
+    <input id="password" type="password" placeholder="٦ أحرف على الأقل" autocomplete="current-password" dir="ltr">
+    <button class="primary" id="submitBtn" type="submit">تسجيل الدخول</button>
+  </form>
+  <p class="switch" id="switch">ما عندك حساب؟ <a id="switchLink">أنشئ حساب جديد</a></p>
+  <p class="footer">الخوارزمي — مساعد ذكي بالعربي</p>
+</div>
+<script>
+let mode = 'login';
+const title = document.getElementById('title');
+const subtitle = document.getElementById('subtitle');
+const msg = document.getElementById('msg');
+const nameWrap = document.getElementById('nameWrap');
+const submitBtn = document.getElementById('submitBtn');
+const switchText = document.getElementById('switch');
+const form = document.getElementById('form');
+
+function render() {
+  const login = mode === 'login';
+  title.textContent = login ? 'تسجيل الدخول' : 'إنشاء حساب جديد';
+  subtitle.textContent = login ? 'مرحباً بعودتك إلى الخوارزمي' : 'دقيقة واحدة وتبلّش تستخدم الخوارزمي';
+  submitBtn.textContent = login ? 'تسجيل الدخول' : 'إنشاء الحساب';
+  nameWrap.style.display = login ? 'none' : 'block';
+  switchText.innerHTML = login
+    ? 'ما عندك حساب؟ <a id="switchLink">أنشئ حساب جديد</a>'
+    : 'عندك حساب؟ <a id="switchLink">سجّل دخولك</a>';
+  document.getElementById('switchLink').onclick = toggle;
+  document.getElementById('password').autocomplete = login ? 'current-password' : 'new-password';
+  msg.textContent = '';
+}
+
+function toggle() {
+  mode = mode === 'login' ? 'register' : 'login';
+  render();
+}
+document.getElementById('switchLink').onclick = toggle;
+
+function show(t) { msg.textContent = t; msg.className = 'msg err'; }
+
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  msg.textContent = '';
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const name = document.getElementById('name').value.trim();
+
+  if (!email || !password) { show('عبّي البريد الإلكتروني وكلمة المرور'); return; }
+  if (password.length < 6) { show('كلمة المرور لازم تكون ٦ أحرف على الأقل'); return; }
+
+  submitBtn.disabled = true;
+  try {
+    const res = await fetch('/api/' + mode, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password }),
+    });
+    const data = await res.json();
+    if (res.ok && data.ok) {
+      location.href = '/';
+    } else {
+      show(data.error || 'صار خطأ — جرّب مرة ثانية');
+    }
+  } catch (err) {
+    show('ما قدرت أوصل للسيرفر — تأكد إنه شغّال');
+  }
+  submitBtn.disabled = false;
+});
+</script>
+</body>
+</html>
