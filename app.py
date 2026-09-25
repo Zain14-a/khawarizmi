@@ -67,23 +67,7 @@ MODELS = {
     },
 }
 
-# OpenRouter: رصيده انتهى مؤقتاً → النماذج مخفية افتراضياً
-# لإعادتها مستقبلاً: ضع OPENROUTER_ENABLED=1 في .env (أو لوحة Render)
-OPENROUTER_ENABLED = os.getenv("OPENROUTER_ENABLED", "").lower() in ("1", "true", "yes")
-
-# نموذجنا الحصري "Al-Khwarizmi Flash" — سريع وخفيف، يُقدَّم تحت اسمنا الخاص لتمييز الموقع
-if OPENROUTER_ENABLED:
-    MODELS = {
-        "khwarizmi-flash": {
-            "label": "Al-Khwarizmi Flash",
-            "desc": "نموذجنا الخاص — سريع وخفيف، مدرب لخدمتك",
-            "provider": "openrouter",
-            "id": "nex-agi/nex-n2.5-mini:free",
-            "icon": "bolt",
-            "vision": True,
-        },
-        **MODELS,
-    }
+# ═══════ OpenRouter ═══════
 
 # نماذج مفتوحة المصدر عبر Groq — تظهر إذا انحط مفتاح GROQ_API_KEY في .env
 if os.getenv("GROQ_API_KEY"):
@@ -220,8 +204,8 @@ if os.getenv("FIREWORKS_API_KEY"):
     })
 
 # ═══════════ نماذج OpenRouter (مطفأة حالياً — رصيدها انتهى) ═══════════
-# تظهر فقط إذا فعّلت OPENROUTER_ENABLED ووضعت OPENROUTER_API_KEY في .env
-if OPENROUTER_ENABLED:
+# تظهر تلقائياً إذا وُجد OPENROUTER_API_KEY في .env (بدون حدود مفاتيح)
+if os.getenv("OPENROUTER_API_KEY"):
     MODELS.update({
         "or-glm-5.2": {
             "label": "GLM-5.2",
