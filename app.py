@@ -260,6 +260,28 @@ PROVIDER_CONFIGS = {
 _clients: dict = {}
 _rot_count: dict = {}
 
+# ذاكرة صحة المفاتيح: المفتاح الذي وصل حده (429) أو رُفض (401/403) يُجمَّد مؤقتاً
+# حتى لا يُعاد تجربته مع كل طلب جديد فيضيع وقت الموقع على الردود المرفوضة.
+_KEY_COOLDOWN: dict = {}   # (مزوّد, مفتاح) -> وقت انتهاء التجميد (ثواني منذ 1970)
+KEY_COOLDOWN_SECONDS = 60  # مدة تجميد المفتاح بعد تجاوز حده
+
+
+def _mark_key_down(provider: str, key, seconds: int = KEY_COOLDOWN_SECONDS) -> None:
+    """منع استخدام مفتاح مؤقتاً بعد استنزافه أو فشله"""
+    if key:
+        _KEY_COOLDOWN[(provider, key)] = time.time() + seconds
+
+
+def _key_is_down(provider: str, key) -> bool:
+    """هل المفتاح مجمّد حالياً؟ (يُرفع التجميد تلقائياً بعد انتهاء مدته)"""
+    until = _KEY_COOLDOWN.get((provider, key))
+    if until is None:
+        return False
+    if time.time() < until:
+        return True
+    _KEY_COOLDOWN.pop((provider, key), None)  # انتهى التجميد
+    return False
+
 
 def _keys_of(provider: str) -> list:
     """كل مفاتيح مزوّد واحد: المفتاح الأساسي (قد يحوي عدة مفاتيح مفصولة بفواصل)
@@ -280,11 +302,14 @@ def _keys_of(provider: str) -> list:
 
 def get_client_and_key(provider: str):
     """عميل واحد بالتناوب (round-robin) عبر مفاتيح المزوّد —
-    كل طلب/محاولة تلقائياً بمفتاح مختلف لتوزيع الحصص المجانية"""
+    كل طلب/محاولة تلقائياً بمفتاح مختلف لتوزيع الحصص المجانية،
+    مع تجاوز تلقائي للمفاتيح المجمّدة (التي وصلت حدها أو فشلت مؤخراً)"""
     keys = _keys_of(provider) or [None]
+    healthy = [k for k in keys if not _key_is_down(provider, k)]
+    pool = healthy or keys   # لو كل المفاتيح مجمّدة — نجربها رغم ذلك (قد تكون الحصة عادت)
     i = _rot_count.get(provider, 0)
     _rot_count[provider] = i + 1
-    key = keys[i % len(keys)]
+    key = pool[i % len(pool)]
     if (provider, key) not in _clients:
         cfg = PROVIDER_CONFIGS[provider]
         _clients[(provider, key)] = OpenAI(
@@ -304,6 +329,34 @@ def get_client(provider: str) -> OpenAI:
 
 MAX_HISTORY = 40      # أقصى عدد رسائل محفوظة من المتصفح
 MAX_MSG_LEN = 4000    # أقصى طول للرسالة الواحدة
+
+
+# ===== حماية الحصص المجانية: حد استخدام لكل مستخدم =====
+# يمنع أي حساب واحد من حرق ميزانية المزوّدين المجانية على الجميع.
+# يُعدَّل من لوحة Render بمتغيرات: RATE_LIMIT_PER_HOUR و RATE_LIMIT_PER_DAY
+RATE_LIMIT_PER_HOUR = int(os.getenv("RATE_LIMIT_PER_HOUR", "60") or 60)
+RATE_LIMIT_PER_DAY = int(os.getenv("RATE_LIMIT_PER_DAY", "300") or 300)
+_USER_CALLS: dict = {}   # البريد -> قائمة أوقات الطلبات (ثواني)
+_RATE_LOCK = threading.Lock()
+
+
+def _check_user_rate(email: str):
+    """هل يُسمح برسالة جديدة؟ — وفق حدود الساعة واليوم مع تنظيف السجلات القديمة"""
+    now = time.time()
+    with _RATE_LOCK:
+        stamps = [t for t in _USER_CALLS.get(email, []) if now - t < 86400]
+        _USER_CALLS[email] = stamps
+        if sum(1 for t in stamps if now - t < 3600) >= RATE_LIMIT_PER_HOUR:
+            return False, f"وصلت حد {RATE_LIMIT_PER_HOUR} رسائل بالساعة — ارجع بعد شوي"
+        if len(stamps) >= RATE_LIMIT_PER_DAY:
+            return False, f"وصلت حد {RATE_LIMIT_PER_DAY} رسائل اليوم — يُجدَّد تلقائياً"
+        return True, None
+
+
+def _record_user_call(email: str) -> None:
+    """تسجيل طلب جديد في سجل المستخدم"""
+    with _RATE_LOCK:
+        _USER_CALLS.setdefault(email, []).append(time.time())
 
 
 # ===== إدارة المستخدمين =====
@@ -532,6 +585,13 @@ def extract_artifacts(reply: str) -> list[dict]:
 @login_required
 def chat_api():
     data = request.get_json(force=True, silent=True) or {}
+
+    # حماية الحصص: حد للاستخدام لكل مستخدم — قبل أي عملية تستهلك الميزانية
+    ok_rate, rate_msg = _check_user_rate(session.get("email", ""))
+    if not ok_rate:
+        return jsonify({"error": rate_msg}), 429
+    _record_user_call(session.get("email", ""))
+
     history = data.get("messages", [])
     requested = data.get("model")
     mode = (data.get("mode") or "chat").lower()          # chat | agent
@@ -653,7 +713,7 @@ def chat_api():
     for mid, entry in ordered[:6]:
         key_slots = len(_keys_of(entry["provider"])) or 1
         for _slot in range(min(key_slots, 3)):   # نفس النموذج حتى 3 مفاتيح بديلة
-            c, _ = get_client_and_key(entry["provider"])
+            c, used_key = get_client_and_key(entry["provider"])
             try:
                 kwargs = {
                     "model": entry["id"],
@@ -682,9 +742,16 @@ def chat_api():
                 # 429 = تجاوز الحد، 402 = الحساب بلا حصة، 404 = نموذج غير موجود، 503 = ضغط،
                 # 400/401/403 = الطلب غير مقبول (مثل صورة غير مدعومة)، None = خطأ اتصال
                 if status in (400, 401, 402, 403, 404, 429, 503) or status is None:
+                    # جمّد المفتاح الفاشل مؤقتاً حتى لا يُعاد تجربته مع كل طلب جديد
+                    if status in (401, 402, 403, 429):
+                        _mark_key_down(entry["provider"], used_key)
+                    elif status == 503:
+                        _mark_key_down(entry["provider"], used_key, seconds=10)
+                    elif status is None:
+                        _mark_key_down(entry["provider"], used_key, seconds=15)
                     if status == 429:
                         rate_limited += 1
-                        # هدّئ لحظياً ثم جرّب نفس النموذج بمفتاح تالٍ
+                        # هدّئ لحظياً ثم جرّب نفس النموذج بمفتاح تالٍ (اللي ما زال حياً)
                         time.sleep(min(1.0 + rate_limited * 0.8, 3.5))
                         continue
                     if status == 503:
