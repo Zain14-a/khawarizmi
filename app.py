@@ -67,8 +67,12 @@ MODELS = {
     },
 }
 
+# OpenRouter: رصيده انتهى مؤقتاً → النماذج مخفية افتراضياً
+# لإعادتها مستقبلاً: ضع OPENROUTER_ENABLED=1 في .env (أو لوحة Render)
+OPENROUTER_ENABLED = os.getenv("OPENROUTER_ENABLED", "").lower() in ("1", "true", "yes")
+
 # نموذجنا الحصري "Al-Khwarizmi Flash" — سريع وخفيف، يُقدَّم تحت اسمنا الخاص لتمييز الموقع
-if os.getenv("OPENROUTER_API_KEY"):
+if OPENROUTER_ENABLED:
     MODELS = {
         "khwarizmi-flash": {
             "label": "Al-Khwarizmi Flash",
@@ -161,8 +165,8 @@ if os.getenv("COLABC_URL") and os.getenv("COLABC_KEY"):
         },
     })
 
-# نماذج مفتوحة المصدر عبر OpenRouter — تظهر إذا انحط مفتاح OPENROUTER_API_KEY في .env
-if os.getenv("OPENROUTER_API_KEY"):
+# نماذج مفتوحة المصدر عبر OpenRouter — تظهر فقط إذا فعّلت OPENROUTER_ENABLED (ووضَعْت OPENROUTER_API_KEY في .env)
+if OPENROUTER_ENABLED:
     MODELS.update({
         "or-glm-5.2": {
             "label": "GLM-5.2",
