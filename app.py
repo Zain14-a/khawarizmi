@@ -186,20 +186,48 @@ PROVIDER_CONFIGS = {
 }
 
 _clients: dict = {}
+_rot_count: dict = {}
 
 
-def get_client(provider: str) -> OpenAI:
-    """إرجاع عميل المزوّد (يُنشأ مرة واحدة ويُخزن)"""
-    if provider not in _clients:
+def _keys_of(provider: str) -> list:
+    """كل مفاتيح مزوّد واحد: المفتاح الأساسي (قد يحوي عدة مفاتيح مفصولة بفواصل)
+    بالإضافة إلى مفاتيح إضافية بالصيغة: GEMINI_API_KEY_2، GEMINI_API_KEY_3..."""
+    cfg = PROVIDER_CONFIGS[provider]
+    base = cfg["key_env"]
+    raw = os.getenv(base, "").strip()
+    keys = [k.strip() for k in re.split(r"[,;\s]+", raw) if k.strip()]
+    n = 2
+    while n <= 9:
+        extra = os.getenv(f"{base}_{n}", "").strip()
+        if not extra:
+            break
+        keys.append(extra.strip())
+        n += 1
+    return keys
+
+
+def get_client_and_key(provider: str):
+    """عميل واحد بالتناوب (round-robin) عبر مفاتيح المزوّد —
+    كل طلب/محاولة تلقائياً بمفتاح مختلف لتوزيع الحصص المجانية"""
+    keys = _keys_of(provider) or [None]
+    i = _rot_count.get(provider, 0)
+    _rot_count[provider] = i + 1
+    key = keys[i % len(keys)]
+    if (provider, key) not in _clients:
         cfg = PROVIDER_CONFIGS[provider]
-        key = os.getenv(cfg["key_env"])
-        _clients[provider] = OpenAI(
+        _clients[(provider, key)] = OpenAI(
             api_key=key,
             base_url=cfg["base_url"],
             timeout=cfg["timeout"],
             max_retries=1,
         )
-    return _clients[provider]
+    return _clients[(provider, key)], key
+
+
+def get_client(provider: str) -> OpenAI:
+    """إرجاع عميل المزوّد (يتناوب عبر المفاتيح المتاحة)"""
+    c, _ = get_client_and_key(provider)
+    return c
 
 
 MAX_HISTORY = 40      # أقصى عدد رسائل محفوظة من المتصفح
@@ -545,52 +573,57 @@ def chat_api():
     ordered += interleaved
 
     # صندوق الأوامر الختامية: جرّب النماذج بالترتيب، ومع الضغط/الحد ننتظر قليلاً
-    # ثم نجرب التالي — الحدود المجانية لحظية وتتسع بعد ثوانٍ
+    # ثم نجرب التالي — الحدود المجانية لحظية وتتسع بعد ثوانٍ.
+    # عند توفّر عدة مفاتيح لنفس المزوّد (مثل GEMINI_API_KEY_2 و _3) يتناوب الموقع
+    # بينها تلقائياً، فيجرب نفس النموذج بمفتاح تالٍ عند وصول المفتاح الأول لحده
     last_error = None
     rate_limited = 0
     for mid, entry in ordered[:6]:
-        try:
-            c = get_client(entry["provider"])
-            kwargs = {
-                "model": entry["id"],
-                "messages": messages,
-                "temperature": temperature,
-            }
-            # طلبات البناء تحتاج ردوداً أطول لكي يكتمل الكود
-            eff_max = max_tokens
-            if mode == "agent" and max_tokens <= 0:
-                eff_max = 2000
-            if eff_max > 0:
-                kwargs["max_tokens"] = min(eff_max, 8000)
-            r = c.chat.completions.create(**kwargs)
-            reply = r.choices[0].message.content or ""
-            artifacts = extract_artifacts(reply) if mode == "agent" else []
-            return jsonify({
-                "reply": reply,
-                "model": mid,
-                "label": entry["label"],
-                "sources": sources,
-                "artifacts": artifacts,
-            })
-        except OpenAIError as e:
-            last_error = e
-            status = getattr(e, "status_code", None)
-            # 429 = تجاوز الحد، 404 = نموذج غير موجود، 503 = ضغط،
-            # 400/401/403 = الطلب غير مقبول (مثل صورة غير مدعومة)، None = خطأ اتصال
-            if status in (400, 401, 403, 404, 429, 503) or status is None:
-                # نهدّئ لحظياً — الحدود المجانية تتسع خلال ثوانٍ
-                if status == 429:
-                    rate_limited += 1
-                    time.sleep(min(1.0 + rate_limited * 0.8, 3.5))
-                elif status == 503:
-                    time.sleep(1)
-                continue
-            break
-        except Exception as e:
-            # أي خطأ غير متوقع — جرّب النموذج التالي بدل إسقاط الطلب
-            last_error = e
-            time.sleep(0.5)
-            continue
+        key_slots = len(_keys_of(entry["provider"])) or 1
+        for _slot in range(min(key_slots, 3)):   # نفس النموذج حتى 3 مفاتيح بديلة
+            c, _ = get_client_and_key(entry["provider"])
+            try:
+                kwargs = {
+                    "model": entry["id"],
+                    "messages": messages,
+                    "temperature": temperature,
+                }
+                # طلبات البناء تحتاج ردوداً أطول لكي يكتمل الكود
+                eff_max = max_tokens
+                if mode == "agent" and max_tokens <= 0:
+                    eff_max = 2000
+                if eff_max > 0:
+                    kwargs["max_tokens"] = min(eff_max, 8000)
+                r = c.chat.completions.create(**kwargs)
+                reply = r.choices[0].message.content or ""
+                artifacts = extract_artifacts(reply) if mode == "agent" else []
+                return jsonify({
+                    "reply": reply,
+                    "model": mid,
+                    "label": entry["label"],
+                    "sources": sources,
+                    "artifacts": artifacts,
+                })
+            except OpenAIError as e:
+                last_error = e
+                status = getattr(e, "status_code", None)
+                # 429 = تجاوز الحد، 404 = نموذج غير موجود، 503 = ضغط،
+                # 400/401/403 = الطلب غير مقبول (مثل صورة غير مدعومة)، None = خطأ اتصال
+                if status in (400, 401, 403, 404, 429, 503) or status is None:
+                    if status == 429:
+                        rate_limited += 1
+                        # هدّئ لحظياً ثم جرّب نفس النموذج بمفتاح تالٍ
+                        time.sleep(min(1.0 + rate_limited * 0.8, 3.5))
+                        continue
+                    if status == 503:
+                        time.sleep(1)
+                    break  # جرّب النموذج التالي
+                break  # خطأ غير متوقع — اترك هذا النموذج
+            except Exception as e:
+                # أي خطأ غير متوقع — جرّب النموذج التالي بدل إسقاط الطلب
+                last_error = e
+                time.sleep(0.5)
+                break
 
     print(f"خطأ API: {last_error}")
     # رسالة صادقة وواضحة حسب السبب
