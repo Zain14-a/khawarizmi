@@ -69,6 +69,30 @@ body{display:flex;background:var(--bg);color:var(--text);overflow:hidden}
 .sources-title{font-size:.72rem;color:var(--muted);font-weight:600;margin-bottom:4px}
 .sources-box a{display:block;font-size:.78rem;color:var(--accent);text-decoration:none;padding:2px 0}
 .sources-box a:hover{text-decoration:underline}
+
+/* ===== شاشة النتيجة الجانبية (Artifacts) ===== */
+#artOverlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:49;display:none;backdrop-filter:blur(2px)}
+#artOverlay.open{display:block}
+#artPanel{position:fixed;top:0;right:0;bottom:0;width:560px;max-width:60vw;background:#1e1e24;border-left:1px solid #2e2e38;z-index:50;display:none;flex-direction:column;box-shadow:-8px 0 32px rgba(0,0,0,.25);animation:slideIn .2s ease;font-size:.85rem}
+#artPanel.open{display:flex}
+.art-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#18181c;border-bottom:1px solid #2e2e38;color:#e4e4e7}
+.art-title{font-weight:700;font-size:.82rem;display:flex;align-items:center;gap:6px}
+.art-actions{display:flex;gap:6px}
+.art-actions button{background:none;border:1px solid #2e2e38;color:#a1a1aa;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:.73rem;font-family:inherit;transition:all .15s}
+.art-actions button:hover{background:#2e2e38;color:#fff;border-color:#444}
+.art-tabs{display:flex;gap:2px;padding:6px 8px 0;background:#18181c;border-bottom:1px solid #2e2e38;overflow-x:auto}
+.art-tab{padding:6px 12px;border:1px solid transparent;border-bottom:none;border-radius:8px 8px 0 0;background:transparent;color:#8b949e;font-family:'Fira Code',Consolas,monospace;font-size:.72rem;cursor:pointer;white-space:nowrap}
+.art-tab.active{background:#1e1e24;color:#fff;border-color:#2e2e38}
+.art-tab .lang{opacity:.6;font-size:.68rem}
+.art-body{flex:1;overflow:auto;background:#1e1e24;direction:ltr;display:flex;align-items:stretch}
+.art-body pre{margin:0;padding:16px;overflow:auto;color:#e4e4e7;font-family:'Fira Code',Consolas,'Courier New',monospace;font-size:.82rem;line-height:1.65;width:100%}
+.art-frame-wrap{flex:1;display:flex;flex-direction:column}
+.art-frame-bar{padding:6px 12px;background:#18181c;border-bottom:1px solid #2e2e38;color:#8b949e;font-size:.7rem;font-family:'Fira Code',monospace}
+.art-frame{flex:1;border:none;background:#fff;width:100%}
+.art-empty{color:#8b949e;padding:40px;text-align:center;font-size:.85rem}
+.art-view-btn{display:inline-flex;align-items:center;gap:5px;background:var(--accent);border:none;color:#fff;padding:6px 16px;border-radius:8px;font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;margin-top:10px}
+.art-view-btn:hover{filter:brightness(1.1)}
+.art-chip-bar{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
 /* شاشة الترحيب */
 #welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center;overflow-y:auto}
 .w-logo{width:54px;height:54px;border-radius:14px;background:var(--accent);color:#fff;font-size:1.4rem;font-weight:700;display:flex;align-items:center;justify-content:center;margin-bottom:6px}
@@ -363,6 +387,22 @@ body{display:flex;background:var(--bg);color:var(--text);overflow:hidden}
   <div class="code-panel-body" id="codePanelBody">
     <pre id="codePanelPre"></pre>
   </div>
+</div>
+
+<!-- شاشة النتيجة الجانبية (Artifacts — وضع Agent) -->
+<div id="artOverlay" onclick="closeArtifacts()"></div>
+<div id="artPanel">
+  <div class="art-head">
+    <div class="art-title">🛠️ النتيجة — من صنع الخوارزمي</div>
+    <div class="art-actions">
+      <button onclick="artPreview()" id="artPreviewBtn" title="معاينة حية">👁️ معاينة</button>
+      <button onclick="artCopy()" title="نسخ الكود">📋 نسخ</button>
+      <button onclick="artDownload()" title="تحميل الملف">⬇️ تحميل</button>
+      <button onclick="closeArtifacts()" title="إغلاق">✕</button>
+    </div>
+  </div>
+  <div class="art-tabs" id="artTabs"></div>
+  <div class="art-body" id="artBody"></div>
 </div>
 
 <script>
@@ -883,6 +923,11 @@ async function send(text) {
       const bubbleEl = t.querySelector('.bubble');
       if (bubbleEl) bubbleEl.appendChild(srcBox);
     }
+    // ===== عرض زر النتيجة (Artifacts) في وضع Agent =====
+    if (data.artifacts && data.artifacts.length) {
+      const bubbleEl = t.querySelector('.bubble');
+      if (bubbleEl) bubbleEl.appendChild(artifactsViewBtn(data.artifacts));
+    }
   } catch (e) {
     t.remove();
     addBubble('assistant', 'ما قدرت أوصل للسيرفر — تأكد إنه شغّال');
@@ -1136,6 +1181,112 @@ function downloadCode() {
   a.href = URL.createObjectURL(blob);
   a.download = 'code.' + ext;
   a.click();
+}
+
+// ===== شاشة النتيجة الجانبية (Artifacts) — وضع Agent =====
+let currentArtifacts = [];
+let currentArtIndex = 0;
+
+function openArtifacts(artifacts) {
+  currentArtifacts = artifacts || [];
+  currentArtIndex = 0;
+  if (!currentArtifacts.length) return;
+  renderArtTabs();
+  renderArtBody();
+  document.getElementById('artPanel').classList.add('open');
+  document.getElementById('artOverlay').classList.add('open');
+}
+
+function closeArtifacts() {
+  document.getElementById('artPanel').classList.remove('open');
+  document.getElementById('artOverlay').classList.remove('open');
+}
+
+function renderArtTabs() {
+  const tabs = document.getElementById('artTabs');
+  tabs.innerHTML = '';
+  currentArtifacts.forEach((a, i) => {
+    const t = document.createElement('button');
+    t.className = 'art-tab' + (i === currentArtIndex ? ' active' : '');
+    t.innerHTML = `${a.name} <span class="lang">(${a.lang})</span>`;
+    t.onclick = () => { currentArtIndex = i; renderArtTabs(); renderArtBody(); };
+    tabs.appendChild(t);
+  });
+}
+
+function highlightArt(code, lang) {
+  try {
+    if (window.hljs) {
+      if (lang && hljs.getLanguage(lang)) return hljs.highlight(code, { language: lang }).value;
+      return hljs.highlightAuto(code).value;
+    }
+  } catch (e) {}
+  return code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderArtBody() {
+  const art = currentArtifacts[currentArtIndex];
+  if (!art) return;
+  const body = document.getElementById('artBody');
+  const previewable = /^(html|htm)$/i.test(art.lang);
+  body.innerHTML = '';
+  if (previewable) {
+    const wrap = document.createElement('div');
+    wrap.className = 'art-frame-wrap';
+    const bar = document.createElement('div');
+    bar.className = 'art-frame-bar';
+    bar.textContent = '👁️ معاينة حية — ' + art.name;
+    const iframe = document.createElement('iframe');
+    iframe.className = 'art-frame';
+    iframe.sandbox = 'allow-scripts';
+    iframe.srcdoc = art.code;
+    wrap.append(bar, iframe);
+    body.appendChild(wrap);
+  } else {
+    const pre = document.createElement('pre');
+    pre.innerHTML = '<code class="hljs" style="background:#1e1e24;color:#e6e6e6;">' + highlightArt(art.code, art.lang) + '</code>';
+    body.appendChild(pre);
+  }
+  document.getElementById('artPreviewBtn').textContent = /^(html|htm)$/i.test(art.lang) ? '👁️ معاينة' : '﴾ كود';
+}
+
+function artPreview() {
+  const art = currentArtifacts[currentArtIndex];
+  if (!art) return;
+  if (/^(html|htm)$/i.test(art.lang)) return; // HTML معروض كمعاينة فعلاً
+  renderArtBody();
+}
+
+function artCopy() {
+  const art = currentArtifacts[currentArtIndex];
+  if (!art) return;
+  navigator.clipboard.writeText(art.code).then(() => {
+    const btn = document.querySelector('.art-actions button:nth-child(2)');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✓ تم';
+    setTimeout(() => { btn.innerHTML = orig; }, 1500);
+  }).catch(() => {});
+}
+
+function artDownload() {
+  const art = currentArtifacts[currentArtIndex];
+  if (!art) return;
+  const blob = new Blob([art.code], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = art.name;
+  a.click();
+}
+
+function artifactsViewBtn(artifacts) {
+  const bar = document.createElement('div');
+  bar.className = 'art-chip-bar';
+  const btn = document.createElement('button');
+  btn.className = 'art-view-btn';
+  btn.innerHTML = '🛠️ عرض النتيجة (' + artifacts.length + ')';
+  btn.onclick = () => openArtifacts(artifacts);
+  bar.appendChild(btn);
+  return bar;
 }
 
 // ===== البداية =====

@@ -7,6 +7,7 @@ import io
 import json
 import os
 import random
+import re
 import sys
 import threading
 import urllib.parse
@@ -358,6 +359,48 @@ def _extract_last_user(messages: list) -> str:
     return ""
 
 
+# امتدادات الملفات حسب اللغة — لتسمية القطع البرمجية
+_EXT_MAP = {
+    "python": "py", "javascript": "js", "typescript": "ts", "html": "html",
+    "html+css": "html", "css": "css", "json": "json", "bash": "sh",
+    "sql": "sql", "cpp": "cpp", "java": "java", "rust": "rs", "go": "go",
+    "ruby": "rb", "php": "php", "swift": "swift", "kotlin": "kt",
+    "scala": "scala", "dart": "dart", "perl": "pl", "r": "r",
+    "markdown": "md", "text": "txt",
+}
+
+
+def extract_artifacts(reply: str) -> list[dict]:
+    """استخراج مقاطع الكود من الرد كقطع منفصلة (Artifacts) للمعاينة"""
+    artifacts = []
+    pattern = re.compile(r"```(\w[\w+#-]*)(?:\s*:\s*([^\n]+))?\n([\s\S]*?)```")
+    pos = 0
+    for m in pattern.finditer(reply or ""):
+        lang = m.group(1).strip() or "text"
+        name = (m.group(2) or "").strip()
+        code = m.group(3).strip("\n")
+        if not code.strip():
+            continue
+        ext = _EXT_MAP.get(lang.lower(), lang.lower() or "txt")
+        if not name:
+            name = f"file.{ext}"
+        artifacts.append({"name": name, "lang": lang, "code": code})
+        pos = m.end()
+    # مقاطع غير مكتملة (بدون إغلاق ``` بسبب حد الطول) — استخرجها حتى نهاية الرد
+    tail = (reply or "")[pos:] if pos else (reply or "")
+    um = re.search(r"```(\w[\w+#-]*)(?:\s*:\s*([^\n]+))?\n([\s\S]*)$", tail)
+    if um:
+        lang = um.group(1).strip() or "text"
+        name = (um.group(2) or "").strip()
+        code = um.group(3).strip("\n")
+        if code.strip():
+            ext = _EXT_MAP.get(lang.lower(), lang.lower() or "txt")
+            if not name:
+                name = f"file.{ext}"
+            artifacts.append({"name": name, "lang": lang, "code": code})
+    return artifacts
+
+
 @app.route("/api/chat", methods=["POST"])
 @login_required
 def chat_api():
@@ -394,7 +437,7 @@ def chat_api():
             return jsonify({"error": "اكتب وصف الصورة التي تريد توليدها"}), 400
         return jsonify(build_image_payload(prompt, req_entry["id"]))
 
-    # === وضع Agent: بحث في الإنترنت وإضافة السياق ===
+    # === وضع Agent: بحث في الإنترنت + تنفيذ المهام (برمجة/بناء) ===
     sources = []
     if mode == "agent":
         query = _extract_last_user(messages)
@@ -404,17 +447,33 @@ def chat_api():
                 query = query[len(prefix):].strip()
         if query:
             sources = web_search(query)
+            context_parts = []
             if sources:
-                context = (
-                    "الوضع: وكيل بحث (Agent). إليك نتائج بحث من ويكيبيديا (قد تكون حديثة أو جزئية):\n"
+                context_parts.append(
+                    "نتائج بحث من ويكيبيديا (قد تكون حديثة أو جزئية):\n"
                     + "\n".join(
                         f"- {s['title']}: {s['snippet']} ({s['url']})"
                         for s in sources
                     )
-                    + "\n\nاستخدم هذه المعلومات لتحسين إجابتك، واذكر المصادر التي استندت إليها "
-                    "بصيغة: (المصدر: العنوان). إذا كانت المعلومات لا ترد على السؤال فلا تختلق شيئاً."
+                    + "\nاستخدمها لتحسين إجابتك واذكر المصادر بصيغة: (المصدر: العنوان). لا تختلق إن لم تكن مفيدة."
                 )
-                messages.append({"role": "system", "content": context})
+            # وضع مهمة بناء/برمجة — أعطِ النموذج قواعد إخراج مقاطع كود منظمة
+            wants_build = any(k in query.lower() for k in (
+                "ابن", "اصنع", "صمم", "اكتب لي", "برمج", "برمجة", "إنشئ", "انشئ",
+                "موقع", "صفحة", "تطبيق", "أداة", "اداة", "game", "build", "make",
+                "create", "write code", "website", "app", "html", "css", "js",
+            ))
+            if wants_build:
+                context_parts.append(
+                    "طلب المستخدم بناء شيء أو كتابة كود. أجب بصيغة مقاطع كود منفصلة: "
+                    "كل ملف داخل صندوق ```لغة:اسم-الملف (مثال: ```html:index.html ثم الكود ثم ```). "
+                    "للموقع: ملف index.html يحتوي كل شيء، مع CSS داخلي. اكتب الكود كاملاً يعمل فوراً."
+                )
+            if context_parts:
+                messages.append({
+                    "role": "system",
+                    "content": "الوضع: وكيل تنفيذ (Agent). " + " ".join(context_parts),
+                })
 
     # ترتيب المحاولات: النموذج المطلوب أولاً، ثم باقي نماذج السحابة كاحتياط
     ordered = []
@@ -424,6 +483,7 @@ def chat_api():
         if mid != requested and e.get("kind", "chat") == "chat":
             ordered.append((mid, e))
 
+    # صندوق الأوامر الختامية لنموذج الاستدعاء
     last_error = None
     for mid, entry in ordered[:5]:
         try:
@@ -433,14 +493,21 @@ def chat_api():
                 "messages": messages,
                 "temperature": temperature,
             }
-            if max_tokens > 0:
-                kwargs["max_tokens"] = min(max_tokens, 8000)
+            # طلبات البناء تحتاج ردوداً أطول لكي يكتمل الكود
+            eff_max = max_tokens
+            if mode == "agent" and max_tokens <= 0:
+                eff_max = 2000
+            if eff_max > 0:
+                kwargs["max_tokens"] = min(eff_max, 8000)
             r = c.chat.completions.create(**kwargs)
+            reply = r.choices[0].message.content or ""
+            artifacts = extract_artifacts(reply) if mode == "agent" else []
             return jsonify({
-                "reply": r.choices[0].message.content,
+                "reply": reply,
                 "model": mid,
                 "label": entry["label"],
                 "sources": sources,
+                "artifacts": artifacts,
             })
         except OpenAIError as e:
             last_error = e
