@@ -122,6 +122,32 @@ if os.getenv("CEREBRAS_API_KEY"):
         },
     })
 
+# نماذج عبر NVIDIA NIM (build.nvidia.com) — تظهر إذا انحط مفتاح NVIDIA_API_KEY في .env
+# مكتبة حرة غنية 80+ نموذجاً — فيها رؤية حقيقية عبر Llama Vision
+if os.getenv("NVIDIA_API_KEY"):
+    MODELS.update({
+        "nvidia-gemma-4": {
+            "label": "Gemma 4 31B",
+            "desc": "من Google عبر NVIDIA — قوي بالعربية",
+            "provider": "nvidia",
+            "id": "google/gemma-4-31b-it",
+        },
+        "nvidia-llama-vision": {
+            "label": "Llama 3.2 Vision 11B",
+            "desc": "يقرأ الصور — من Meta عبر NVIDIA",
+            "provider": "nvidia",
+            "id": "meta/llama-3.2-11b-vision-instruct",
+            "vision": True,
+        },
+        "nvidia-llama-vision-90b": {
+            "label": "Llama 3.2 Vision 90B",
+            "desc": "يقرأ الصور — النسخة الأقوى والأبطأ",
+            "provider": "nvidia",
+            "id": "meta/llama-3.2-90b-vision-instruct",
+            "vision": True,
+        },
+    })
+
 # نماذج مفتوحة المصدر عبر OpenRouter — تظهر إذا انحط مفتاح OPENROUTER_API_KEY في .env
 if os.getenv("OPENROUTER_API_KEY"):
     MODELS.update({
@@ -205,6 +231,11 @@ PROVIDER_CONFIGS = {
         "base_url": "https://api.cerebras.ai/v1",
         "key_env": "CEREBRAS_API_KEY",
         "timeout": 30,
+    },
+    "nvidia": {
+        "base_url": "https://integrate.api.nvidia.com/v1",
+        "key_env": "NVIDIA_API_KEY",
+        "timeout": 40,
     },
 }
 
@@ -587,7 +618,7 @@ def chat_api():
         by_provider.setdefault(e.get("provider", "?"), []).append((mid, e))
     interleaved: list = []
     while any(by_provider.values()):
-        for p in ("gemini", "openrouter", "groq", "cerebras"):
+        for p in ("gemini", "openrouter", "groq", "nvidia", "cerebras"):
             if by_provider.get(p):
                 interleaved.append(by_provider[p].pop(0))
     ordered: list = []
