@@ -85,6 +85,8 @@ a svg{vertical-align:-2px}
 .attach-preview .attach-del:hover{background:#fee2e2;color:#dc2626}
 /* الصورة داخل فقاعة المستخدم */
 .bubble .user-img{max-width:250px;max-height:250px;border-radius:11px;margin-bottom:6px;display:block;border:1px solid var(--border);object-fit:cover}
+/* ملاحظة أن الرد جاء من نموذج بديل */
+.fallback-note{font-size:.68rem;color:var(--muted);margin-top:8px;opacity:.85;border-top:1px dashed var(--border);padding-top:6px}
 
 /* ===== إعدادات الموقع ===== */
 .modal-box.settings-box{max-width:580px}
@@ -1168,6 +1170,14 @@ async function send(text) {
     if (data.reply) {
       current.messages.push({ role: 'assistant', content: data.reply });
       save();
+    }
+    // ملاحظة شفافة: الرد جاء من نموذج بديل لأن النموذج المختار مشبع
+    if (data.reply && data.label && data.model !== model) {
+      const note = document.createElement('div');
+      note.className = 'fallback-note';
+      note.textContent = 'جواب عبر ' + data.label + ' —النموذج المختار مشبع حالياً';
+      const bubbleEl = t.querySelector('.bubble');
+      if (bubbleEl) bubbleEl.appendChild(note);
     }
     // ===== عرض مصادر وضع Agent =====
     if (settings.showSources && data.sources && data.sources.length) {

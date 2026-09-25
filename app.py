@@ -10,6 +10,7 @@ import random
 import re
 import sys
 import threading
+import time
 import urllib.parse
 import urllib.request
 from functools import wraps
@@ -439,13 +440,17 @@ def chat_api():
     max_tokens = int(data.get("max_tokens", 0) or 0)
 
     # بناء سجل المحادثة: شخصية البوت + الرسائل المُنقّاة (مع دعم إرفاق صور)
+    # نرسل آخر صورتين فقط من المحادثة — حماية للحصص المجانية من الاحتراق
+    # (الصور تستهلك رموزاً كثيرة، وإعادة إرسالها مع كل رسالة تالية تضاعف الاستهلاك)
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    img_budget = 2
     for m in history[-MAX_HISTORY:]:
         role, content = m.get("role"), m.get("content", "")
         img = _valid_image(m.get("image")) and m.get("image")
         keep = (isinstance(content, str) and content.strip()) or bool(img)
         if role in ("user", "assistant") and keep:
-            if role == "user" and img:
+            if role == "user" and img and img_budget > 0:
+                img_budget -= 1
                 messages.append({
                     "role": "user",
                     "content": [
@@ -518,18 +523,31 @@ def chat_api():
         for m in history[-MAX_HISTORY:]
     )
 
-    # ترتيب المحاولات: النموذج المطلوب أولاً، ثم باقي نماذج السحابة كاحتياط
-    ordered = []
+    # ترتيب المحاولات: النموذج المطلوب أولاً، ثم بما تبقّى بالتداخل بين المزوّدين —
+    # حتى لا نستنزف حصة مزوّد واحد (نماذج OpenRouter المجانية كلها تشترك بحصة
+    # ساعية واحدة، فتجربة عدة نماذج منها وراء بعض لا تضيف شيئاً)
+    pool = [
+        (mid, e) for mid, e in MODELS.items()
+        if mid != requested and e.get("kind", "chat") == "chat"
+        and (not has_image or e.get("vision"))
+    ]
+    by_provider: dict = {}
+    for mid, e in pool:
+        by_provider.setdefault(e.get("provider", "?"), []).append((mid, e))
+    interleaved: list = []
+    while any(by_provider.values()):
+        for p in ("gemini", "openrouter", "groq"):
+            if by_provider.get(p):
+                interleaved.append(by_provider[p].pop(0))
+    ordered: list = []
     if requested in MODELS and (not has_image or MODELS[requested].get("vision")):
         ordered.append((requested, MODELS[requested]))
-    for mid, e in MODELS.items():
-        if mid != requested and e.get("kind", "chat") == "chat":
-            if has_image and not e.get("vision"):
-                continue  # مع صورة — نمرّ فقط النماذج التي تدعم الرؤية
-            ordered.append((mid, e))
+    ordered += interleaved
 
-    # صندوق الأوامر الختامية لنموذج الاستدعاء
+    # صندوق الأوامر الختامية: جرّب النماذج بالترتيب، ومع الضغط/الحد ننتظر قليلاً
+    # ثم نجرب التالي — الحدود المجانية لحظية وتتسع بعد ثوانٍ
     last_error = None
+    rate_limited = 0
     for mid, entry in ordered[:6]:
         try:
             c = get_client(entry["provider"])
@@ -560,20 +578,29 @@ def chat_api():
             # 429 = تجاوز الحد، 404 = نموذج غير موجود، 503 = ضغط،
             # 400/401/403 = الطلب غير مقبول (مثل صورة غير مدعومة)، None = خطأ اتصال
             if status in (400, 401, 403, 404, 429, 503) or status is None:
+                # نهدّئ لحظياً — الحدود المجانية تتسع خلال ثوانٍ
+                if status == 429:
+                    rate_limited += 1
+                    time.sleep(min(1.0 + rate_limited * 0.8, 3.5))
+                elif status == 503:
+                    time.sleep(1)
                 continue
             break
         except Exception as e:
             # أي خطأ غير متوقع — جرّب النموذج التالي بدل إسقاط الطلب
             last_error = e
+            time.sleep(0.5)
             continue
 
     print(f"خطأ API: {last_error}")
-    # رسالة أوضح حسب السبب: رفض الصور (400) أم ضغط/حدود عامة
-    if isinstance(last_error, OpenAIError) and getattr(last_error, "status_code", None) == 400:
+    # رسالة صادقة وواضحة حسب السبب
+    if isinstance(last_error, OpenAIError) and getattr(last_error, "status_code", None) == 400 and has_image:
         return jsonify({
-            "error": "النموذج المختار لا يدعم الصور حالياً — جرّب Al-Khwarizmi Flash أو Gemini 2.5 Flash"
+            "error": "النموذج المختار لا يدعم الصور — جرّب Al-Khwarizmi Flash أو Gemini 2.5 Flash"
         }), 400
-    return jsonify({"error": "الخدمة مشغولة حالياً — جرّب مرة ثانية بعد دقيقة"}), 503
+    return jsonify({
+        "error": "النماذج المجانية مشبعّة حالياً — جرّب مرة ثانية بعد دقيقة"
+    }), 503
 
 
 # ===== توليد الصور عبر FLUX.1 (Pollinations) — مجاني بالكامل بدون أي مفتاح =====
