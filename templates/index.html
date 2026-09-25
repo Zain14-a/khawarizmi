@@ -592,7 +592,7 @@ function buildModelMenu() {
     if (m.icon && ICON[m.icon]) row.innerHTML = ic(m.icon, 14) + '<span>' + m.label.replace(/&/g,'&amp;') + '</span>';
     else row.textContent = m.label;
     const sm = document.createElement('small');
-    sm.textContent = m.desc;
+    sm.textContent = m.desc + (m.vision ? ' · يقرأ الصور' : '');
     b.append(row, sm);
     b.onclick = () => {
       model = m.id;
@@ -666,7 +666,7 @@ function renderSetModelList() {
       <span class="m-dot"></span>
       <span class="m-info">
         <div class="m-name">${(m.icon && ICON[m.icon] ? ic(m.icon, 12) + ' ' : '')}${m.label.replace(/&/g,'&amp;')}</div>
-        <div class="m-desc">${m.desc.replace(/&/g,'&amp;')}</div>
+        <div class="m-desc">${m.desc.replace(/&/g,'&amp;')}${m.vision ? ' · يقرأ الصور' : ''}</div>
       </span>
       <span class="m-check">${ic('check', 11)}</span>`;
     item.onclick = () => {
@@ -1352,6 +1352,16 @@ attachInput.addEventListener('change', (e) => {
       cv.getContext('2d').drawImage(imgEl, 0, 0, w, h);
       pendingImage = cv.toDataURL('image/jpeg', 0.82);
       showAttachPreview(pendingImage, file.name);
+      // إن كان النموذج المختار لا يقرأ الصور — حوّل تلقائياً لنموذج يدعم الرؤية ليُرسل الطلب بنجاح
+      const activeM = models.find(x => x.id === model);
+      if (activeM && !activeM.vision && activeM.kind !== 'image') {
+        const vision = models.find(x => x.vision && x.kind !== 'image');
+        if (vision && vision.id !== model) {
+          model = vision.id;
+          localStorage.setItem('khawarizmi_model', model);
+          updateModelUI();
+        }
+      }
     };
     imgEl.onerror = () => { e.target.value = ''; };
     imgEl.src = reader.result;

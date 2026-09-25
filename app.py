@@ -47,12 +47,14 @@ MODELS = {
         "desc": "الأذكى — من جوجل (مجاني)",
         "provider": "gemini",
         "id": "gemini-2.5-flash",
+        "vision": True,
     },
     "gemini-2.5-flash-lite": {
         "label": "Gemini 2.5 Flash-Lite",
         "desc": "الأسرع — من جوجل (مجاني)",
         "provider": "gemini",
         "id": "gemini-2.5-flash-lite",
+        "vision": True,
     },
     "image-flux": {
         "label": "توليد صورة (FLUX.1)",
@@ -73,6 +75,7 @@ if os.getenv("OPENROUTER_API_KEY"):
             "provider": "openrouter",
             "id": "nex-agi/nex-n2.5-mini:free",
             "icon": "bolt",
+            "vision": True,
         },
         **MODELS,
     }
@@ -108,6 +111,7 @@ if os.getenv("OPENROUTER_API_KEY"):
             "desc": "مفتوح المصدر — من Zhipu (عبر OpenRouter)",
             "provider": "openrouter",
             "id": "z-ai/glm-5.2:free",
+            "vision": True,
         },
         "or-nemotron-ultra": {
             "label": "Nemotron 3 Ultra 550B",
@@ -120,6 +124,7 @@ if os.getenv("OPENROUTER_API_KEY"):
             "desc": "مفتوح المصدر — من جوجل (عبر OpenRouter)",
             "provider": "openrouter",
             "id": "google/gemma-4-31b-it:free",
+            "vision": True,
         },
         "or-qwen-3.8": {
             "label": "Qwen 3.8 27B",
@@ -156,6 +161,7 @@ if os.getenv("OPENROUTER_API_KEY"):
             "desc": "مفتوح المصدر — النسخة الأقوى من فلاشنا (عبر OpenRouter)",
             "provider": "openrouter",
             "id": "nex-agi/nex-n2.5-pro:free",
+            "vision": True,
         },
     })
 
@@ -317,7 +323,7 @@ def api_logout():
 def api_models():
     return jsonify([
         {"id": mid, "label": e["label"], "desc": e["desc"], "kind": e.get("kind", "chat"),
-         "icon": e.get("icon")}
+         "icon": e.get("icon"), "vision": bool(e.get("vision"))}
         for mid, e in MODELS.items()
     ])
 
@@ -506,17 +512,25 @@ def chat_api():
                     "content": "الوضع: وكيل تنفيذ (Agent). " + " ".join(context_parts),
                 })
 
+    # هل توجد صورة مرفقة في الرسائل؟ — عندها نمرّ على النماذج التي تقرأ الصور فقط
+    has_image = any(
+        m.get("role") == "user" and _valid_image(m.get("image"))
+        for m in history[-MAX_HISTORY:]
+    )
+
     # ترتيب المحاولات: النموذج المطلوب أولاً، ثم باقي نماذج السحابة كاحتياط
     ordered = []
-    if requested in MODELS:
+    if requested in MODELS and (not has_image or MODELS[requested].get("vision")):
         ordered.append((requested, MODELS[requested]))
     for mid, e in MODELS.items():
         if mid != requested and e.get("kind", "chat") == "chat":
+            if has_image and not e.get("vision"):
+                continue  # مع صورة — نمرّ فقط النماذج التي تدعم الرؤية
             ordered.append((mid, e))
 
     # صندوق الأوامر الختامية لنموذج الاستدعاء
     last_error = None
-    for mid, entry in ordered[:5]:
+    for mid, entry in ordered[:6]:
         try:
             c = get_client(entry["provider"])
             kwargs = {
@@ -543,12 +557,22 @@ def chat_api():
         except OpenAIError as e:
             last_error = e
             status = getattr(e, "status_code", None)
-            # 429 = تجاوز الحد، 404 = نموذج غير موجود، 503 = ضغط، None = خطأ اتصال
-            if status in (429, 404, 503) or status is None:
+            # 429 = تجاوز الحد، 404 = نموذج غير موجود، 503 = ضغط،
+            # 400/401/403 = الطلب غير مقبول (مثل صورة غير مدعومة)، None = خطأ اتصال
+            if status in (400, 401, 403, 404, 429, 503) or status is None:
                 continue
             break
+        except Exception as e:
+            # أي خطأ غير متوقع — جرّب النموذج التالي بدل إسقاط الطلب
+            last_error = e
+            continue
 
     print(f"خطأ API: {last_error}")
+    # رسالة أوضح حسب السبب: رفض الصور (400) أم ضغط/حدود عامة
+    if isinstance(last_error, OpenAIError) and getattr(last_error, "status_code", None) == 400:
+        return jsonify({
+            "error": "النموذج المختار لا يدعم الصور حالياً — جرّب Al-Khwarizmi Flash أو Gemini 2.5 Flash"
+        }), 400
     return jsonify({"error": "الخدمة مشغولة حالياً — جرّب مرة ثانية بعد دقيقة"}), 503
 
 
