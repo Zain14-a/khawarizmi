@@ -42,7 +42,7 @@ PROVIDERS = {
 
 PROVIDER = os.getenv("PROVIDER", "gemini").strip().lower()
 if PROVIDER not in PROVIDERS:
-    print(f"⚠️ مزوّد غير معروف: {PROVIDER}")
+    print(f"[خطأ] مزوّد غير معروف: {PROVIDER}")
     print(f"   المتاح: {', '.join(PROVIDERS)}")
     sys.exit(1)
 
@@ -62,14 +62,16 @@ SYSTEM_PROMPT = (
     "وإذا سُئلت 'من هي Light Co؟' أو عن الاستوديو الذي صنعك، أجب دائماً: "
     "'Light Co هي استوديو فلسطيني، وأنا صُنعت بواسطة هذا الاستوديو'. "
     "لا تذكر أبداً أسماء شركات أو نماذج أو مزوّدي خدمات آخرين (مثل Nex أو Algo "
-    "أو AGI أو جوجل أو OpenRouter أو غيرها) في أي إجابة عن هويتك أو صانعك."
+    "أو AGI أو جوجل أو OpenRouter أو غيرها) في أي إجابة عن هويتك أو صانعك.\n"
+    "لا تستخدم الإيموجيات أو الرموز التعبيرية في ردودك إطلاقاً. اكتب نصاً واضحاً "
+    "بدون أي رموز تعبيرية أو صور رمزية، واستعن بالتنسيق والترقيم لإبراز الأقسام."
 )
 
 
 def create_client() -> OpenAI:
     """إنشاء عميل API مع التحقق من وجود المفتاح"""
     if not API_KEY or API_KEY == "ضع-مفتاحك-هنا":
-        print(f"❌ لم يتم العثور على مفتاح {PROVIDER.upper()} API!")
+        print(f"[خطأ] لم يتم العثور على مفتاح {PROVIDER.upper()} API!")
         print("الخطوات:")
         print(f"  1. اذهب إلى {PROVIDERS[PROVIDER]['key_url']}")
         print("  2. أنشئ مفتاح جديد (مجاني وبدون بطاقة ائتمانية)")
@@ -115,7 +117,7 @@ def main() -> None:
     messages: list[dict] = [{"role": "system", "content": SYSTEM_PROMPT}]
 
     print("=" * 50)
-    print("🤖 الخوارزمي — روبوت المحادثة الذكي")
+    print("الخوارزمي — روبوت المحادثة الذكي")
     print(f"   المزوّد: {PROVIDER} | النموذج: {MODEL}")
     print("   اكتب 'خروج' أو 'exit' لإنهاء المحادثة")
     print("=" * 50)
@@ -124,26 +126,26 @@ def main() -> None:
         try:
             user_input = input("\nأنت: ").strip()
         except (KeyboardInterrupt, EOFError):
-            print("\n\n👋 إلى اللقاء!")
+            print("\n\nإلى اللقاء!")
             break
 
         if not user_input:
             continue
 
         if user_input.lower() in ("خروج", "exit", "quit"):
-            print("👋 إلى اللقاء!")
+            print("إلى اللقاء!")
             break
 
         try:
             reply = chat(client, messages, user_input)
-            print(f"\n🤖 الخوارزمي: {reply}")
+            print(f"\nالخوارزمي: {reply}")
         except OpenAIError as e:
             if getattr(e, "status_code", None) == 429:
-                print("\n⏳ وصلت للحد المجاني — انتظر دقيقة وحاول مرة أخرى")
+                print("\nوصلت للحد المجاني — انتظر دقيقة وحاول مرة أخرى")
             else:
-                print(f"\n⚠️ خطأ من {PROVIDER.upper()}: {e}")
+                print(f"\n[خطأ] من {PROVIDER.upper()}: {e}")
         except Exception as e:
-            print(f"\n⚠️ خطأ غير متوقع: {e}")
+            print(f"\n[خطأ] غير متوقع: {e}")
 
 
 if __name__ == "__main__":

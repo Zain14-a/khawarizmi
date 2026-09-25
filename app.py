@@ -55,22 +55,24 @@ MODELS = {
         "id": "gemini-2.5-flash-lite",
     },
     "image-flux": {
-        "label": "🎨 توليد صورة (FLUX.1)",
+        "label": "توليد صورة (FLUX.1)",
         "desc": "ولّد صوراً بأي وصف — نموذج مفتوح المصدر",
         "provider": "image",
         "id": "flux",
         "kind": "image",
+        "icon": "image",
     },
 }
 
-# ⚡ نموذجنا الحصري "Al-Khwarizmi Flash" — سريع وخفيف، يُقدَّم تحت اسمنا الخاص لتمييز الموقع
+# نموذجنا الحصري "Al-Khwarizmi Flash" — سريع وخفيف، يُقدَّم تحت اسمنا الخاص لتمييز الموقع
 if os.getenv("OPENROUTER_API_KEY"):
     MODELS = {
         "khwarizmi-flash": {
-            "label": "⚡ Al-Khwarizmi Flash",
+            "label": "Al-Khwarizmi Flash",
             "desc": "نموذجنا الخاص — سريع وخفيف، مدرب لخدمتك",
             "provider": "openrouter",
             "id": "nex-agi/nex-n2.5-mini:free",
+            "icon": "bolt",
         },
         **MODELS,
     }
@@ -314,7 +316,8 @@ def api_logout():
 @login_required
 def api_models():
     return jsonify([
-        {"id": mid, "label": e["label"], "desc": e["desc"], "kind": e.get("kind", "chat")}
+        {"id": mid, "label": e["label"], "desc": e["desc"], "kind": e.get("kind", "chat"),
+         "icon": e.get("icon")}
         for mid, e in MODELS.items()
     ])
 
@@ -430,7 +433,7 @@ def chat_api():
             if m.get("role") == "user":
                 prompt = m.get("content", "")
                 break
-        for prefix in ("/image", "/img", "صورة:", "ارسم:", "🎨 توليد صورة:"):
+        for prefix in ("/image", "/img", "صورة:", "ارسم:", "توليد صورة:"):
             if prompt.startswith(prefix):
                 prompt = prompt[len(prefix):].strip()
         if not prompt:
@@ -645,7 +648,7 @@ def api_generate_image():
 
 if __name__ == "__main__":
     print("=" * 50)
-    print("🌐 موقع الخوارزمي شغّال!")
+    print("موقع الخوارزمي شغّال!")
     print("   افتح المتصفح على: http://127.0.0.1:5000")
     print("   للإيقاف: Ctrl+C")
     print("=" * 50)
