@@ -318,12 +318,56 @@ def api_models():
     ])
 
 
+def web_search(query: str, limit: int = 4):
+    """بحث في ويكيبيديا (عربي/إنجليزي) — مجاني بدون مفتاح، يعيد نتائج للوضع Agent"""
+    results = []
+    # حاول العربية أولاً، ثم الإنجليزية
+    for lang in ("ar", "en"):
+        try:
+            q = urllib.parse.quote(query[:200])
+            url = (
+                f"https://{lang}.wikipedia.org/w/api.php?action=query&list=search"
+                f"&srsearch={q}&format=json&utf8=1&srlimit={limit}"
+                f"&srprop=snippet"
+            )
+            req = urllib.request.Request(url, headers={"User-Agent": "KhawarizmiBot/1.0"})
+            with urllib.request.urlopen(req, timeout=15) as r:
+                data = json.loads(r.read().decode("utf-8"))
+            for item in data.get("query", {}).get("search", []):
+                title = item.get("title", "")
+                snippet = item.get("snippet", "")
+                snippet = snippet.replace('<span class="searchmatch">', "").replace("</span>", "")
+                page_url = f"https://{lang}.wikipedia.org/wiki/{urllib.parse.quote(title.replace(' ', '_'))}"
+                results.append({
+                    "title": title[:150],
+                    "snippet": snippet[:400],
+                    "url": page_url,
+                })
+            if results:
+                break  # نجحت العربية — توقف
+        except Exception:
+            continue
+    return results[:limit]
+
+
+def _extract_last_user(messages: list) -> str:
+    """أخذ آخر رسالة مستخدم من السجل"""
+    for m in reversed(messages):
+        if m.get("role") == "user":
+            return m.get("content", "")
+    return ""
+
+
 @app.route("/api/chat", methods=["POST"])
 @login_required
 def chat_api():
     data = request.get_json(force=True, silent=True) or {}
     history = data.get("messages", [])
     requested = data.get("model")
+    mode = (data.get("mode") or "chat").lower()          # chat | agent
+    temperature = float(data.get("temperature", 0.7))
+    temperature = max(0.0, min(1.5, temperature))
+    max_tokens = int(data.get("max_tokens", 0) or 0)
 
     # بناء سجل المحادثة: شخصية البوت + الرسائل المُنقّاة
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
@@ -350,6 +394,28 @@ def chat_api():
             return jsonify({"error": "اكتب وصف الصورة التي تريد توليدها"}), 400
         return jsonify(build_image_payload(prompt, req_entry["id"]))
 
+    # === وضع Agent: بحث في الإنترنت وإضافة السياق ===
+    sources = []
+    if mode == "agent":
+        query = _extract_last_user(messages)
+        # إزالة أوامر الصور من الاستعلام
+        for prefix in ("/image", "/img", "صورة:", "ارسم:"):
+            if query.startswith(prefix):
+                query = query[len(prefix):].strip()
+        if query:
+            sources = web_search(query)
+            if sources:
+                context = (
+                    "الوضع: وكيل بحث (Agent). إليك نتائج بحث من ويكيبيديا (قد تكون حديثة أو جزئية):\n"
+                    + "\n".join(
+                        f"- {s['title']}: {s['snippet']} ({s['url']})"
+                        for s in sources
+                    )
+                    + "\n\nاستخدم هذه المعلومات لتحسين إجابتك، واذكر المصادر التي استندت إليها "
+                    "بصيغة: (المصدر: العنوان). إذا كانت المعلومات لا ترد على السؤال فلا تختلق شيئاً."
+                )
+                messages.append({"role": "system", "content": context})
+
     # ترتيب المحاولات: النموذج المطلوب أولاً، ثم باقي نماذج السحابة كاحتياط
     ordered = []
     if requested in MODELS:
@@ -362,15 +428,19 @@ def chat_api():
     for mid, entry in ordered[:5]:
         try:
             c = get_client(entry["provider"])
-            r = c.chat.completions.create(
-                model=entry["id"],
-                messages=messages,
-                temperature=0.7,
-            )
+            kwargs = {
+                "model": entry["id"],
+                "messages": messages,
+                "temperature": temperature,
+            }
+            if max_tokens > 0:
+                kwargs["max_tokens"] = min(max_tokens, 8000)
+            r = c.chat.completions.create(**kwargs)
             return jsonify({
                 "reply": r.choices[0].message.content,
                 "model": mid,
                 "label": entry["label"],
+                "sources": sources,
             })
         except OpenAIError as e:
             last_error = e

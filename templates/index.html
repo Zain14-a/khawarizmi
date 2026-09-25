@@ -58,6 +58,17 @@ body{display:flex;background:var(--bg);color:var(--text);overflow:hidden}
 #modelMenu button small{color:var(--muted);font-weight:400;font-size:.73rem}
 #modelMenu button:hover{background:var(--bubble)}
 #modelMenu button.active{background:#eef2f1;color:var(--accent)}
+.settings-wrap{margin-left:6px}
+.icon-btn{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border:1px solid var(--border);border-radius:9px;background:#fff;color:var(--text);font-size:.95rem;cursor:pointer;transition:background .15s}
+.icon-btn:hover{background:var(--bubble)}
+.mode-toggle{display:inline-flex;background:var(--bubble);border-radius:9px;padding:3px;gap:2px;border:1px solid var(--border)}
+.mode-btn{border:none;background:transparent;padding:5px 12px;border-radius:7px;font-family:inherit;font-size:.78rem;font-weight:600;color:var(--muted);cursor:pointer;transition:all .15s}
+.mode-btn.active{background:#fff;color:var(--accent);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.modal-slider{width:100%;accent-color:var(--accent);margin:8px 0}
+.sources-box{margin-top:10px;padding-top:8px;border-top:1px solid var(--border)}
+.sources-title{font-size:.72rem;color:var(--muted);font-weight:600;margin-bottom:4px}
+.sources-box a{display:block;font-size:.78rem;color:var(--accent);text-decoration:none;padding:2px 0}
+.sources-box a:hover{text-decoration:underline}
 /* شاشة الترحيب */
 #welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center;overflow-y:auto}
 .w-logo{width:54px;height:54px;border-radius:14px;background:var(--accent);color:#fff;font-size:1.4rem;font-weight:700;display:flex;align-items:center;justify-content:center;margin-bottom:6px}
@@ -224,6 +235,9 @@ body{display:flex;background:var(--bg);color:var(--text);overflow:hidden}
       <button id="modelBtn"><span class="dot"></span><span id="modelLabel">Gemini 2.5 Flash</span></button>
       <div id="modelMenu" class="hidden"></div>
     </div>
+    <div class="settings-wrap">
+      <button id="settingsBtn" class="icon-btn" title="الإعدادات">⚙️</button>
+    </div>
   </header>
 
   <!-- شاشة الترحيب -->
@@ -248,6 +262,10 @@ body{display:flex;background:var(--bg);color:var(--text);overflow:hidden}
       <textarea id="input" rows="1" placeholder="اكتب رسالتك للخوارزمي... أو اكتب: /image وصف الصورة"></textarea>
       <div class="box-footer">
         <div class="box-tools">
+          <div class="mode-toggle" id="modeToggle" title="تبديل وضع المحادثة">
+            <button type="button" class="mode-btn active" data-mode="chat" id="modeChat">💬 Chat</button>
+            <button type="button" class="mode-btn" data-mode="agent" id="modeAgent">🤖 Agent</button>
+          </div>
           <button type="button" class="tool-btn" id="openImgModalBtn" title="توليد صورة بالذكاء الاصطناعي">
             <span>🎨</span>
             <span>توليد صورة</span>
@@ -285,6 +303,44 @@ body{display:flex;background:var(--bg);color:var(--text);overflow:hidden}
     <div class="modal-footer">
       <button class="img-btn" id="cancelImgModalBtn">إلغاء</button>
       <button class="img-btn primary" id="submitImgModalBtn">توليد الآن 🚀</button>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة الإعدادات -->
+<div class="modal-overlay" id="settingsModal" style="display:none">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">
+        <span>⚙️</span>
+        <span>إعدادات المحادثة</span>
+      </div>
+      <button class="modal-close" id="closeSettingsBtn">&times;</button>
+    </div>
+    <div>
+      <label class="modal-label" for="tempSlider">درجة الإبداع: <b id="tempVal">0.7</b></label>
+      <input type="range" id="tempSlider" min="0" max="1" step="0.1" value="0.7" class="modal-slider">
+      <p class="img-key-hint">منخفضة = دقيق ومنطقي • عالية = إبداعي وحر</p>
+    </div>
+    <div>
+      <label class="modal-label" for="lenSelect">طول الرد:</label>
+      <select id="lenSelect" class="modal-select">
+        <option value="300">قصير</option>
+        <option value="900" selected>متوسط</option>
+        <option value="2000">طويل</option>
+        <option value="4000">مفصّل جداً</option>
+      </select>
+    </div>
+    <div>
+      <label class="modal-label" for="modeDefaultSelect">الوضع الافتراضي:</label>
+      <select id="modeDefaultSelect" class="modal-select">
+        <option value="chat">Chat — محادثة عادية</option>
+        <option value="agent">Agent — محادثة مع بحث في الإنترنت</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="img-btn" id="resetSettingsBtn">إعادة الافتراضي</button>
+      <button class="img-btn primary" id="saveSettingsBtn">حفظ ✅</button>
     </div>
   </div>
 </div>
@@ -374,6 +430,56 @@ async function loadModels() {
   } catch (e) {}
   buildModelMenu();
 }
+
+// ===== الإعدادات (تُحفظ في المتصفح) =====
+const DEFAULT_SETTINGS = { temperature: 0.7, maxTokens: 900, defaultMode: 'chat' };
+let settings = { ...DEFAULT_SETTINGS };
+try {
+  const saved = JSON.parse(localStorage.getItem('khawarizmi_settings') || '{}');
+  settings = { ...DEFAULT_SETTINGS, ...saved };
+} catch (e) {}
+let mode = settings.defaultMode;
+
+const tempSlider = document.getElementById('tempSlider');
+const tempVal = document.getElementById('tempVal');
+const lenSelect = document.getElementById('lenSelect');
+const modeDefaultSelect = document.getElementById('modeDefaultSelect');
+const settingsModal = document.getElementById('settingsModal');
+
+function openSettings() {
+  tempSlider.value = settings.temperature;
+  tempVal.textContent = settings.temperature.toFixed(1);
+  lenSelect.value = String(settings.maxTokens);
+  modeDefaultSelect.value = settings.defaultMode;
+  settingsModal.style.display = 'flex';
+}
+function closeSettings() { settingsModal.style.display = 'none'; }
+function applyModeUI() {
+  document.getElementById('modeChat').classList.toggle('active', mode === 'chat');
+  document.getElementById('modeAgent').classList.toggle('active', mode === 'agent');
+  const hint = document.querySelector('.hint');
+  if (hint) hint.textContent = mode === 'agent'
+    ? '🤖 وضع Agent — يبحث في الإنترنت ثم يجيب بمصادر موثقة'
+    : 'الخوارزمي يدعم المحادثة وتوليد الصور عبر نماذج مفتوحة المصدر (FLUX.1)';
+}
+document.getElementById('modeChat').onclick = () => { mode = 'chat'; applyModeUI(); };
+document.getElementById('modeAgent').onclick = () => { mode = 'agent'; applyModeUI(); };
+document.getElementById('settingsBtn').onclick = openSettings;
+document.getElementById('closeSettingsBtn').onclick = closeSettings;
+document.getElementById('saveSettingsBtn').onclick = () => {
+  settings.temperature = parseFloat(tempSlider.value);
+  settings.maxTokens = parseInt(lenSelect.value, 10);
+  settings.defaultMode = modeDefaultSelect.value;
+  localStorage.setItem('khawarizmi_settings', JSON.stringify(settings));
+  closeSettings();
+};
+document.getElementById('resetSettingsBtn').onclick = () => {
+  settings = { ...DEFAULT_SETTINGS };
+  localStorage.setItem('khawarizmi_settings', JSON.stringify(settings));
+  openSettings();
+};
+tempSlider.oninput = () => { tempVal.textContent = parseFloat(tempSlider.value).toFixed(1); };
+applyModeUI();
 
 modelBtn.onclick = e => {
   e.stopPropagation();
@@ -736,7 +842,13 @@ async function send(text) {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: current.messages, model }),
+      body: JSON.stringify({
+        messages: current.messages,
+        model,
+        mode,
+        temperature: settings.temperature,
+        max_tokens: settings.maxTokens,
+      }),
     });
     if (res.status === 401) { location.href = '/login'; return; }
     const data = await res.json();
@@ -759,6 +871,17 @@ async function send(text) {
     if (data.reply) {
       current.messages.push({ role: 'assistant', content: data.reply });
       save();
+    }
+    // ===== عرض مصادر وضع Agent =====
+    if (data.sources && data.sources.length) {
+      const srcBox = document.createElement('div');
+      srcBox.className = 'sources-box';
+      srcBox.innerHTML = `<div class="sources-title">📚 المصادر (من ويكيبيديا):</div>` +
+        data.sources.map(s =>
+          `<a href="${s.url}" target="_blank" rel="noopener">${s.title}</a>`
+        ).join('');
+      const bubbleEl = t.querySelector('.bubble');
+      if (bubbleEl) bubbleEl.appendChild(srcBox);
     }
   } catch (e) {
     t.remove();
