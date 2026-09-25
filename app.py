@@ -362,6 +362,23 @@ def _extract_last_user(messages: list) -> str:
     return ""
 
 
+def _text_of(value) -> str:
+    """استخراج النص من رسالة قد تكون نصاً عادياً أو قائمة أجزاء (عند إرفاق صورة)"""
+    if isinstance(value, list):
+        return "".join(
+            p.get("text", "") for p in value
+            if isinstance(p, dict) and p.get("type") == "text"
+        )
+    return value or ""
+
+
+def _valid_image(img) -> bool:
+    """تحقق من أن الصورة المرفقة data-URI صالحة وليست ضخمة (حماية من الإساءة)"""
+    if not isinstance(img, str) or not img:
+        return False
+    return img.startswith("data:image/") and ";base64," in img and len(img) < 4_000_000
+
+
 # امتدادات الملفات حسب اللغة — لتسمية القطع البرمجية
 _EXT_MAP = {
     "python": "py", "javascript": "js", "typescript": "ts", "html": "html",
@@ -415,12 +432,23 @@ def chat_api():
     temperature = max(0.0, min(1.5, temperature))
     max_tokens = int(data.get("max_tokens", 0) or 0)
 
-    # بناء سجل المحادثة: شخصية البوت + الرسائل المُنقّاة
+    # بناء سجل المحادثة: شخصية البوت + الرسائل المُنقّاة (مع دعم إرفاق صور)
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
     for m in history[-MAX_HISTORY:]:
         role, content = m.get("role"), m.get("content", "")
-        if role in ("user", "assistant") and isinstance(content, str) and content.strip():
-            messages.append({"role": role, "content": content[:MAX_MSG_LEN]})
+        img = _valid_image(m.get("image")) and m.get("image")
+        keep = (isinstance(content, str) and content.strip()) or bool(img)
+        if role in ("user", "assistant") and keep:
+            if role == "user" and img:
+                messages.append({
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": content[:MAX_MSG_LEN]},
+                        {"type": "image_url", "image_url": {"url": img}},
+                    ],
+                })
+            else:
+                messages.append({"role": role, "content": content[:MAX_MSG_LEN]})
 
     if len(messages) == 1:
         return jsonify({"error": "الرسالة فارغة"}), 400
@@ -431,7 +459,7 @@ def chat_api():
         prompt = ""
         for m in reversed(messages):
             if m.get("role") == "user":
-                prompt = m.get("content", "")
+                prompt = _text_of(m.get("content", ""))
                 break
         for prefix in ("/image", "/img", "صورة:", "ارسم:", "توليد صورة:"):
             if prompt.startswith(prefix):
@@ -443,7 +471,7 @@ def chat_api():
     # === وضع Agent: بحث في الإنترنت + تنفيذ المهام (برمجة/بناء) ===
     sources = []
     if mode == "agent":
-        query = _extract_last_user(messages)
+        query = _text_of(_extract_last_user(messages))
         # إزالة أوامر الصور من الاستعلام
         for prefix in ("/image", "/img", "صورة:", "ارسم:"):
             if query.startswith(prefix):
