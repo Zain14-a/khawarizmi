@@ -112,7 +112,7 @@ python chatbot.py
    - **Name:** `khawarizmi` → عنوانك: **`khawarizmi.onrender.com`**
    - **Runtime:** Python 3
    - **Build Command:** `pip install -r requirements.txt`
-   - **Start Command:** `gunicorn wsgi:application --bind 0.0.0.0:$PORT --workers 1 --timeout 180`
+   - **Start Command:** `gunicorn wsgi:application --bind 0.0.0.0:$PORT --worker-class gthread --threads 16 --timeout 180` (16 خيطاً = يخدم عدة مستخدمين بالوقت نفسه لتجنب الطابور)
    - **Plan:** Free
    - **Environment** (Environment Variables):
      - `SECRET_KEY` → أنشئ مفتاحاً عشوائياً طويلاً

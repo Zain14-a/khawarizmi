@@ -6,7 +6,9 @@ services:
     runtime: python
     plan: free
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn wsgi:application --bind 0.0.0.0:$PORT --workers 1 --timeout 180"
+    # خيوط متعددة = الموقع يخدم عدة مستخدمين بالوقت نفسه (بدل طابور واحد)
+    # gthread: خيوط خفيفة تشترك بالذاكرة — تناسب حصة Render المجانية (512MB)
+    startCommand: "gunicorn wsgi:application --bind 0.0.0.0:$PORT --worker-class gthread --threads 16 --timeout 180"
     envVars:
       - key: SECRET_KEY
         generateValue: true
