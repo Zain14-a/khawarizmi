@@ -104,6 +104,24 @@ if os.getenv("GROQ_API_KEY"):
         },
     })
 
+# نماذج عبر Cerebras — تظهر إذا انحط مفتاح CEREBRAS_API_KEY في .env
+# (أسرع مزوّد نصي بالعالم، حصته المجانية تعتمد على تفعيل الحساب)
+if os.getenv("CEREBRAS_API_KEY"):
+    MODELS.update({
+        "cerebras-gpt-oss-120b": {
+            "label": "GPT-OSS 120B ⚡",
+            "desc": "مفتوح المصدر — الأسرع عالمياً (عبر Cerebras)",
+            "provider": "cerebras",
+            "id": "gpt-oss-120b",
+        },
+        "cerebras-qwen": {
+            "label": "Qwen 3.8 27B ⚡",
+            "desc": "مفتوح المصدر — سريع وخفيف (عبر Cerebras)",
+            "provider": "cerebras",
+            "id": "qwen-3.8-27b",
+        },
+    })
+
 # نماذج مفتوحة المصدر عبر OpenRouter — تظهر إذا انحط مفتاح OPENROUTER_API_KEY في .env
 if os.getenv("OPENROUTER_API_KEY"):
     MODELS.update({
@@ -181,6 +199,11 @@ PROVIDER_CONFIGS = {
     "openrouter": {
         "base_url": "https://openrouter.ai/api/v1",
         "key_env": "OPENROUTER_API_KEY",
+        "timeout": 30,
+    },
+    "cerebras": {
+        "base_url": "https://api.cerebras.ai/v1",
+        "key_env": "CEREBRAS_API_KEY",
         "timeout": 30,
     },
 }
@@ -564,7 +587,7 @@ def chat_api():
         by_provider.setdefault(e.get("provider", "?"), []).append((mid, e))
     interleaved: list = []
     while any(by_provider.values()):
-        for p in ("gemini", "openrouter", "groq"):
+        for p in ("gemini", "openrouter", "groq", "cerebras"):
             if by_provider.get(p):
                 interleaved.append(by_provider[p].pop(0))
     ordered: list = []
@@ -607,9 +630,9 @@ def chat_api():
             except OpenAIError as e:
                 last_error = e
                 status = getattr(e, "status_code", None)
-                # 429 = تجاوز الحد، 404 = نموذج غير موجود، 503 = ضغط،
+                # 429 = تجاوز الحد، 402 = الحساب بلا حصة، 404 = نموذج غير موجود، 503 = ضغط،
                 # 400/401/403 = الطلب غير مقبول (مثل صورة غير مدعومة)، None = خطأ اتصال
-                if status in (400, 401, 403, 404, 429, 503) or status is None:
+                if status in (400, 401, 402, 403, 404, 429, 503) or status is None:
                     if status == 429:
                         rate_limited += 1
                         # هدّئ لحظياً ثم جرّب نفس النموذج بمفتاح تالٍ

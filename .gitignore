@@ -17,3 +17,6 @@ server.log
 nul
 *.tmp
 ck*.tmp
+# نسخ احتياطية للمفاتيح — ممنوعة من GitHub دائماً
+.env.*
+*.bak
