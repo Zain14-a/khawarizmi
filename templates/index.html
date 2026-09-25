@@ -54,13 +54,6 @@ body{display:flex;background:var(--bg);color:var(--text);overflow:hidden}
 #modelBtn .dot{width:7px;height:7px;border-radius:50%;background:#22c55e;flex-shrink:0}
 #modelMenu{position:absolute;top:calc(100% + 6px);left:0;width:270px;background:#fff;border:1px solid var(--border);border-radius:11px;box-shadow:0 8px 24px rgba(0,0,0,.08);padding:6px;z-index:30;max-height:min(72vh,560px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#c8ccd1 transparent;-webkit-overflow-scrolling:touch}
 #modelMenu.hidden{display:none}
-/* زر التمرير العائم لقائمة النماذج (لشاشات صغيرة) */
-#scrollFab{position:fixed;left:16px;bottom:16px;z-index:45;width:44px;height:44px;border-radius:50%;border:1px solid var(--border);background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(15,118,110,.35);transition:transform .15s,opacity .15s;font-family:inherit}
-#scrollFab:hover{transform:scale(1.08)}
-#scrollFab:active{transform:scale(.94)}
-#scrollFab.pop{animation:fabPop .45s ease}
-@keyframes fabPop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.18)}100%{transform:scale(1);opacity:1}}
-#scrollFab.hidden{display:none}
 #modelMenu button{display:flex;flex-direction:column;gap:2px;width:100%;text-align:right;padding:9px 11px;border:none;border-radius:8px;background:none;font-family:inherit;cursor:pointer;color:var(--text);font-size:.85rem;font-weight:600;transition:background .12s}
 #modelMenu button small{color:var(--muted);font-weight:400;font-size:.73rem}
 #modelMenu button:hover{background:var(--bubble)}
@@ -530,7 +523,6 @@ a svg{vertical-align:-2px}
   <div class="art-body" id="artBody"></div>
 </div>
 
-<button id="scrollFab" class="hidden" aria-label="تمرير قائمة النماذج"></button>
 <script>
 const chat = document.getElementById('chat');
 const welcome = document.getElementById('welcome');
@@ -566,8 +558,6 @@ const ICON = {
   plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
   attach: '<path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
   layout: '<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>',
-  arrowDown: '<line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>',
-  arrowUp: '<line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>',
 };
 function ic(name, size = 16, cls = 'ic') {
   return `<svg class="${cls}" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[name] || ''}</svg>`;
@@ -611,7 +601,6 @@ function buildModelMenu() {
       localStorage.setItem('khawarizmi_model', model);
       updateModelUI();
       modelMenu.classList.add('hidden');
-      syncFab();
     };
     modelMenu.appendChild(b);
   });
@@ -775,37 +764,12 @@ document.querySelector('.art-actions button:nth-child(4)').innerHTML = ic('x', 1
 modelBtn.onclick = e => {
   e.stopPropagation();
   modelMenu.classList.toggle('hidden');
-  syncFab();
 };
 document.addEventListener('click', e => {
   if (!modelMenu.contains(e.target) && !modelBtn.contains(e.target)) {
     modelMenu.classList.add('hidden');
-    syncFab();
   }
 });
-
-// ===== زر التمرير العائم: ينزل تحت ويطلع فوق داخل قائمة النماذج =====
-const scrollFab = document.getElementById('scrollFab');
-function syncFab() {
-  // اختباء الزر إذا القائمة مقفلة أو كل النماذج ظاهرة بدون تمرير
-  if (modelMenu.classList.contains('hidden') || modelMenu.scrollHeight <= modelMenu.clientHeight + 8) {
-    scrollFab.classList.add('hidden');
-    return;
-  }
-  const canDown = modelMenu.scrollHeight - modelMenu.scrollTop - modelMenu.clientHeight > 8;
-  scrollFab.classList.remove('hidden');
-  scrollFab.innerHTML = ic(canDown ? 'arrowDown' : 'arrowUp', 22);
-  scrollFab.title = canDown ? 'انزل لأسفل قائمة النماذج' : 'ارجع لأعلى قائمة النماذج';
-  // قفزة انتباه عند أول ظهور
-  scrollFab.classList.remove('pop');
-  void scrollFab.offsetWidth;
-  scrollFab.classList.add('pop');
-}
-scrollFab.onclick = () => {
-  const atBottom = modelMenu.scrollHeight - modelMenu.scrollTop - modelMenu.clientHeight <= 8;
-  modelMenu.scrollTo({ top: atBottom ? 0 : modelMenu.scrollHeight, behavior: 'smooth' });
-};
-modelMenu.addEventListener('scroll', syncFab, { passive: true });
 
 // ===== المحادثات =====
 let chats = JSON.parse(localStorage.getItem('khawarizmi_chats') || '[]');
