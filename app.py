@@ -165,7 +165,56 @@ if os.getenv("COLABC_URL") and os.getenv("COLABC_KEY"):
         },
     })
 
-# نماذج مفتوحة المصدر عبر OpenRouter — تظهر فقط إذا فعّلت OPENROUTER_ENABLED (ووضَعْت OPENROUTER_API_KEY في .env)
+# ═══════════ مزوّدون إضافيون (يظهر كل واحد إذا ضعفت مفتاحه في .env) ═══════════
+if os.getenv("MISTRAL_API_KEY"):
+    MODELS.update({
+        "mistral-small-24b": {
+            "label": "Mistral Small 24B",
+            "desc": "سريع وذكي — 128K سياق، قارئ صور",
+            "provider": "mistral",
+            "id": "mistralai/Mistral-Small-24B-Instruct-2501",
+            "vision": True,
+        },
+        "mistral-mixtral": {
+            "label": "Mixtral 8x7B",
+            "desc": "مفتوح المصدر — قوي بالعموم",
+            "provider": "mistral",
+            "id": "mistralai/Mixtral-8x7B-Instruct-v0.1",
+        },
+    })
+if os.getenv("TOGETHER_API_KEY"):
+    MODELS.update({
+        "together-llama-3.1": {
+            "label": "Llama 3.1 8B",
+            "desc": "مفتوح المصدر — من Meta",
+            "provider": "together",
+            "id": "meta-llama/Llama-3.1-8B-Instruct",
+        },
+        "together-qwen-72b": {
+            "label": "Qwen 2.5 72B",
+            "desc": "قوي بالعربية والبرمجة",
+            "provider": "together",
+            "id": "Qwen/Qwen2.5-72B-Instruct",
+        },
+    })
+if os.getenv("FIREWORKS_API_KEY"):
+    MODELS.update({
+        "fw-llama-3.1": {
+            "label": "Llama 3.1 (Fireworks)",
+            "desc": "سريع وخفيف — Fireworks AI",
+            "provider": "fireworks",
+            "id": "fireworks/firellama-3.1-11b-v0.2",
+        },
+        "fw-qwen-72b": {
+            "label": "Qwen 2.5 72B (Fireworks)",
+            "desc": "قوي بالعربية والبرمجة",
+            "provider": "fireworks",
+            "id": "Qwen/Qwen2.5-72B-Instruct",
+        },
+    })
+
+# ═══════════ نماذج OpenRouter (مطفأة حالياً — رصيدها انتهى) ═══════════
+# تظهر فقط إذا فعّلت OPENROUTER_ENABLED ووضعت OPENROUTER_API_KEY في .env
 if OPENROUTER_ENABLED:
     MODELS.update({
         "or-glm-5.2": {
@@ -258,6 +307,21 @@ PROVIDER_CONFIGS = {
         "base_url": os.getenv("COLABC_URL", ""),   # رابط نفق Cloudflare من جهازك/كولاب
         "key_env": "COLABC_KEY",
         "timeout": 60,
+    },
+    "mistral": {
+        "base_url": "https://api.mistral.ai/v1",
+        "key_env": "MISTRAL_API_KEY",
+        "timeout": 30,
+    },
+    "together": {
+        "base_url": "https://api.together.xyz/v1",
+        "key_env": "TOGETHER_API_KEY",
+        "timeout": 30,
+    },
+    "fireworks": {
+        "base_url": "https://api.fireworks.ai/inference/v1",
+        "key_env": "FIREWORKS_API_KEY",
+        "timeout": 30,
     },
 }
 
@@ -687,9 +751,8 @@ def chat_api():
         for m in history[-MAX_HISTORY:]
     )
 
-    # ترتيب المحاولات: النموذج المطلوب أولاً، ثم بما تبقّى بالتداخل بين المزوّدين —
-    # حتى لا نستنزف حصة مزوّد واحد (نماذج OpenRouter المجانية كلها تشترك بحصة
-    # ساعية واحدة، فتجربة عدة نماذج منها وراء بعض لا تضيف شيئاً)
+    # ترتيب المحاولات: النموذج المطلوب أولاً، ثم بالتداخل بين المزوّدين —
+    # عند فشل أحدهم ينتقل تلقائياً للتالي؛ وعند توفّر عدة مفاتيح لنفس المزوّد يتناوب بينها
     pool = [
         (mid, e) for mid, e in MODELS.items()
         if mid != requested and e.get("kind", "chat") == "chat"
@@ -700,7 +763,7 @@ def chat_api():
         by_provider.setdefault(e.get("provider", "?"), []).append((mid, e))
     interleaved: list = []
     while any(by_provider.values()):
-        for p in ("gemini", "openrouter", "groq", "nvidia", "colab", "cerebras"):
+        for p in ("gemini", "groq", "mistral", "together", "fireworks", "nvidia", "colab", "cerebras"):
             if by_provider.get(p):
                 interleaved.append(by_provider[p].pop(0))
     ordered: list = []
