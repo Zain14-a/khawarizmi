@@ -121,6 +121,7 @@ python chatbot.py
      - `OPENROUTER_API_KEY` → المفتاح من `.env` المحلي
       - `APINEX_API_KEY` -> مفتاح APInex (1M token مجاني) من apinex.bond
       - `DAILY_BUDGET` -> ميزانية النموذج المجاني/يوم (افتراضي 2000)
+      - `USER_DAILY_TOKEN_LIMIT` -> حد التوكنز لكل مستخدم/يوم (افتراضي 20,000)
       - `USER_DAILY_LIMIT` -> حد الطلبات لكل مستخدم/يوم (افتراضي 15)
       - `USER_HOURLY_LIMIT` -> حد الطلبات لكل مستخدم/ساعة (افتراضي 5)
    - اضغط **Create Web Service** → يبني وينشر تلقائياً 🚀
