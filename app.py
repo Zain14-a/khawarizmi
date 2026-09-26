@@ -430,6 +430,28 @@ _USER_DAILY_LIMIT = int(os.getenv("USER_DAILY_LIMIT", "15") or 15)
 _USER_HOURLY_LIMIT = int(os.getenv("USER_HOURLY_LIMIT", "5") or 5)
 _USER_CALLS: dict = {}   # البريد -> قائمة أوقات الطلبات (ثواني)
 _TOTAL_USED = 0          # إجمالي الطلبات اليوم (تتبّع الميزانية)
+
+# ===== تتبّع التوكنز لكل مستخدم =====
+_USER_TOKENS: dict = {}   # البريد -> إجمالي التوكنز المستخدمة اليوم
+USER_DAILY_TOKEN_LIMIT = int(os.getenv("USER_DAILY_TOKEN_LIMIT", "20000") or 20000)
+_TOKEN_LOCK = threading.Lock()
+
+
+def _record_user_tokens(email: str, tokens: int) -> None:
+    """تسجيل التوكنز المستخدمة من المستخدم"""
+    if tokens <= 0:
+        return
+    with _TOKEN_LOCK:
+        _USER_TOKENS[email] = _USER_TOKENS.get(email, 0) + tokens
+
+
+def _check_user_tokens(email: str) -> tuple:
+    """هل المستخدم عنده رصيد توكنز كافٍ؟ — (صحيح/غالط، رسالة)"""
+    with _TOKEN_LOCK:
+        used = _USER_TOKENS.get(email, 0)
+    if used >= USER_DAILY_TOKEN_LIMIT:
+        return False, f"🫡 وصلت الحد اليومي ({USER_DAILY_TOKEN_LIMIT} توكن). جرب بعد دقيقة أو بكرا 🌅"
+    return True, None
 _RATE_LOCK = threading.Lock()
 _BUDGET_LOCK = threading.Lock()
 
@@ -710,6 +732,11 @@ def chat_api():
         return jsonify({"error": rate_msg}), 429
     _record_user_call(session.get("email", ""))
 
+    # حماية التوكنز: حد يومي لكل مستخدم
+    ok_tokens, token_msg = _check_user_tokens(session.get("email", ""))
+    if not ok_tokens:
+        return jsonify({"error": token_msg}), 429
+
     history = data.get("messages", [])
     requested = data.get("model")
     mode = (data.get("mode") or "chat").lower()          # chat | agent
@@ -845,6 +872,11 @@ def chat_api():
                     kwargs["max_tokens"] = min(eff_max, 8000)
                 r = c.chat.completions.create(**kwargs)
                 reply = r.choices[0].message.content or ""
+                # تتبّع التوكنز المستخدمة لكل مستخدم
+                try:
+                    _record_user_tokens(session.get("email", ""), r.usage.total_tokens if r.usage else 0)
+                except Exception:
+                    pass
                 artifacts = extract_artifacts(reply) if mode == "agent" else []
                 return jsonify({
                     "reply": reply,
