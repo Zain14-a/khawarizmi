@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- نسخة "تفكير": الخلفية ثابتة والنجمة البيضاء تدور -->
+  <rect width="64" height="64" rx="14" fill="#0f766e"/>
+  <g id="kh-star" fill="#ffffff">
+    <rect x="19" y="19" width="26" height="26" rx="1.5"/>
+    <rect x="19" y="19" width="26" height="26" rx="1.5" transform="rotate(45 32 32)"/>
+  </g>
+  <circle cx="32" cy="32" r="4.5" fill="#0f766e"/>
+  <style>
+    #kh-star{transform-box:fill-box;transform-origin:center;animation:kh-spin 1.5s linear infinite}
+    @keyframes kh-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+    @media (prefers-reduced-motion: reduce){#kh-star{animation:none}}
+  </style>
+</svg>
