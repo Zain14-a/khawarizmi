@@ -841,7 +841,7 @@ def chat_api():
         by_provider.setdefault(e.get("provider", "?"), []).append((mid, e))
     interleaved: list = []
     while any(by_provider.values()):
-        for p in ("gemini", "groq", "apinex", "mistral", "together", "fireworks", "nvidia", "colab", "cerebras"):
+        for p in ("apinex", "mistral", "gemini", "groq", "together", "fireworks", "nvidia", "colab", "cerebras"):
             if by_provider.get(p):
                 interleaved.append(by_provider[p].pop(0))
     ordered: list = []
@@ -855,9 +855,9 @@ def chat_api():
     # بينها تلقائياً، فيجرب نفس النموذج بمفتاح تالٍ عند وصول المفتاح الأول لحده
     last_error = None
     rate_limited = 0
-    for mid, entry in ordered[:6]:
+    for mid, entry in ordered[:2]:   # موديل واحد + fallback واحد بس
         key_slots = len(_keys_of(entry["provider"])) or 1
-        for _slot in range(min(key_slots, 3)):   # نفس النموذج حتى 3 مفاتيح بديلة
+        for _slot in range(min(key_slots, 2)):   # مفتاحين بدل 3
             c, used_key = get_client_and_key(entry["provider"])
             try:
                 kwargs = {
@@ -907,11 +907,10 @@ def chat_api():
                         _mark_key_down(entry["provider"], used_key, seconds=15)
                     if status == 429:
                         rate_limited += 1
-                        # هدّئ لحظياً ثم جرّب نفس النموذج بمفتاح تالٍ (اللي ما زال حياً)
-                        time.sleep(min(1.0 + rate_limited * 0.8, 3.5))
+                        time.sleep(0.3)  # هدّئ شوي ثم جرّب التالي
                         continue
                     if status == 503:
-                        time.sleep(1)
+                        time.sleep(0.5)
                     break  # جرّب النموذج التالي
                 break  # خطأ غير متوقع — اترك هذا النموذج
             except Exception as e:
