@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-<script>(function(){try{var t=localStorage.getItem('khawarizmi_theme');if(t!=='dark'&&t!=='light'){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<script>(function(){try{var t=localStorage.getItem('khawarizmi_theme');if(t!=='dark'&&t!=='light'){t='dark';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Tajawal','Plus Jakarta Sans','Segoe UI',Tahoma,sans-serif}
@@ -17,13 +17,24 @@ body{min-height:100vh;background:#070b0f;color:#f1f5f9;display:flex;align-items:
 html[data-theme="light"] body{background:#eef2f5;color:#0f172a}
 body::before{content:"";position:fixed;top:-18%;left:12%;width:620px;height:620px;border-radius:50%;background:radial-gradient(circle,rgba(212,168,67,.20),rgba(13,148,136,.06) 55%,transparent 70%);filter:blur(70px);pointer-events:none}
 body::after{content:"";position:fixed;bottom:-20%;right:8%;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,106,.16),rgba(212,168,67,.05) 55%,transparent 70%);filter:blur(70px);pointer-events:none}
+/* جزيئات ذهبية متحركة */
+.pt{position:fixed;width:3px;height:3px;border-radius:50%;background:#D4A843;opacity:0;z-index:0;pointer-events:none;animation:ptRise linear infinite}
+.pt.p2{background:#5eead4}
+@keyframes ptRise{0%{transform:translateY(105vh);opacity:0}8%{opacity:.9}90%{opacity:.7}100%{transform:translateY(-6vh) translateX(var(--drift,30px));opacity:0}}
+.pt:nth-child(1){left:10%;--drift:26px;animation-duration:16s}
+.pt:nth-child(2){left:24%;--drift:-22px;animation-duration:21s;animation-delay:3s}
+.pt:nth-child(3){left:38%;--drift:30px;animation-duration:18s;animation-delay:6s}
+.pt:nth-child(4){left:52%;--drift:-28px;animation-duration:24s;animation-delay:2s}
+.pt:nth-child(5){left:66%;--drift:20px;animation-duration:15s;animation-delay:8s}
+.pt:nth-child(6){left:80%;--drift:-24px;animation-duration:20s;animation-delay:5s}
+.pt:nth-child(7){left:91%;--drift:16px;animation-duration:17s;animation-delay:9s}
 .card{width:100%;max-width:440px;background:rgba(16,23,32,.88);backdrop-filter:blur(22px);border:1px solid rgba(255,255,255,.09);border-radius:26px;padding:38px 34px 28px;box-shadow:0 30px 70px -15px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.12);position:relative;overflow:hidden;z-index:1}
 html[data-theme="light"] .card{background:rgba(255,255,255,.94);border-color:rgba(15,23,42,.08);box-shadow:0 30px 60px -18px rgba(15,23,42,.22)}
 .card::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#D4A843,#c9a86a,transparent)}
 .logo-wrap{position:relative;width:68px;height:68px;margin:0 auto 12px}
 .logo-wrap::after{content:"";position:absolute;inset:-7px;border-radius:22px;background:linear-gradient(135deg,#D4A843,#D4A843);filter:blur(16px);opacity:.45}
 .logo{width:64px;height:64px;border-radius:18px;margin:0 auto;display:block;position:relative;z-index:1;border:1px solid rgba(255,255,255,.25)}
-.brand-name{text-align:center;font-weight:800;font-size:1.5rem;letter-spacing:-.3px;background:linear-gradient(135deg,#fff 20%,#a7f3d0 60%,#e9d6a4 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+.brand-name{text-align:center;font-weight:800;font-size:1.5rem;letter-spacing:-.3px;background:linear-gradient(135deg,#fff 20%,#e9d6a4 40%,#D4A843 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
 html[data-theme="light"] .brand-name{background:linear-gradient(135deg,#0f172a 20%,#D4A843 70%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .brand-sub{display:flex;justify-content:center;margin-bottom:20px}
 .brand-sub span{font-size:.70rem;font-weight:700;color:#6ee7b7;background:rgba(212,168,67,.12);border:1px solid rgba(212,168,67,.28);padding:4px 12px;border-radius:999px}
@@ -56,10 +67,11 @@ html[data-theme="light"] .theme-fab{background:#fff;color:#475569;border-color:#
 </head>
 <body>
 <button class="theme-fab" id="themeFab" title="تبديل المظهر" aria-label="تبديل المظهر"><svg id="themeFabIc" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+<span class="pt"></span><span class="pt p2"></span><span class="pt"></span><span class="pt p2"></span><span class="pt"></span><span class="pt p2"></span><span class="pt"></span>
 <div class="card">
   <div class="logo-wrap"><img class="logo" src="/static/logo.svg" alt="الخوارزمي"></div>
   <div class="brand-name">الخوارزمي</div>
-  <div class="brand-sub"><span>ذكاء اصطناعي فاخر — مفتوح المصدر</span></div>
+  <div class="brand-sub"><span>مساعد ذكي فاخر — من فلسطين</span></div>
   <h1 id="title">تسجيل الدخول</h1>
   <p class="sub" id="subtitle">مرحباً بعودتك إلى بيئة العمل الذكية</p>
   <div class="msg" id="msg"></div>

@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-<script>(function(){try{var t=localStorage.getItem('khawarizmi_theme');if(t!=='dark'&&t!=='light'){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<script>(function(){try{var t=localStorage.getItem('khawarizmi_theme');if(t!=='dark'&&t!=='light'){t='dark';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -20,6 +20,31 @@ html[data-theme="dark"]{--bg:#080c11;--panel:#0e141b;--border:#1d2732;--text:#ee
 html,body{height:100%}
 body{display:flex;background:var(--bg);color:var(--text);overflow:hidden;position:relative;-webkit-font-smoothing:antialiased}
 html[data-theme="dark"] body{background:radial-gradient(900px 500px at 85% -10%,rgba(212,168,67,.10),transparent 60%),radial-gradient(700px 500px at 10% 110%,rgba(26,83,92,.08),transparent 60%),#080c11}
+/* ===== الخلفية الفاخرة: كرات متوهجة + جزيئات ذهبية متحركة ===== */
+#luxBg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+#luxBg .orb{position:absolute;border-radius:50%;filter:blur(64px);opacity:.5;animation:orbFloat 18s ease-in-out infinite}
+#luxBg .orb.o1{width:480px;height:480px;background:rgba(212,168,67,.16);top:-140px;left:-120px}
+#luxBg .orb.o2{width:420px;height:420px;background:rgba(26,83,92,.22);bottom:-160px;right:-100px;animation-delay:-6s}
+#luxBg .orb.o3{width:300px;height:300px;background:rgba(224,122,95,.12);top:40%;left:62%;animation-delay:-12s}
+@keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(40px,-30px) scale(1.08)}66%{transform:translate(-25px,25px) scale(.95)}}
+#luxBg .pt{position:absolute;width:3px;height:3px;border-radius:50%;background:#D4A843;opacity:0;animation:ptRise linear infinite}
+#luxBg .pt.p2{background:#5eead4}
+#luxBg .pt.p3{background:#f9a8d4;opacity:0}
+@keyframes ptRise{0%{transform:translateY(105vh);opacity:0}8%{opacity:.9}90%{opacity:.7}100%{transform:translateY(-6vh) translateX(var(--drift,30px));opacity:0}}
+#luxBg .pt:nth-child(1){left:8%;--drift:26px;animation-duration:16s;animation-delay:0s}
+#luxBg .pt:nth-child(2){left:16%;--drift:-20px;animation-duration:21s;animation-delay:2s}
+#luxBg .pt:nth-child(3){left:26%;--drift:34px;animation-duration:18s;animation-delay:5s}
+#luxBg .pt:nth-child(4){left:34%;--drift:-28px;animation-duration:24s;animation-delay:1s}
+#luxBg .pt:nth-child(5){left:43%;--drift:22px;animation-duration:15s;animation-delay:7s}
+#luxBg .pt:nth-child(6){left:52%;--drift:-32px;animation-duration:20s;animation-delay:3s}
+#luxBg .pt:nth-child(7){left:61%;--drift:18px;animation-duration:17s;animation-delay:6s}
+#luxBg .pt:nth-child(8){left:70%;--drift:-24px;animation-duration:23s;animation-delay:4s}
+#luxBg .pt:nth-child(9){left:79%;--drift:30px;animation-duration:19s;animation-delay:8s}
+#luxBg .pt:nth-child(10){left:88%;--drift:-18px;animation-duration:22s;animation-delay:2.5s}
+#luxBg .pt:nth-child(11){left:94%;--drift:14px;animation-duration:16s;animation-delay:6.5s}
+#luxBg .pt:nth-child(12){left:4%;--drift:20px;animation-duration:20s;animation-delay:9s}
+html[data-theme="light"] #luxBg{display:none}
+#main,#sidebar{position:relative;z-index:1}
 /* الشريط الجانبي */
 #sidebar{width:284px;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:margin .25s;position:relative}
 html[data-theme="dark"] #sidebar{background:linear-gradient(180deg,#0d141c,#0a0f15);border-left-color:#1d2732}
@@ -308,6 +333,11 @@ html[data-theme="dark"] .lux-badge{color:#5eead4;border-color:rgba(212,168,67,.3
 </style>
 </head>
 <body>
+<!-- الخلفية الفاخرة المتحركة -->
+<div id="luxBg" aria-hidden="true">
+  <div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
+  <span class="pt"></span><span class="pt"></span><span class="pt"></span><span class="pt"></span><span class="pt"></span><span class="pt"></span><span class="pt"></span><span class="pt"></span><span class="pt"></span><span class="pt"></span><span class="pt"></span><span class="pt"></span>
+</div>
 
 <!-- الشريط الجانبي -->
 <aside id="sidebar">
