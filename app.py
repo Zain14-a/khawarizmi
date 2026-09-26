@@ -203,8 +203,61 @@ if os.getenv("FIREWORKS_API_KEY"):
         },
     })
 
-# ═══════════ نماذج OpenRouter (مطفأة حالياً — رصيدها انتهى) ═══════════
-# تظهر تلقائياً إذا وُجد OPENROUTER_API_KEY في .env (بدون حدود مفاتيح)
+# ═══════ نماذج APInex (مجاني 100% — 1M token لكل الموديلات) ═══════
+# التسجيل: apinex.bond + أدخل الكود TMKTL35G
+# المفتاح: APINEX_API_KEY من لوحة المطورين
+if os.getenv("APINEX_API_KEY"):
+    MODELS.update({
+        "apnx-gemini-3.8-flash": {
+            "label": "Gemini 3.8 Flash",
+            "desc": "أقوى موديل جوجل — 1M token — مجاني عبر APInex ⚡",
+            "provider": "apinex",
+            "id": "free/gemini-3.8-flash",
+            "vision": True,
+        },
+        "apnx-gpt-5.6-luna": {
+            "label": "GPT-5.6 Luna",
+            "desc": "أحدث GPT — 1M token — مجاني عبر APInex ⚡",
+            "provider": "apinex",
+            "id": "free/gpt-5.6-luna",
+            "vision": True,
+        },
+        "apnx-deepseek-v4-pro": {
+            "label": "DeepSeek V4 Pro",
+            "desc": "أقوى DeepSeek — 1M token — مجاني عبر APInex ⚡",
+            "provider": "apinex",
+            "id": "free/deepseek-v4-pro-0813",
+            "vision": True,
+        },
+        "apnx-qwen-3.8-max": {
+            "label": "Qwen 3.8 MAX",
+            "desc": "أقوى Qwen — 1M token — مجاني عبر APInex ⚡",
+            "provider": "apinex",
+            "id": "free/qwen-3.8-max",
+            "vision": True,
+        },
+        "apnx-glm-5.3-flash": {
+            "label": "GLM-5.3 Flash",
+            "desc": "قوي وسريع — 1M token — مجاني عبر APInex ⚡",
+            "provider": "apinex",
+            "id": "free/glm-5.3-flash",
+            "vision": True,
+        },
+        "apnx-deepseek-v4-flash": {
+            "label": "DeepSeek V4 Flash",
+            "desc": "سريع وذكي — 1M token — مجاني عبر APInex ⚡",
+            "provider": "apinex",
+            "id": "free/deepseek-v4-flash-0731",
+        },
+        "apnx-muse-spark": {
+            "label": "Muse Spark 1.3",
+            "desc": "مبدع — 1M token — مجاني عبر APInex ⚡",
+            "provider": "apinex",
+            "id": "free/muse-spark-1.3",
+        },
+    })
+
+# ═══════════ نماذج OpenRouter ═══════════
 if os.getenv("OPENROUTER_API_KEY"):
     MODELS.update({
         "or-glm-5.2": {
@@ -312,6 +365,11 @@ PROVIDER_CONFIGS = {
         "base_url": "https://api.fireworks.ai/inference/v1",
         "key_env": "FIREWORKS_API_KEY",
         "timeout": 30,
+    },
+    "apinex": {
+        "base_url": "https://apinex.bond/v1",
+        "key_env": "APINEX_API_KEY",
+        "timeout": 60,
     },
 }
 
@@ -782,7 +840,7 @@ def chat_api():
         by_provider.setdefault(e.get("provider", "?"), []).append((mid, e))
     interleaved: list = []
     while any(by_provider.values()):
-        for p in ("gemini", "groq", "mistral", "together", "fireworks", "nvidia", "colab", "cerebras"):
+        for p in ("gemini", "groq", "apinex", "mistral", "together", "fireworks", "nvidia", "colab", "cerebras"):
             if by_provider.get(p):
                 interleaved.append(by_provider[p].pop(0))
     ordered: list = []
