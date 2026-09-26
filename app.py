@@ -152,18 +152,18 @@ if os.getenv("COLABC_URL") and os.getenv("COLABC_KEY"):
 # ═══════════ مزوّدون إضافيون (يظهر كل واحد إذا ضعفت مفتاحه في .env) ═══════════
 if os.getenv("MISTRAL_API_KEY"):
     MODELS.update({
-        "mistral-small-24b": {
-            "label": "Mistral Small 24B",
-            "desc": "سريع وذكي — 128K سياق، قارئ صور",
+        "mistral-small": {
+            "label": "Mistral Small",
+            "desc": "سريع وذكي — 128K سياق، قارئ صور — مجاني ⚡",
             "provider": "mistral",
-            "id": "mistralai/Mistral-Small-24B-Instruct-2501",
+            "id": "mistral-small-latest",
             "vision": True,
         },
         "mistral-mixtral": {
             "label": "Mixtral 8x7B",
             "desc": "مفتوح المصدر — قوي بالعموم",
             "provider": "mistral",
-            "id": "mistralai/Mixtral-8x7B-Instruct-v0.1",
+            "id": "mistral.mixtral-8x7b-instruct-v0.1",
         },
     })
 if os.getenv("TOGETHER_API_KEY"):
