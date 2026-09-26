@@ -298,52 +298,52 @@ PROVIDER_CONFIGS = {
     "gemini": {
         "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
         "key_env": "GEMINI_API_KEY",
-        "timeout": 15,
+        "timeout": 10,
     },
     "groq": {
         "base_url": "https://api.groq.com/openai/v1",
         "key_env": "GROQ_API_KEY",
-        "timeout": 15,
+        "timeout": 10,
     },
     "openrouter": {
         "base_url": "https://openrouter.ai/api/v1",
         "key_env": "OPENROUTER_API_KEY",
-        "timeout": 15,
+        "timeout": 10,
     },
     "cerebras": {
         "base_url": "https://api.cerebras.ai/v1",
         "key_env": "CEREBRAS_API_KEY",
-        "timeout": 15,
+        "timeout": 10,
     },
     "nvidia": {
         "base_url": "https://integrate.api.nvidia.com/v1",
         "key_env": "NVIDIA_API_KEY",
-        "timeout": 15,
+        "timeout": 10,
     },
     "colab": {
         "base_url": os.getenv("COLABC_URL", ""),   # رابط نفق Cloudflare من جهازك/كولاب
         "key_env": "COLABC_KEY",
-        "timeout": 20,
+        "timeout": 15,
     },
     "mistral": {
         "base_url": "https://api.mistral.ai/v1",
         "key_env": "MISTRAL_API_KEY",
-        "timeout": 15,
+        "timeout": 10,
     },
     "together": {
         "base_url": "https://api.together.xyz/v1",
         "key_env": "TOGETHER_API_KEY",
-        "timeout": 15,
+        "timeout": 10,
     },
     "fireworks": {
         "base_url": "https://api.fireworks.ai/inference/v1",
         "key_env": "FIREWORKS_API_KEY",
-        "timeout": 15,
+        "timeout": 10,
     },
     "apinex": {
         "base_url": "https://apinex.bond/v1",
         "key_env": "APINEX_API_KEY",
-        "timeout": 15,
+        "timeout": 10,
     },
 }
 
@@ -875,7 +875,7 @@ def chat_api():
                 with ThreadPoolExecutor(max_workers=1) as _executor:
                     _future = _executor.submit(c.chat.completions.create, **kwargs)
                     try:
-                        r = _future.result(timeout=12)
+                        r = _future.result(timeout=10)
                     except FuturesTimeout:
                         raise RuntimeError("Chat timeout - model too slow")
                 reply = r.choices[0].message.content or ""
