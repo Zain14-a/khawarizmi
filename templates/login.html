@@ -3,80 +3,65 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>الخوارزمي</title>
+<title>تسجيل الدخول — الخوارزمي</title>
 <link rel="icon" type="image/svg+xml" href="/static/logo.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <script>(function(){try{var t=localStorage.getItem('khawarizmi_theme');if(t!=='dark'&&t!=='light'){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Noto Sans Arabic','Segoe UI',Tahoma,sans-serif}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Tajawal','Plus Jakarta Sans','Segoe UI',Tahoma,sans-serif}
 html[data-theme="dark"]{color-scheme:dark}
-:root{
-  --bg:#0d0d0d;--fg:#f5f0e8;--muted:#9a9185;--accent:#D4A843;--accent2:#e07a5f;
-  --card:rgba(22,20,18,.82);--border:rgba(212,168,67,.18);
-  --glow:rgba(212,168,67,.25);--teal:#1a535c;--warm:#3d2e1f;
-}
-html[data-theme="light"]{
-  --bg:#f5f0e8;--fg:#1a1612;--muted:#7a7064;--accent:#b8892e;--accent2:#c4684a;
-  --card:rgba(255,253,248,.92);--border:rgba(184,137,46,.2);
-  --glow:rgba(184,137,46,.2);--teal:#1a535c;--warm:#d4c4a8;
-}
-body{min-height:100vh;background:var(--bg);color:var(--fg);display:flex;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden;-webkit-font-smoothing:antialiased}
-body::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 600px 400px at 25% 20%,rgba(212,168,67,.09),transparent),radial-gradient(ellipse 500px 500px at 75% 80%,rgba(26,83,92,.10),transparent),radial-gradient(ellipse 300px 300px at 50% 50%,rgba(224,122,95,.06),transparent);pointer-events:none}
-body::after{content:"";position:absolute;width:120px;height:120px;background:radial-gradient(circle,rgba(212,168,67,.07),transparent);border-radius:50%;top:18%;left:12%;pointer-events:none;animation:float 14s ease-in-out infinite}
-@keyframes float{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,20px)}}
-.card{width:100%;max-width:440px;background:var(--card);backdrop-filter:blur(24px);border:1px solid var(--border);border-radius:28px;padding:40px 34px 30px;box-shadow:0 40px 80px -20px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.04) inset;position:relative;overflow:hidden}
-.card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--accent),var(--accent2),transparent)}
-.card::after{content:"";position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(to bottom,transparent,var(--bg));pointer-events:none}
-.logo-wrap{position:relative;width:70px;height:70px;margin:0 auto 16px;animation:glow 4s ease-in-out infinite}
-@keyframes glow{0%,100%{filter:drop-shadow(0 0 8px var(--glow))}50%{filter:drop-shadow(0 0 16px var(--glow))}}
-.logo{width:70px;height:70px;border-radius:20px;display:block;margin:0 auto}
-.brand-name{text-align:center;font-weight:900;font-size:1.6rem;letter-spacing:-.5px;background:linear-gradient(135deg,var(--fg) 30%,var(--accent) 80%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:2px}
-.brand-sub{text-align:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.92rem;color:var(--muted);margin-bottom:24px;letter-spacing:.5px}
-h1{font-size:1.28rem;text-align:center;margin-bottom:6px;font-weight:800;letter-spacing:-.2px}
-.sub{text-align:center;color:var(--muted);font-size:.86rem;margin-bottom:22px;line-height:1.6}
-label{display:block;font-size:.78rem;font-weight:700;color:var(--muted);margin-bottom:7px;letter-spacing:.3px;text-transform:uppercase}
-input{width:100%;padding:14px 16px;border:1px solid var(--border);border-radius:14px;font-size:.96rem;font-family:inherit;color:var(--fg);background:rgba(0,0,0,.25);margin-bottom:16px;transition:all .25s;outline:none;letter-spacing:.2px}
-html[data-theme="light"] input{background:#fff;border-color:rgba(0,0,0,.1)}
-input::placeholder{color:var(--muted);opacity:.6}
-input:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--glow)}
-button.primary{width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),var(--teal));color:var(--fg);border:none;border-radius:14px;font-size:1rem;font-weight:800;font-family:inherit;cursor:pointer;transition:all .25s;letter-spacing:.3px;position:relative;overflow:hidden}
-button.primary::before{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);transition:left .5s}
-button.primary:hover::before{left:100%}
-button.primary:hover{transform:translateY(-2px);box-shadow:0 12px 30px -6px var(--glow)}
-button.primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
-button.primary .spinner{display:none;width:20px;height:20px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;margin:0 auto}
-button.primary.loading .spinner{display:block}
-button.primary.loading .btn-text{display:none}
-@keyframes spin{to{transform:rotate(360deg)}}
-.msg{font-size:.83rem;text-align:center;margin-bottom:12px;min-height:20px;font-weight:600}
-.msg.err{color:#e07a5f;background:rgba(224,122,95,.1);border:1px solid rgba(224,122,95,.22);border-radius:11px;padding:9px 12px}
-html[data-theme="light"] .msg.err{color:#c4684a;background:rgba(196,104,74,.08)}
-.switch{text-align:center;font-size:.86rem;color:var(--muted);margin-top:18px}
-.switch a{color:var(--accent);font-weight:700;cursor:pointer;text-decoration:none;border-bottom:1px solid transparent;transition:border-color .2s}
-.switch a:hover{border-bottom-color:var(--accent)}
-.footer{text-align:center;font-size:.7rem;color:var(--muted);margin-top:20px;padding-top:14px;border-top:1px solid var(--border);opacity:.6;display:flex;align-items:center;justify-content:center;gap:5px}
-.theme-fab{position:fixed;top:18px;left:18px;z-index:5;width:42px;height:42px;border-radius:13px;background:var(--card);border:1px solid var(--border);color:var(--fg);display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(10px);transition:all .2s}
-.theme-fab:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.2)}
-.deco{position:fixed;pointer-events:none;opacity:.05;font-size:8rem;font-family:'Cormorant Garamond',serif;color:var(--accent);z-index:0}
-.deco-1{top:-20px;right:-10px;transform:rotate(-12deg)}
-.deco-2{bottom:-40px;left:-15px;transform:rotate(8deg);font-size:6rem}
-@media(max-width:480px){.card{padding:28px 20px 22px}h1{font-size:1.15rem}.brand-name{font-size:1.4rem}}
+body{min-height:100vh;background:#070b0f;color:#f1f5f9;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden;-webkit-font-smoothing:antialiased}
+html[data-theme="light"] body{background:#eef2f5;color:#0f172a}
+body::before{content:"";position:fixed;top:-18%;left:12%;width:620px;height:620px;border-radius:50%;background:radial-gradient(circle,rgba(212,168,67,.20),rgba(13,148,136,.06) 55%,transparent 70%);filter:blur(70px);pointer-events:none}
+body::after{content:"";position:fixed;bottom:-20%;right:8%;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,106,.16),rgba(212,168,67,.05) 55%,transparent 70%);filter:blur(70px);pointer-events:none}
+.card{width:100%;max-width:440px;background:rgba(16,23,32,.88);backdrop-filter:blur(22px);border:1px solid rgba(255,255,255,.09);border-radius:26px;padding:38px 34px 28px;box-shadow:0 30px 70px -15px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.12);position:relative;overflow:hidden;z-index:1}
+html[data-theme="light"] .card{background:rgba(255,255,255,.94);border-color:rgba(15,23,42,.08);box-shadow:0 30px 60px -18px rgba(15,23,42,.22)}
+.card::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#D4A843,#c9a86a,transparent)}
+.logo-wrap{position:relative;width:68px;height:68px;margin:0 auto 12px}
+.logo-wrap::after{content:"";position:absolute;inset:-7px;border-radius:22px;background:linear-gradient(135deg,#D4A843,#D4A843);filter:blur(16px);opacity:.45}
+.logo{width:64px;height:64px;border-radius:18px;margin:0 auto;display:block;position:relative;z-index:1;border:1px solid rgba(255,255,255,.25)}
+.brand-name{text-align:center;font-weight:800;font-size:1.5rem;letter-spacing:-.3px;background:linear-gradient(135deg,#fff 20%,#a7f3d0 60%,#e9d6a4 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+html[data-theme="light"] .brand-name{background:linear-gradient(135deg,#0f172a 20%,#D4A843 70%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.brand-sub{display:flex;justify-content:center;margin-bottom:20px}
+.brand-sub span{font-size:.70rem;font-weight:700;color:#6ee7b7;background:rgba(212,168,67,.12);border:1px solid rgba(212,168,67,.28);padding:4px 12px;border-radius:999px}
+html[data-theme="light"] .brand-sub span{color:#1a535c}
+h1{font-size:1.22rem;text-align:center;margin-bottom:6px;font-weight:800}
+.sub{text-align:center;color:#94a3b8;font-size:.87rem;margin-bottom:22px}
+html[data-theme="light"] .sub{color:#64748b}
+label{display:block;font-size:.80rem;font-weight:700;color:#cbd5e1;margin-bottom:7px}
+html[data-theme="light"] label{color:#334155}
+input{width:100%;padding:13px 15px;border:1px solid rgba(255,255,255,.10);border-radius:13px;font-size:.94rem;font-family:inherit;color:#f1f5f9;background:rgba(7,11,16,.6);margin-bottom:16px;transition:all .2s;outline:none}
+html[data-theme="light"] input{background:#f8fafc;border-color:#e2e8f0;color:#0f172a}
+input::placeholder{color:#64748b}
+input:focus{border-color:#D4A843;box-shadow:0 0 0 4px rgba(212,168,67,.18);background:rgba(212,168,67,.05)}
+button.primary{width:100%;padding:13px;background:linear-gradient(135deg,#D4A843,#D4A843 60%,#0e7490);color:#fff;border:none;border-radius:13px;font-size:.96rem;font-weight:800;font-family:inherit;cursor:pointer;transition:all .2s;box-shadow:0 12px 26px -6px rgba(212,168,67,.5),inset 0 1px 0 rgba(255,255,255,.3);margin-top:6px}
+button.primary:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.06)}
+button.primary:disabled{opacity:.6;cursor:not-allowed;box-shadow:none}
+.msg{font-size:.84rem;text-align:center;margin-bottom:12px;min-height:20px;font-weight:600}
+.msg.err{color:#fca5a5;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.28);border-radius:11px;padding:9px 12px}
+html[data-theme="light"] .msg.err{color:#b91c1c}
+.switch{text-align:center;font-size:.86rem;color:#94a3b8;margin-top:18px}
+html[data-theme="light"] .switch{color:#64748b}
+.switch a{color:#34d399;font-weight:700;cursor:pointer;text-decoration:none}
+.switch a:hover{text-decoration:underline}
+.footer{text-align:center;font-size:.72rem;color:#64748b;margin-top:22px;padding-top:16px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;gap:7px}
+html[data-theme="light"] .footer{border-color:#eef2f7}
+.theme-fab{position:fixed;top:18px;left:18px;z-index:5;width:42px;height:42px;border-radius:12px;background:rgba(16,23,32,.8);border:1px solid rgba(255,255,255,.12);color:#cbd5e1;display:flex;align-items:center;justify-content:center;cursor:pointer}
+html[data-theme="light"] .theme-fab{background:#fff;color:#475569;border-color:#e2e8f0}
+.theme-fab:hover{transform:translateY(-2px)}
 </style>
 </head>
 <body>
-<div class="deco deco-1">✦</div>
-<div class="deco deco-2">✦</div>
-<button class="theme-fab" id="themeFab" title="تبديل المظهر" aria-label="تبديل المظهر">
-  <svg id="themeFabIc" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-</button>
+<button class="theme-fab" id="themeFab" title="تبديل المظهر" aria-label="تبديل المظهر"><svg id="themeFabIc" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
 <div class="card">
   <div class="logo-wrap"><img class="logo" src="/static/logo.svg" alt="الخوارزمي"></div>
   <div class="brand-name">الخوارزمي</div>
-  <div class="brand-sub">من فلسطين، بالعربية، للعالم</div>
+  <div class="brand-sub"><span>ذكاء اصطناعي فاخر — مفتوح المصدر</span></div>
   <h1 id="title">تسجيل الدخول</h1>
-  <p class="sub" id="subtitle">ادخل إلى عالم الذكاء الاصطناعي المفتوح</p>
+  <p class="sub" id="subtitle">مرحباً بعودتك إلى بيئة العمل الذكية</p>
   <div class="msg" id="msg"></div>
   <form id="form" novalidate>
     <div id="nameWrap" style="display:none">
@@ -87,16 +72,10 @@ html[data-theme="light"] .msg.err{color:#c4684a;background:rgba(196,104,74,.08)}
     <input id="email" type="email" placeholder="you@example.com" autocomplete="email" dir="ltr">
     <label for="password">كلمة المرور</label>
     <input id="password" type="password" placeholder="٦ أحرف على الأقل" autocomplete="current-password" dir="ltr">
-    <button class="primary" id="submitBtn" type="submit">
-      <span class="btn-text">تسجيل الدخول</span>
-      <span class="spinner"></span>
-    </button>
+    <button class="primary" id="submitBtn" type="submit">تسجيل الدخول</button>
   </form>
   <p class="switch" id="switch">ما عندك حساب؟ <a id="switchLink">أنشئ حساب جديد</a></p>
-  <div class="footer">
-    <span style="width:4px;height:4px;border-radius:50%;background:var(--accent);display:inline-block;opacity:.6"></span>
-    الخوارزمي — فخامة عربية مفتوحة
-  </div>
+  <p class="footer">الخوارزمي <span style="width:4px;height:4px;border-radius:50%;background:currentColor;display:inline-block;opacity:.6"></span> مساعد فائق الفخامة</p>
 </div>
 <script>
 let mode = 'login';
@@ -105,16 +84,64 @@ const subtitle = document.getElementById('subtitle');
 const msg = document.getElementById('msg');
 const nameWrap = document.getElementById('nameWrap');
 const submitBtn = document.getElementById('submitBtn');
+const switchText = document.getElementById('switch');
 const form = document.getElementById('form');
 const themeFab = document.getElementById('themeFab');
 const themeFabIc = document.getElementById('themeFabIc');
-function syncThemeFab(){try{var d=document.documentElement.getAttribute('data-theme')==='dark';themeFabIc.innerHTML=d?'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>':'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';}catch(e){}}
+function syncThemeFab(){try{var dark=document.documentElement.getAttribute('data-theme')==='dark';themeFabIc.innerHTML=dark?'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>':'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';}catch(e){}}
 syncThemeFab();
 if(themeFab){themeFab.onclick=()=>{var c=document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light';var n=c==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);try{localStorage.setItem('khawarizmi_theme',n);}catch(e){}syncThemeFab();};}
-function render(){const l=mode==='login';title.textContent=l?'تسجيل الدخول':'إنشاء حساب جديد';subtitle.textContent=l?'ادخل إلى عالم الذكاء الاصطناعي المفتوح':'دقيقة واحدة وتدخل عالم الخوارزمي';const b=submitBtn.querySelector('.btn-text');b.textContent=l?'تسجيل الدخول':'إنشاء الحساب';nameWrap.style.display=l?'none':'block';document.getElementById('switch').innerHTML=l?'ما عندك حساب؟ <a id="switchLink">أنشئ حساب جديد</a>':'عندك حساب؟ <a id="switchLink">سجّل دخولك</a>';document.getElementById('switchLink').onclick=toggle;document.getElementById('password').autocomplete=l?'current-password':'new-password';msg.textContent='';}
-function toggle(){mode=mode==='login'?'register':'login';render();}
-function show(t){msg.textContent=t;msg.className='msg err';}
-form.addEventListener('submit',async e=>{e.preventDefault();msg.textContent='';const email=document.getElementById('email').value.trim();const password=document.getElementById('password').value;const name=document.getElementById('name').value.trim();if(!email||!password){show('عبّي البريد الإلكتروني وكلمة المرور');return;}if(password.length<6){show('كلمة المرور لازم تكون ٦ أحرف على الأقل');return;}submitBtn.classList.add('loading');submitBtn.disabled=true;try{const res=await fetch('/api/'+mode,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,password})});const data=await res.json();submitBtn.classList.remove('loading');if(res.ok&&data.ok){location.href='/';}else{show(data.error||'صار خطأ — جرّب مرة ثانية');}}catch(err){submitBtn.classList.remove('loading');show('ما قدرت أوصل للسيرفر — تأكد إنه شغّال');}submitBtn.disabled=false;});
+
+function render() {
+  const login = mode === 'login';
+  title.textContent = login ? 'تسجيل الدخول' : 'إنشاء حساب جديد';
+  subtitle.textContent = login ? 'مرحباً بعودتك إلى بيئة العمل الذكية' : 'دقيقة واحدة وتدخل عالم الخوارزمي';
+  submitBtn.textContent = login ? 'تسجيل الدخول' : 'إنشاء الحساب';
+  nameWrap.style.display = login ? 'none' : 'block';
+  switchText.innerHTML = login
+    ? 'ما عندك حساب؟ <a id="switchLink">أنشئ حساب جديد</a>'
+    : 'عندك حساب؟ <a id="switchLink">سجّل دخولك</a>';
+  document.getElementById('switchLink').onclick = toggle;
+  document.getElementById('password').autocomplete = login ? 'current-password' : 'new-password';
+  msg.textContent = '';
+}
+
+function toggle() {
+  mode = mode === 'login' ? 'register' : 'login';
+  render();
+}
+document.getElementById('switchLink').onclick = toggle;
+
+function show(t) { msg.textContent = t; msg.className = 'msg err'; }
+
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  msg.textContent = '';
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const name = document.getElementById('name').value.trim();
+
+  if (!email || !password) { show('عبّي البريد الإلكتروني وكلمة المرور'); return; }
+  if (password.length < 6) { show('كلمة المرور لازم تكون ٦ أحرف على الأقل'); return; }
+
+  submitBtn.disabled = true;
+  try {
+    const res = await fetch('/api/' + mode, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password }),
+    });
+    const data = await res.json();
+    if (res.ok && data.ok) {
+      location.href = '/';
+    } else {
+      show(data.error || 'صار خطأ — جرّب مرة ثانية');
+    }
+  } catch (err) {
+    show('ما قدرت أوصل للسيرفر — تأكد إنه شغّال');
+  }
+  submitBtn.disabled = false;
+});
 </script>
 </body>
 </html>
