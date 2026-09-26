@@ -13,6 +13,7 @@ import threading
 import time
 import urllib.parse
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeout
 from functools import wraps
 
 if sys.platform == "win32":
@@ -870,7 +871,13 @@ def chat_api():
                     eff_max = 2000
                 if eff_max > 0:
                     kwargs["max_tokens"] = min(eff_max, 8000)
-                r = c.chat.completions.create(**kwargs)
+                # ===== timeout صارم: 12 ثانية ← لو تأخر يروح للتالي =====
+                with ThreadPoolExecutor(max_workers=1) as _executor:
+                    _future = _executor.submit(c.chat.completions.create, **kwargs)
+                    try:
+                        r = _future.result(timeout=12)
+                    except FuturesTimeout:
+                        raise RuntimeError("Chat timeout - model too slow")
                 reply = r.choices[0].message.content or ""
                 # تتبّع التوكنز المستخدمة لكل مستخدم
                 try:
