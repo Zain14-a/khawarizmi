@@ -297,52 +297,52 @@ PROVIDER_CONFIGS = {
     "gemini": {
         "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
         "key_env": "GEMINI_API_KEY",
-        "timeout": 30,
+        "timeout": 15,
     },
     "groq": {
         "base_url": "https://api.groq.com/openai/v1",
         "key_env": "GROQ_API_KEY",
-        "timeout": 30,
+        "timeout": 15,
     },
     "openrouter": {
         "base_url": "https://openrouter.ai/api/v1",
         "key_env": "OPENROUTER_API_KEY",
-        "timeout": 30,
+        "timeout": 15,
     },
     "cerebras": {
         "base_url": "https://api.cerebras.ai/v1",
         "key_env": "CEREBRAS_API_KEY",
-        "timeout": 30,
+        "timeout": 15,
     },
     "nvidia": {
         "base_url": "https://integrate.api.nvidia.com/v1",
         "key_env": "NVIDIA_API_KEY",
-        "timeout": 40,
+        "timeout": 15,
     },
     "colab": {
         "base_url": os.getenv("COLABC_URL", ""),   # رابط نفق Cloudflare من جهازك/كولاب
         "key_env": "COLABC_KEY",
-        "timeout": 60,
+        "timeout": 20,
     },
     "mistral": {
         "base_url": "https://api.mistral.ai/v1",
         "key_env": "MISTRAL_API_KEY",
-        "timeout": 30,
+        "timeout": 15,
     },
     "together": {
         "base_url": "https://api.together.xyz/v1",
         "key_env": "TOGETHER_API_KEY",
-        "timeout": 30,
+        "timeout": 15,
     },
     "fireworks": {
         "base_url": "https://api.fireworks.ai/inference/v1",
         "key_env": "FIREWORKS_API_KEY",
-        "timeout": 30,
+        "timeout": 15,
     },
     "apinex": {
         "base_url": "https://apinex.bond/v1",
         "key_env": "APINEX_API_KEY",
-        "timeout": 60,
+        "timeout": 15,
     },
 }
 
