@@ -417,7 +417,7 @@ html[data-theme="dark"] .lux-badge{color:#E3D3A6;border-color:rgba(212,168,67,.3
       <button class="card agent-card-trigger"><b>ابنِ لي موقعاً</b><small>صفحة كاملة بمعاينة حية بجانب المحادثة</small></button>
       <button class="card agent-card-game"><b>اصنع لي لعبة</b><small>لعبة تفاعلية تعمل فوراً مع معاينة</small></button>
       <button class="card"><b>اكتبلي كود برمجي</b><small>بأي لغة مع الشرح خطوة بخطوة</small></button>
-      <button class="card img-card-trigger"><b>ولّد صورة بالذكاء الاصطناعي</b><small>عبر نموذج FLUX.1 المفتوح</small></button>
+      <button class="card img-card-trigger"><b>ولّد صورة بالذكاء الاصطناعي</b><small>بنموذجنا الفني الحصري</small></button>
     </div>
   </div>
 
@@ -450,7 +450,7 @@ html[data-theme="dark"] .lux-badge{color:#E3D3A6;border-color:rgba(212,168,67,.3
         <button id="send" title="إرسال (Enter)"></button>
       </div>
     </div>
-    <p class="hint">الخوارزمي يدعم المحادثة وتوليد الصور عبر نماذج مفتوحة المصدر (FLUX.1, FLUX.2, Z-Image وغيرها)</p>
+    <p class="hint">الخوارزمي يدعم المحادثة وتوليد الصور عبر نماذج فنية متعددة</p>
   </div>
 </main>
 
@@ -469,11 +469,11 @@ html[data-theme="dark"] .lux-badge{color:#E3D3A6;border-color:rgba(212,168,67,.3
       <textarea id="imgPromptInput" class="modal-textarea" placeholder="مثال: قطة رائد فضاء في الفضاء الخارجي بأسلوب سينمائي واقعي..."></textarea>
     </div>
     <div>
-      <label class="modal-label" for="imgModelSelect">النموذج مفتوح المصدر:</label>
+      <label class="modal-label" for="imgModelSelect">النموذج الفني:</label>
       <select id="imgModelSelect" class="modal-select">
-        <option value="flux" selected>FLUX.1 Schnell — الأعلى دقة وواقعية (مجاني بالكامل)</option>
+        <option value="flux" selected>Al-Khwarizmi Art — الأعلى دقة وواقعية (مجاني بالكامل)</option>
       </select>
-      <p class="img-key-hint">موقع مجاني 100% — توليد الصور عبر FLUX.1 مفتوح المصدر بدون أي مفاتيح</p>
+      <p class="img-key-hint">موقع مجاني 100% — توليد الصور بنموذجنا الفني بدون أي مفاتيح</p>
     </div>
     <div class="modal-footer">
       <button class="img-btn" id="cancelImgModalBtn">إلغاء</button>
@@ -1055,7 +1055,7 @@ function addImageBubble(imageItem) {
   row.className = 'row assistant';
   const imgUrl = imageItem.image_url;
   const promptText = imageItem.original_prompt || imageItem.prompt;
-  const modelText = imageItem.model_label || 'FLUX.1 Schnell';
+  const modelText = imageItem.model_label || 'Al-Khwarizmi Art';
   const enPrompt = imageItem.enhanced_prompt || promptText;
 
   row.innerHTML = `

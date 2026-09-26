@@ -59,7 +59,7 @@ MODELS = {
         "vision": True,
     },
     "image-flux": {
-        "label": "توليد صورة (FLUX.1)",
+        "label": "Al-Khwarizmi Art",
         "desc": "ولّد صوراً بأي وصف إبداعي",
         "provider": "image",
         "id": "flux",
@@ -1067,7 +1067,7 @@ def chat_api():
 # ===== توليد الصور عبر FLUX.1 (Pollinations) — مجاني بالكامل بدون أي مفتاح =====
 IMAGE_MODELS = {
     "flux": {
-        "label": "FLUX.1 Schnell",
+        "label": "Al-Khwarizmi Art",
         "desc": "المفتوح الأشهر — أعلى دقة وواقعية (مجاني)",
         "api": "flux",
     },
