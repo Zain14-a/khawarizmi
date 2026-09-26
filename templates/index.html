@@ -27,22 +27,33 @@ html[data-theme="dark"] body{background:radial-gradient(900px 500px at 85% -10%,
 #luxBg .orb.o2{width:420px;height:420px;background:rgba(26,83,92,.22);bottom:-160px;right:-100px;animation-delay:-6s}
 #luxBg .orb.o3{width:300px;height:300px;background:rgba(224,122,95,.12);top:40%;left:62%;animation-delay:-12s}
 @keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(40px,-30px) scale(1.08)}66%{transform:translate(-25px,25px) scale(.95)}}
-#luxBg .pt{position:absolute;width:3px;height:3px;border-radius:50%;background:#D4A843;opacity:0;animation:ptRise linear infinite}
-#luxBg .pt.p2{background:#5eead4}
-#luxBg .pt.p3{background:#f9a8d4;opacity:0}
-@keyframes ptRise{0%{transform:translateY(105vh);opacity:0}8%{opacity:.9}90%{opacity:.7}100%{transform:translateY(-6vh) translateX(var(--drift,30px));opacity:0}}
-#luxBg .pt:nth-child(1){left:8%;--drift:26px;animation-duration:16s;animation-delay:0s}
-#luxBg .pt:nth-child(2){left:16%;--drift:-20px;animation-duration:21s;animation-delay:2s}
-#luxBg .pt:nth-child(3){left:26%;--drift:34px;animation-duration:18s;animation-delay:5s}
-#luxBg .pt:nth-child(4){left:34%;--drift:-28px;animation-duration:24s;animation-delay:1s}
-#luxBg .pt:nth-child(5){left:43%;--drift:22px;animation-duration:15s;animation-delay:7s}
-#luxBg .pt:nth-child(6){left:52%;--drift:-32px;animation-duration:20s;animation-delay:3s}
-#luxBg .pt:nth-child(7){left:61%;--drift:18px;animation-duration:17s;animation-delay:6s}
-#luxBg .pt:nth-child(8){left:70%;--drift:-24px;animation-duration:23s;animation-delay:4s}
-#luxBg .pt:nth-child(9){left:79%;--drift:30px;animation-duration:19s;animation-delay:8s}
-#luxBg .pt:nth-child(10){left:88%;--drift:-18px;animation-duration:22s;animation-delay:2.5s}
-#luxBg .pt:nth-child(11){left:94%;--drift:14px;animation-duration:16s;animation-delay:6.5s}
-#luxBg .pt:nth-child(12){left:4%;--drift:20px;animation-duration:20s;animation-delay:9s}
+#luxBg .code{position:absolute;font-family:'Cairo','Noto Sans Arabic',Consolas,'Courier New',monospace;font-size:13px;font-weight:600;white-space:nowrap;direction:ltr;opacity:0;animation:codeRise linear infinite;text-shadow:0 0 12px rgba(212,168,67,.35)}
+#luxBg .code .k{color:#D4A843}
+#luxBg .code .s{color:#5eead4}
+#luxBg .code .f{color:#e07a5f}
+#luxBg .code .c{color:#5d6b7e;font-weight:400}
+#luxBg .code .b{color:#8ab4f8}
+@keyframes codeRise{0%{transform:translateY(106vh);opacity:0}7%{opacity:.6}88%{opacity:.45}100%{transform:translateY(-10vh) translateX(var(--drift,0px));opacity:0}}
+#luxBg .c1{left:3%;font-size:13px;animation-duration:22s;animation-delay:0s;--drift:18px}
+#luxBg .c2{left:9%;font-size:15px;animation-duration:26s;animation-delay:-4s;--drift:-22px}
+#luxBg .c3{left:16%;font-size:12px;animation-duration:19s;animation-delay:-9s;--drift:14px}
+#luxBg .c4{left:23%;font-size:14px;animation-duration:29s;animation-delay:-2s;--drift:-16px}
+#luxBg .c5{left:30%;font-size:13px;animation-duration:24s;animation-delay:-12s;--drift:24px}
+#luxBg .c6{left:37%;font-size:16px;animation-duration:21s;animation-delay:-6s;--drift:-12px}
+#luxBg .c7{left:44%;font-size:12px;animation-duration:27s;animation-delay:-16s;--drift:20px}
+#luxBg .c8{left:51%;font-size:14px;animation-duration:23s;animation-delay:-3s;--drift:-26px}
+#luxBg .c9{left:58%;font-size:13px;animation-duration:30s;animation-delay:-19s;--drift:12px}
+#luxBg .c10{left:65%;font-size:15px;animation-duration:20s;animation-delay:-8s;--drift:-18px}
+#luxBg .c11{left:72%;font-size:12px;animation-duration:25s;animation-delay:-22s;--drift:22px}
+#luxBg .c12{left:79%;font-size:14px;animation-duration:28s;animation-delay:-5s;--drift:-20px}
+#luxBg .c13{left:86%;font-size:13px;animation-duration:22s;animation-delay:-14s;--drift:16px}
+#luxBg .c14{left:93%;font-size:15px;animation-duration:26s;animation-delay:-10s;--drift:-24px}
+#luxBg .c15{left:6%;font-size:16px;animation-duration:31s;animation-delay:-24s;--drift:26px}
+#luxBg .c16{left:49%;font-size:17px;animation-duration:24s;animation-delay:-28s;--drift:-14px}
+#luxBg .c17{left:69%;font-size:12px;animation-duration:29s;animation-delay:-26s;--drift:10px}
+#luxBg .c18{left:13%;font-size:15px;animation-duration:27s;animation-delay:-30s;--drift:-28px}
+#luxBg .c19{left:33%;font-size:14px;animation-duration:32s;animation-delay:-34s;--drift:18px}
+#luxBg .c20{left:89%;font-size:12px;animation-duration:21s;animation-delay:-18s;--drift:-16px}
 html[data-theme="light"] #luxBg{display:none}
 #main,#sidebar{position:relative;z-index:1}
 /* الشريط الجانبي */
@@ -336,7 +347,26 @@ html[data-theme="dark"] .lux-badge{color:#5eead4;border-color:rgba(212,168,67,.3
 <!-- الخلفية الفاخرة المتحركة -->
 <div id="luxBg" aria-hidden="true">
   <div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
-  <span class="pt"></span><span class="pt"></span><span class="pt"></span><span class="pt"></span><span class="pt"></span><span class="pt"></span><span class="pt"></span><span class="pt"></span><span class="pt"></span><span class="pt"></span><span class="pt"></span><span class="pt"></span>
+  <div class="code c1"><span class="k">def</span> <span class="f">khawarizmi</span>():</div>
+  <div class="code c2"><span class="c"># Light Co — Palestine</span></div>
+  <div class="code c3"><span class="k">import</span> ai <span class="k">from</span> <span class="s">'brain'</span></div>
+  <div class="code c4"><span class="k">const</span> model = <span class="s">'gpt-oss-20b'</span>;</div>
+  <div class="code c5"><span class="k">while</span> <span class="b">True</span>: reply(prompt)</div>
+  <div class="code c6"><span class="k">await</span> fetch(<span class="s">'/api/chat'</span>)</div>
+  <div class="code c7">tokens = rate_limit(user, <span class="b">20000</span>)</div>
+  <div class="code c8"><span class="k">return</span> response.json()</div>
+  <div class="code c9">console.log(<span class="s">"salam"</span>);</div>
+  <div class="code c10"><span class="k">if</span> user.quota &gt; <span class="b">0</span>:</div>
+  <div class="code c11">api_key = os.getenv(<span class="s">"APINEX"</span>)</div>
+  <div class="code c12"><span class="k">async</span> <span class="k">function</span> <span class="f">chat</span>() {}</div>
+  <div class="code c13">stream = client.chat(messages)</div>
+  <div class="code c14"><span class="c">// khawarizmi-flash</span></div>
+  <div class="code c15">data = json.loads(body)</div>
+  <div class="code c16"><span class="k">def</span> <span class="f">think</span>(prompt):</div>
+  <div class="code c17">await stream.close()</div>
+  <div class="code c18">git push origin master</div>
+  <div class="code c19"><span class="k">FROM</span> python:3.12-slim</div>
+  <div class="code c20"><span class="s">'Al-Khwarizmi Flash'</span></div>
 </div>
 
 <!-- الشريط الجانبي -->
