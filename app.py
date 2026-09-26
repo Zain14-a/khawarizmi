@@ -208,52 +208,25 @@ if os.getenv("FIREWORKS_API_KEY"):
 # المفتاح: APINEX_API_KEY من لوحة المطورين
 if os.getenv("APINEX_API_KEY"):
     MODELS.update({
-        "apnx-gemini-3.8-flash": {
-            "label": "Gemini 3.8 Flash",
-            "desc": "أقوى موديل جوجل — 1M token — مجاني عبر APInex ⚡",
-            "provider": "apinex",
-            "id": "free/gemini-3.8-flash",
-            "vision": True,
-        },
-        "apnx-gpt-5.6-luna": {
-            "label": "GPT-5.6 Luna",
-            "desc": "أحدث GPT — 1M token — مجاني عبر APInex ⚡",
-            "provider": "apinex",
-            "id": "free/gpt-5.6-luna",
-            "vision": True,
-        },
-        "apnx-deepseek-v4-pro": {
-            "label": "DeepSeek V4 Pro",
-            "desc": "أقوى DeepSeek — 1M token — مجاني عبر APInex ⚡",
-            "provider": "apinex",
-            "id": "free/deepseek-v4-pro-0813",
-            "vision": True,
-        },
-        "apnx-qwen-3.8-max": {
-            "label": "Qwen 3.8 MAX",
-            "desc": "أقوى Qwen — 1M token — مجاني عبر APInex ⚡",
-            "provider": "apinex",
-            "id": "free/qwen-3.8-max",
-            "vision": True,
-        },
         "apnx-glm-5.3-flash": {
             "label": "GLM-5.3 Flash",
-            "desc": "قوي وسريع — 1M token — مجاني عبر APInex ⚡",
+            "desc": "قوي وسريع — Zhipu — مجاني 1M token عبر APInex ⚡",
             "provider": "apinex",
             "id": "free/glm-5.3-flash",
             "vision": True,
         },
-        "apnx-deepseek-v4-flash": {
-            "label": "DeepSeek V4 Flash",
-            "desc": "سريع وذكي — 1M token — مجاني عبر APInex ⚡",
+        "apnx-dsv4-pro": {
+            "label": "DeepSeek V4 Pro",
+            "desc": "أقوى DeepSeek — مجاني 1M token عبر APInex ⚡",
             "provider": "apinex",
-            "id": "free/deepseek-v4-flash-0731",
+            "id": "free/deepseek-v4-pro-0813",
+            "vision": True,
         },
-        "apnx-muse-spark": {
-            "label": "Muse Spark 1.3",
-            "desc": "مبدع — 1M token — مجاني عبر APInex ⚡",
+        "apnx-dsv4-flash": {
+            "label": "DeepSeek V4 Flash",
+            "desc": "سريع وذكي — مجاني 1M token عبر APInex ⚡",
             "provider": "apinex",
-            "id": "free/muse-spark-1.3",
+            "id": "free/deepseek-v4.1-flash",
         },
     })
 
