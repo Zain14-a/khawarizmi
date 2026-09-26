@@ -46,21 +46,21 @@ create_client()  # تحقق من وجود مفتاح Gemini عند بدء الت
 MODELS = {
     "gemini-2.5-flash": {
         "label": "Gemini 2.5 Flash",
-        "desc": "الأذكى — من جوجل (مجاني)",
+        "desc": "الأذكى والأدق — متعدد اللغات",
         "provider": "gemini",
         "id": "gemini-2.5-flash",
         "vision": True,
     },
     "gemini-2.5-flash-lite": {
         "label": "Gemini 2.5 Flash-Lite",
-        "desc": "الأسرع — من جوجل (مجاني)",
+        "desc": "الأسرع — خفيف وسريع الاستجابة",
         "provider": "gemini",
         "id": "gemini-2.5-flash-lite",
         "vision": True,
     },
     "image-flux": {
         "label": "توليد صورة (FLUX.1)",
-        "desc": "ولّد صوراً بأي وصف — نموذج مفتوح المصدر",
+        "desc": "ولّد صوراً بأي وصف إبداعي",
         "provider": "image",
         "id": "flux",
         "kind": "image",
@@ -75,19 +75,19 @@ if os.getenv("GROQ_API_KEY"):
     MODELS.update({
         "groq-gpt-oss-120b": {
             "label": "GPT-OSS 120B",
-            "desc": "مفتوح المصدر — من OpenAI (عبر Groq) — أقوى",
+            "desc": "أقوى نموذج متاح — برمجة واستنتاج متقدم",
             "provider": "groq",
             "id": "openai/gpt-oss-120b",
         },
         "al-khwarizmi": {
             "label": "Al-Khwarizmi Flash",
-            "desc": "مطوّر بـ Light Co من فلسطين — مجاني ~2000 طلب/يوم ⚡",
+            "desc": "مطوّر بـ Light Co من فلسطين — سريع وخفيف",
             "provider": "groq",
             "id": "openai/gpt-oss-20b",
         },
         "groq-qwen3": {
             "label": "Qwen 3.8 27B",
-            "desc": "مفتوح المصدر — من علي بابا (عبر Groq)",
+            "desc": "قوي بالعربية والبرمجة",
             "provider": "groq",
             "id": "qwen/qwen3.8-27b",
         },
@@ -98,14 +98,14 @@ if os.getenv("GROQ_API_KEY"):
 if os.getenv("CEREBRAS_API_KEY"):
     MODELS.update({
         "cerebras-gpt-oss-120b": {
-            "label": "GPT-OSS 120B ⚡",
-            "desc": "مفتوح المصدر — الأسرع عالمياً (عبر Cerebras)",
+            "label": "GPT-OSS 120B",
+            "desc": "الأسرع استجابة — قوي بالعموم",
             "provider": "cerebras",
             "id": "gpt-oss-120b",
         },
         "cerebras-qwen": {
-            "label": "Qwen 3.8 27B ⚡",
-            "desc": "مفتوح المصدر — سريع وخفيف (عبر Cerebras)",
+            "label": "Qwen 3.8 27B",
+            "desc": "سريع وخفيف — مثالي للمحادثة",
             "provider": "cerebras",
             "id": "qwen-3.8-27b",
         },
@@ -117,20 +117,20 @@ if os.getenv("NVIDIA_API_KEY"):
     MODELS.update({
         "nvidia-gemma-4": {
             "label": "Gemma 4 31B",
-            "desc": "من Google عبر NVIDIA — قوي بالعربية",
+            "desc": "قوي بالعربية — فهم عميق",
             "provider": "nvidia",
             "id": "google/gemma-4-31b-it",
         },
         "nvidia-llama-vision": {
             "label": "Llama 3.2 Vision 11B",
-            "desc": "يقرأ الصور — من Meta عبر NVIDIA",
+            "desc": "يقرأ الصور والوثائق بدقة",
             "provider": "nvidia",
             "id": "meta/llama-3.2-11b-vision-instruct",
             "vision": True,
         },
         "nvidia-llama-vision-90b": {
             "label": "Llama 3.2 Vision 90B",
-            "desc": "يقرأ الصور — النسخة الأقوى والأبطأ",
+            "desc": "يقرأ الصور — النسخة الأقوى",
             "provider": "nvidia",
             "id": "meta/llama-3.2-90b-vision-instruct",
             "vision": True,
@@ -155,14 +155,14 @@ if os.getenv("MISTRAL_API_KEY"):
     MODELS.update({
         "mistral-small": {
             "label": "Mistral Small",
-            "desc": "سريع وذكي — 128K سياق، قارئ صور — مجاني ⚡",
+            "desc": "سريع وذكي — 128K سياق — قارئ صور",
             "provider": "mistral",
             "id": "mistral-small-latest",
             "vision": True,
         },
         "mistral-mixtral": {
             "label": "Mixtral 8x7B",
-            "desc": "مفتوح المصدر — قوي بالعموم",
+            "desc": "قوي بالعموم — متعدد المهام",
             "provider": "mistral",
             "id": "mistral.mixtral-8x7b-instruct-v0.1",
         },
@@ -171,13 +171,13 @@ if os.getenv("TOGETHER_API_KEY"):
     MODELS.update({
         "al-khwarizmi-together": {
             "label": "Al-Khwarizmi (قوي)",
-            "desc": "نموذج الموقع — 10,000+ طلب/يوم مجاناً ⚡",
+            "desc": "نموذج الموقع — قوي وسريع",
             "provider": "together",
             "id": "meta-llama/Llama-3.1-8B-Instruct",
         },
         "together-llama-3.1": {
             "label": "Llama 3.1 8B",
-            "desc": "مفتوح المصدر — من Meta",
+            "desc": "متعدد الاستخدامات — موثوق",
             "provider": "together",
             "id": "meta-llama/Llama-3.1-8B-Instruct",
         },
@@ -191,13 +191,13 @@ if os.getenv("TOGETHER_API_KEY"):
 if os.getenv("FIREWORKS_API_KEY"):
     MODELS.update({
         "fw-llama-3.1": {
-            "label": "Llama 3.1 (Fireworks)",
-            "desc": "سريع وخفيف — Fireworks AI",
+            "label": "Llama 3.1",
+            "desc": "سريع وخفيف — استجابة فورية",
             "provider": "fireworks",
             "id": "fireworks/firellama-3.1-11b-v0.2",
         },
         "fw-qwen-72b": {
-            "label": "Qwen 2.5 72B (Fireworks)",
+            "label": "Qwen 2.5 72B",
             "desc": "قوي بالعربية والبرمجة",
             "provider": "fireworks",
             "id": "Qwen/Qwen2.5-72B-Instruct",
@@ -211,21 +211,21 @@ if os.getenv("APINEX_API_KEY"):
     MODELS.update({
         "apnx-glm-5.3-flash": {
             "label": "GLM-5.3 Flash",
-            "desc": "قوي وسريع — Zhipu — مجاني 1M token عبر APInex ⚡",
+            "desc": "قوي وسريع — تفكير متقدم",
             "provider": "apinex",
             "id": "free/glm-5.3-flash",
             "vision": True,
         },
         "apnx-dsv4-pro": {
             "label": "DeepSeek V4 Pro",
-            "desc": "أقوى DeepSeek — مجاني 1M token عبر APInex ⚡",
+            "desc": "أقوى نسخة — استنتاج وتحليل عميق",
             "provider": "apinex",
             "id": "free/deepseek-v4-pro-0813",
             "vision": True,
         },
         "apnx-dsv4-flash": {
             "label": "DeepSeek V4 Flash",
-            "desc": "سريع وذكي — مجاني 1M token عبر APInex ⚡",
+            "desc": "سريع وذكي — خفيف على الجهاز",
             "provider": "apinex",
             "id": "free/deepseek-v4.1-flash",
         },
@@ -236,57 +236,57 @@ if os.getenv("OPENROUTER_API_KEY"):
     MODELS.update({
         "or-glm-5.2": {
             "label": "GLM-5.2",
-            "desc": "مفتوح المصدر — من Zhipu (عبر OpenRouter)",
+            "desc": "سريع وذكي — متعدد اللغات",
             "provider": "openrouter",
             "id": "z-ai/glm-5.2:free",
             "vision": True,
         },
         "or-nemotron-ultra": {
             "label": "Nemotron 3 Ultra 550B",
-            "desc": "مفتوح المصدر — من NVIDIA (عبر OpenRouter)",
+            "desc": "أضخم نموذج متاح — استنتاج عميق",
             "provider": "openrouter",
             "id": "nvidia/nemotron-3-ultra-550b-a55b:free",
         },
         "or-gemma-4": {
             "label": "Gemma 4 31B",
-            "desc": "مفتوح المصدر — من جوجل (عبر OpenRouter)",
+            "desc": "قوي بالعربية — يقرأ الصور",
             "provider": "openrouter",
             "id": "google/gemma-4-31b-it:free",
             "vision": True,
         },
         "or-qwen-3.8": {
             "label": "Qwen 3.8 27B",
-            "desc": "مفتوح المصدر — من علي بابا (عبر OpenRouter)",
+            "desc": "قوي بالعربية والبرمجة",
             "provider": "openrouter",
             "id": "qwen/qwen3.8-27b:free",
         },
         "or-north-code": {
             "label": "North Mini Code",
-            "desc": "مفتوح المصدر — للبرمجة من Cohere (عبر OpenRouter)",
+            "desc": "متخصص بالبرمجة والكود",
             "provider": "openrouter",
             "id": "cohere/north-mini-code:free",
         },
         "or-liquid-mini": {
             "label": "LFM 2.5 2.6B",
-            "desc": "مفتوح المصدر — خفيف وسريع من Liquid (عبر OpenRouter)",
+            "desc": "خفيف وسريع — استجابة لحظية",
             "provider": "openrouter",
             "id": "liquid/lfm-2.5-2.6b:free",
         },
         "or-ling-fin": {
             "label": "Ling 3.0 Flash (مالية)",
-            "desc": "مفتوح المصدر — متخصص مالي من InclusionAI (عبر OpenRouter)",
+            "desc": "متخصص بالتحليل المالي",
             "provider": "openrouter",
             "id": "inclusionai/ling-3.0-flash-fin:free",
         },
         "or-ling-sante": {
             "label": "Ling 3.0 Flash (صحة)",
-            "desc": "مفتوح المصدر — متخصص صحي من InclusionAI (عبر OpenRouter)",
+            "desc": "متخصص بالمجال الصحي",
             "provider": "openrouter",
             "id": "inclusionai/ling-3.0-flash-sante:free",
         },
         "or-nex-pro": {
             "label": "Nex N2.5 Pro",
-            "desc": "مفتوح المصدر — النسخة الأقوى من فلاشنا (عبر OpenRouter)",
+            "desc": "النسخة الأقوى من عائلتنا — تفكير عميق",
             "provider": "openrouter",
             "id": "nex-agi/nex-n2.5-pro:free",
             "vision": True,
@@ -563,6 +563,11 @@ def index():
         provider=PROVIDER,
         email=session.get("email", ""),
         name=user.get("name") or session.get("email", ""),
+        video_enabled=VIDEO_ENABLED,
+        video_models=[
+            {"id": mid, "label": e["label"], "desc": e["desc"]}
+            for mid, e in VIDEO_MODELS.items()
+        ],
     )
 
 
@@ -682,44 +687,115 @@ def _valid_image(img) -> bool:
 
 # امتدادات الملفات حسب اللغة — لتسمية القطع البرمجية
 _EXT_MAP = {
-    "python": "py", "javascript": "js", "typescript": "ts", "html": "html",
-    "html+css": "html", "css": "css", "json": "json", "bash": "sh",
-    "sql": "sql", "cpp": "cpp", "java": "java", "rust": "rs", "go": "go",
-    "ruby": "rb", "php": "php", "swift": "swift", "kotlin": "kt",
+    "python": "py", "javascript": "js", "typescript": "ts", "jsx": "jsx",
+    "tsx": "tsx", "html": "html", "htm": "html",
+    "html+css": "html", "css": "css", "scss": "scss", "json": "json",
+    "bash": "sh", "sh": "sh", "shell": "sh",
+    "sql": "sql", "cpp": "cpp", "c": "c", "java": "java", "rust": "rs",
+    "go": "go", "ruby": "rb", "php": "php", "swift": "swift",
+    "kotlin": "kt", "vue": "vue", "svelte": "svelte",
     "scala": "scala", "dart": "dart", "perl": "pl", "r": "r",
-    "markdown": "md", "text": "txt",
+    "markdown": "md", "md": "md", "text": "txt", "txt": "txt", "xml": "xml",
+    "yaml": "yml", "yml": "yml",
 }
+
+
+def _clean_artifact_name(name: str, ext: str) -> str:
+    """تنظيف اسم الملف المستخرج من النموذج (إزالة مسارات/رموز غريبة)"""
+    name = (name or "").strip().strip("`'\"").split("\n")[0][:60]
+    name = re.sub(r"[^A-Za-z0-9_.\-+\u0600-\u06FF ]", "", name).strip()
+    if not name or name in (".", ".."):
+        return f"file.{ext}"
+    if "." not in name:
+        return f"{name}.{ext}"
+    return name
+
+
+def _norm_artifact_lang(raw: str) -> str:
+    """توحيد اسم اللغة (js→javascript، py→python...) حتى تعمل المعاينة والتلوين"""
+    lang = (raw or "").strip().lower().split()[0][:20] or "text"
+    aliases = {
+        "js": "javascript", "py": "python", "ts": "typescript",
+        "htm": "html", "md": "markdown", "sh": "bash",
+        "yml": "yaml", "c++": "cpp", "c#": "csharp",
+    }
+    return aliases.get(lang, lang)
+
+
+def _push_artifact(artifacts: list, seen: set, lang: str, name: str, code: str):
+    """إضافة قطعة واحدة بعد التنظيف — تتجاهل الفارغ والمكرر"""
+    code = (code or "").strip("\n")
+    if not code.strip() or len(code.strip()) < 8:
+        return
+    lang = _norm_artifact_lang(lang)
+    ext = _EXT_MAP.get(lang, lang or "txt")
+    name = _clean_artifact_name(name, ext)
+    key = (name, code[:120])
+    if key in seen:
+        return
+    seen.add(key)
+    artifacts.append({"name": name, "lang": lang, "code": code[:60000]})
 
 
 def extract_artifacts(reply: str) -> list[dict]:
     """استخراج مقاطع الكود من الرد كقطع منفصلة (Artifacts) للمعاينة"""
-    artifacts = []
+    artifacts: list = []
+    seen: set = set()
+    text = reply or ""
+    # 1) صناديق مكتملة ```lang:name ... ```
     pattern = re.compile(r"```(\w[\w+#-]*)(?:\s*:\s*([^\n]+))?\n([\s\S]*?)```")
     pos = 0
-    for m in pattern.finditer(reply or ""):
-        lang = m.group(1).strip() or "text"
-        name = (m.group(2) or "").strip()
-        code = m.group(3).strip("\n")
-        if not code.strip():
-            continue
-        ext = _EXT_MAP.get(lang.lower(), lang.lower() or "txt")
-        if not name:
-            name = f"file.{ext}"
-        artifacts.append({"name": name, "lang": lang, "code": code})
+    for m in pattern.finditer(text):
+        _push_artifact(artifacts, seen, m.group(1), m.group(2) or "", m.group(3))
         pos = m.end()
-    # مقاطع غير مكتملة (بدون إغلاق ``` بسبب حد الطول) — استخرجها حتى نهاية الرد
-    tail = (reply or "")[pos:] if pos else (reply or "")
+    # 2) صندوق غير مكتمل (بدون إغلاق ``` بسبب حد الطول) — حتى نهاية الرد
+    tail = text[pos:] if pos else text
     um = re.search(r"```(\w[\w+#-]*)(?:\s*:\s*([^\n]+))?\n([\s\S]*)$", tail)
     if um:
-        lang = um.group(1).strip() or "text"
-        name = (um.group(2) or "").strip()
-        code = um.group(3).strip("\n")
-        if code.strip():
-            ext = _EXT_MAP.get(lang.lower(), lang.lower() or "txt")
-            if not name:
-                name = f"file.{ext}"
-            artifacts.append({"name": name, "lang": lang, "code": code})
+        _push_artifact(artifacts, seen, um.group(1), um.group(2) or "", um.group(3))
+        tail = ""
+    # 3) صندوق بدون لغة ``` ... ``` — خمّن html إن كان فيه وسم، وإلا text
+    for m2 in re.finditer(r"```\n([\s\S]*?)```", tail):
+        code = m2.group(1)
+        guess = "html" if re.search(r"<(html|!DOCTYPE|div|style|script|canvas|button)", code, re.I) else "text"
+        _push_artifact(artifacts, seen, guess, "", code)
+    # 4) كتلة HTML خام طويلة بدون صناديق (بعض النماذج تنسى ```) — التقطها
+    if not artifacts:
+        hm = re.search(r"(<!DOCTYPE html[\s\S]{200,30000}|<html[\s\S]{200,30000}</html>)", text, re.I)
+        if hm:
+            _push_artifact(artifacts, seen, "html", "index.html", hm.group(1))
+    # أسماء افتراضية مرقمة إن تكررت (file.html, file-2.html...)
+    counts: dict = {}
+    for a in artifacts:
+        counts[a["name"]] = counts.get(a["name"], 0) + 1
+        if counts[a["name"]] > 1:
+            base, dot, ext = a["name"].partition(".")
+            a["name"] = f"{base}-{counts[a['name']]}{dot}{ext}" if dot else f"{base}-{counts[a['name']]}"
+    # 5) ملف معاينة مدمج: إن وُجدت html+css/js منفصلة، ادمجها في preview.html
+    langs = {a["lang"] for a in artifacts}
+    names = {a["name"] for a in artifacts}
+    if ("html" in langs or "css" in langs or "javascript" in langs) and "preview.html" not in names:
+        merged = _merge_web_preview(artifacts)
+        if merged:
+            artifacts.insert(0, {"name": "preview.html", "lang": "html", "code": merged})
     return artifacts
+
+
+def _merge_web_preview(artifacts: list) -> str:
+    """دمج أول html + أول css + أول js في ملف واحد للمعاينة الحية"""
+    html_p = next((a for a in artifacts if a["lang"] == "html"), None)
+    css_p = next((a for a in artifacts if a["lang"] in ("css", "scss")), None)
+    js_p = next((a for a in artifacts if a["lang"] in ("javascript", "typescript", "jsx", "tsx")), None)
+    if not html_p and not css_p and not js_p:
+        return ""
+    base = html_p["code"] if html_p else "<!DOCTYPE html><html dir=\"rtl\" lang=\"ar\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"></head><body></body></html>"
+    if css_p and "</style>" not in base.lower():
+        css_tag = f"<style>\n{css_p['code']}\n</style>"
+        base = base.replace("</head>", css_tag + "\n</head>") if "</head>" in base.lower() else css_tag + "\n" + base
+    if js_p and "</script>" not in base.lower():
+        js_tag = f"<script>\n{js_p['code']}\n</script>"
+        base = base.replace("</body>", js_tag + "\n</body>") if "</body>" in base.lower() else base + "\n" + js_tag
+    return base
 
 
 @app.route("/api/chat", methods=["POST"])
@@ -785,6 +861,20 @@ def chat_api():
             return jsonify({"error": "اكتب وصف الصورة التي تريد توليدها"}), 400
         return jsonify(build_image_payload(prompt, req_entry["id"]))
 
+    # إذا النموذج المختار لتوليد الفيديو: حول آخر رسالة لفيديو
+    if req_entry and req_entry.get("kind") == "video":
+        vprompt = ""
+        for m in reversed(messages):
+            if m.get("role") == "user":
+                vprompt = _text_of(m.get("content", ""))
+                break
+        for prefix in ("/video", "/vid", "فيديو:", "فيديو قصير:", "مقطع:", "توليد فيديو:"):
+            if vprompt.startswith(prefix):
+                vprompt = vprompt[len(prefix):].strip()
+        if not vprompt:
+            return jsonify({"error": "اكتب وصف الفيديو الذي تريد توليده"}), 400
+        return jsonify(build_video_payload(vprompt, requested))
+
     # === وضع Agent: بحث في الإنترنت + تنفيذ المهام (برمجة/بناء) ===
     sources = []
     if mode == "agent":
@@ -808,14 +898,25 @@ def chat_api():
             # وضع مهمة بناء/برمجة — أعطِ النموذج قواعد إخراج مقاطع كود منظمة
             wants_build = any(k in query.lower() for k in (
                 "ابن", "اصنع", "صمم", "اكتب لي", "برمج", "برمجة", "إنشئ", "انشئ",
-                "موقع", "صفحة", "تطبيق", "أداة", "اداة", "game", "build", "make",
-                "create", "write code", "website", "app", "html", "css", "js",
+                "أنشئ", "سوي", "سويلي", "اعمل", "اعملي", "جهز", "جهزلي",
+                "موقع", "صفحة", "تطبيق", "أداة", "اداة", "لعبة", "لعبه",
+                "متجر", "مدونة", "بورتفوليو", "معرض", "لوحة", "حاسبة", "آلة حاسبة",
+                "ساعة", "مؤقت", "قائمة", "نموذج", "فورم", "جدول", "تقويم",
+                "game", "build", "make", "create", "website", "webpage", "page",
+                "app", "html", "css", "javascript", "python", "code",
+                "write code", "landing", "portfolio", "dashboard", "clone",
+                "canvas", "snake", "tetris", "quiz", "todo", "calculator",
+                "stopwatch", "weather", "chatbot", "gallery", "slider",
             ))
             if wants_build:
                 context_parts.append(
-                    "طلب المستخدم بناء شيء أو كتابة كود. أجب بصيغة مقاطع كود منفصلة: "
-                    "كل ملف داخل صندوق ```لغة:اسم-الملف (مثال: ```html:index.html ثم الكود ثم ```). "
-                    "للموقع: ملف index.html يحتوي كل شيء، مع CSS داخلي. اكتب الكود كاملاً يعمل فوراً."
+                    "أنت الآن وكيل بناء تنفيذي (Builder Agent) — مهمتك كتابة كود حقيقي كامل يعمل فوراً، لا شرح نظري. "
+                    "قواعد صارمة للإخراج: "
+                    "1) أخرج كل ملف داخل صندوق كود منفصل بصيغة ```لغة:اسم-الملف (مثال: ```html:index.html ثم الكود ثم ```). "
+                    "2) للموقع/الصفحة/اللعبة: ملف واحد index.html يحتوي كل شيء (CSS داخل <style> وJS داخل <script>) — كامل ويعمل بالفتح مباشرة، مع دعم عربي RTL إن كان المحتوى عربياً. "
+                    "3) للعبة: استخدم <canvas> أو DOM مع requestAnimationFrame، أزرار تحكم، ونقاط/مراحل. "
+                    "4) لا تختصر الكود أبداً بـ '...' أو 'باقي الكود' — اكتبه كاملاً حتى النهاية. "
+                    "5) بعد الصناديق اكتب سطراً واحداً فقط يشرح كيف تشغّل النتيجة."
                 )
             if context_parts:
                 messages.append({
@@ -839,19 +940,46 @@ def chat_api():
     by_provider: dict = {}
     for mid, e in pool:
         by_provider.setdefault(e.get("provider", "?"), []).append((mid, e))
+
+    # التوزيع المتبادل يُبنى من المزوّدين الموجودين فعلاً (لا قائمة ثابتة!)
+    # ⚠️ كان هنا خلل: قائمة ثابتة تنسى "openrouter" فتبقى قائمته غير فارغة
+    # والحلقة while لا تنتهي أبداً — فيتجمّد كل طلب محادثة للأبد.
+    priority = ("apinex", "gemini", "groq", "openrouter", "mistral",
+                "cerebras", "nvidia", "together", "fireworks", "colab", "ollama")
+    queues = {p: list(v) for p, v in by_provider.items()}
+    order = sorted(queues, key=lambda p: priority.index(p) if p in priority else len(priority))
     interleaved: list = []
-    while any(by_provider.values()):
-        for p in ("apinex", "mistral", "gemini", "groq", "together", "fireworks", "nvidia", "colab", "cerebras"):
-            if by_provider.get(p):
-                interleaved.append(by_provider[p].pop(0))
+    guard = 0
+    while any(queues[p] for p in order):
+        for p in order:
+            if queues[p]:
+                interleaved.append(queues[p].pop(0))
+        guard += 1
+        if guard > 200:   # حماية مضاعفة: مستحيل نظرياً، لكن تمنع أي تعليق للموقع
+            break
+
     ordered: list = []
-    # ===== APInex أولاً دائماً ← أسرع موديل شغال ✅ =====
+    seen_mids: set = set()
+
+    def _push(mid, entry):
+        """إضافة نموذج للترتيب مرة واحدة فقط (مع احترام شرط الصور)"""
+        if mid in seen_mids:
+            return
+        if has_image and not entry.get("vision"):
+            return
+        seen_mids.add(mid)
+        ordered.append((mid, entry))
+
+    # 1) النموذج الذي اختاره المستخدم — أولاً دائماً
+    if requested in MODELS:
+        _push(requested, MODELS[requested])
+    # 2) نماذج APInex (أسرع مزوّد متاح حالياً)
     for mid, entry in MODELS.items():
-        if entry.get("provider") == "apinex" and (not has_image or entry.get("vision")):
-            ordered.append((mid, entry))
-    if requested in MODELS and (not has_image or MODELS[requested].get("vision")):
-        ordered.append((requested, MODELS[requested]))
-    ordered += interleaved
+        if entry.get("provider") == "apinex":
+            _push(mid, entry)
+    # 3) باقي النماذج — بالتناوب بين كل المزوّدين
+    for mid, entry in interleaved:
+        _push(mid, entry)
 
     # صندوق الأوامر الختامية: جرّب النماذج بالترتيب، ومع الضغط/الحد ننتظر قليلاً
     # ثم نجرب التالي — الحدود المجانية لحظية وتتسع بعد ثوانٍ.
@@ -859,7 +987,7 @@ def chat_api():
     # بينها تلقائياً، فيجرب نفس النموذج بمفتاح تالٍ عند وصول المفتاح الأول لحده
     last_error = None
     rate_limited = 0
-    for mid, entry in ordered[:2]:   # موديل واحد + fallback واحد بس
+    for mid, entry in ordered[:3]:   # النموذج المطلوب + بديلان
         key_slots = len(_keys_of(entry["provider"])) or 1
         for _slot in range(min(key_slots, 2)):   # مفتاحين بدل 3
             c, used_key = get_client_and_key(entry["provider"])
@@ -875,14 +1003,16 @@ def chat_api():
                     eff_max = 2000
                 if eff_max > 0:
                     kwargs["max_tokens"] = min(eff_max, 8000)
-                # ===== timeout صارم: 12 ثانية ← لو تأخر يروح للتالي =====
-                with ThreadPoolExecutor(max_workers=1) as _executor:
-                    _future = _executor.submit(c.chat.completions.create, **kwargs)
-                    try:
-                        r = _future.result(timeout=10)
-                    except FuturesTimeout:
-                        raise RuntimeError("Chat timeout - model too slow")
-                reply = r.choices[0].message.content or ""
+                # ===== مهلة صارمة على الاتصال نفسه (12 ثانية) =====
+                # ملاحظة مهمة: كان هنا ThreadPoolExecutor + result(timeout=10)، لكن الخروج
+                # من بلوك with كان ينتظر انتهاء الخيط البطيء (shutdown wait=True) —
+                # فتنمحي فائدة المهلة ويتعلّق الطلب دقائق. الآن المهلة على مستوى الطلب.
+                r = c.with_options(timeout=12, max_retries=0).chat.completions.create(**kwargs)
+                _choice_msg = r.choices[0].message if r.choices else None
+                reply = (_choice_msg.content if _choice_msg else "") or ""
+                # دعم لنماذج التفكير (مثل GPT-OSS على Groq) التي قد تعيد الرد داخل reasoning إذا استهلك الـ max_tokens
+                if not reply.strip() and _choice_msg:
+                    reply = getattr(_choice_msg, "reasoning", "") or getattr(_choice_msg, "reasoning_content", "") or ""
                 # تتبّع التوكنز المستخدمة لكل مستخدم
                 try:
                     _record_user_tokens(session.get("email", ""), r.usage.total_tokens if r.usage else 0)
@@ -1054,6 +1184,134 @@ def api_generate_image():
         return jsonify({"error": "يرجى كتابة وصف للصورة المراد توليدها"}), 400
 
     return jsonify(build_image_payload(user_prompt, img_model))
+
+
+# ===== توليد الفيديو (Seedance / Wan عبر Pollinations) — مدفوع فيحتاج مفتاحاً =====
+# كل نماذج الفيديو في Pollinations مدفوعة (لا يوجد بديل مجاني)، لذلك تُخفى
+# هذه النماذج تماماً وتُعطَّل البوابة إذا لم يوجد POLLINATIONS_KEY في .env
+VIDEO_ENABLED = bool(os.getenv("POLLINATIONS_KEY"))
+
+VIDEO_MODELS = {
+    "video-seedance-mini": {
+        "label": "Seedance 2.0 Mini",
+        "desc": "الأسرع والأرخص — مقطع ~5 ثوانٍ",
+        "api": "bytedance/seedance-2.0-mini",
+    },
+    "video-seedance": {
+        "label": "Seedance 2.0",
+        "desc": "أعلى جودة سينمائية",
+        "api": "bytedance/seedance-2.0",
+    },
+    "video-wan": {
+        "label": "Wan 2.7",
+        "desc": "مفتوح المصدر — من علي بابا",
+        "api": "alibaba/wan-2.7",
+    },
+}
+
+if VIDEO_ENABLED:
+    MODELS.update({
+        mid: {
+            "label": "🎬 " + e["label"],
+            "desc": e["desc"],
+            "provider": "pollinations",
+            "id": mid,
+            "kind": "video",
+        }
+        for mid, e in VIDEO_MODELS.items()
+    })
+
+
+def _find_video_url(obj):
+    """استخراج أول رابط فيديو من رد JSON متداخل (بعض النماذج ترجع رابطاً بدل ملف)"""
+    if isinstance(obj, str) and obj.startswith("http"):
+        return obj
+    if isinstance(obj, dict):
+        for k in ("video_url", "url", "videoUrl", "result", "data", "output"):
+            if k in obj:
+                found = _find_video_url(obj[k])
+                if found:
+                    return found
+        for v in obj.values():
+            found = _find_video_url(v)
+            if found:
+                return found
+    if isinstance(obj, list):
+        for v in obj:
+            found = _find_video_url(v)
+            if found:
+                return found
+    return None
+
+
+def build_video_payload(prompt: str, vid_model: str = "video-seedance-mini") -> dict:
+    """بناء رد توليد الفيديو — يحتاج مفتاح Pollinations (كل نماذج الفيديو مدفوعة)"""
+    key = os.getenv("POLLINATIONS_KEY")
+    if not key:
+        return {"error": "توليد الفيديو معطّل: يحتاج مفتاح Pollinations (POLLINATIONS_KEY) في ملف .env."}
+    if vid_model not in VIDEO_MODELS:
+        vid_model = "video-seedance-mini"
+
+    seed = random.randint(1000, 9999999)
+    english_prompt = enhance_image_prompt(prompt)
+    encoded = urllib.parse.quote(english_prompt)
+    api_model = VIDEO_MODELS[vid_model]["api"]
+    url = (
+        f"https://gen.pollinations.ai/video/{encoded}"
+        f"?model={api_model}&seed={seed}&nologo=true&key={key}"
+    )
+
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=420) as resp:
+            ctype = (resp.headers.get("Content-Type") or "").lower()
+            data = resp.read()
+
+        # بعض النماذج ترجع JSON فيه رابط بدل ملف الفيديو — نستخرجه ثم نحمّل الملف
+        if not (ctype.startswith("video/") or data[4:8] == b"ftyp"):
+            found = None
+            try:
+                found = _find_video_url(json.loads(data.decode("utf-8", "ignore")))
+            except Exception:
+                found = None
+            if not found:
+                raise ValueError("رد غير متوقع من سيرفر الفيديو")
+            vreq = urllib.request.Request(found, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(vreq, timeout=420) as vresp:
+                data = vresp.read()
+
+        ext = "webm" if "webm" in ctype else "mp4"
+        fname = f"vid_{seed}_{random.randint(1000, 9999)}.{ext}"
+        with open(os.path.join(GENERATED_DIR, fname), "wb") as f:
+            f.write(data)
+        video_url = f"/static/generated/{fname}"
+    except Exception as e:
+        print(f"توليد الفيديو فشل: {e}")
+        return {"error": "تعذر توليد الفيديو الآن — جرّب مرة أخرى بعد قليل."}
+
+    return {
+        "video_url": video_url,
+        "enhanced_prompt": english_prompt,
+        "original_prompt": prompt,
+        "model_label": VIDEO_MODELS[vid_model]["label"],
+    }
+
+
+@app.route("/api/generate-video", methods=["POST"])
+@login_required
+def api_generate_video():
+    data = request.get_json(force=True, silent=True) or {}
+    user_prompt = (data.get("prompt") or "").strip()
+    vid_model = data.get("model") or "video-seedance-mini"
+
+    if not VIDEO_ENABLED:
+        return jsonify({
+            "error": "توليد الفيديو معطّل: يحتاج مفتاح Pollinations (POLLINATIONS_KEY) في ملف .env ثم إعادة تشغيل السيرفر."
+        }), 503
+    if not user_prompt:
+        return jsonify({"error": "يرجى كتابة وصف للفيديو المراد توليده"}), 400
+
+    return jsonify(build_video_payload(user_prompt, vid_model))
 
 
 if __name__ == "__main__":
