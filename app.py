@@ -845,6 +845,10 @@ def chat_api():
             if by_provider.get(p):
                 interleaved.append(by_provider[p].pop(0))
     ordered: list = []
+    # ===== APInex أولاً دائماً ← أسرع موديل شغال ✅ =====
+    for mid, entry in MODELS.items():
+        if entry.get("provider") == "apinex" and (not has_image or entry.get("vision")):
+            ordered.append((mid, entry))
     if requested in MODELS and (not has_image or MODELS[requested].get("vision")):
         ordered.append((requested, MODELS[requested]))
     ordered += interleaved
