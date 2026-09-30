@@ -81,9 +81,10 @@ if os.getenv("GROQ_API_KEY"):
         },
         "al-khwarizmi": {
             "label": "Al-Khwarizmi Flash",
-            "desc": "مطوّر بـ Light Co من فلسطين — سريع وخفيف",
+            "desc": "بطل البرمجة",
             "provider": "groq",
             "id": "openai/gpt-oss-20b",
+            "icon": "bolt",
         },
         "groq-qwen3": {
             "label": "Qwen 3.8 27B",
@@ -621,15 +622,22 @@ def api_logout():
 @app.route("/api/models")
 @login_required
 def api_models():
+    # نضع Al-Khwarizmi Flash دائماً في رأس القائمة، وباقي النماذج بترتيبها (فرز مستقر)
+    entries = sorted(MODELS.items(), key=lambda kv: 0 if kv[0] == "al-khwarizmi" else 1)
     return jsonify([
         {"id": mid, "label": e["label"], "desc": e["desc"], "kind": e.get("kind", "chat"),
          "icon": e.get("icon"), "vision": bool(e.get("vision"))}
-        for mid, e in MODELS.items()
+        for mid, e in entries
     ])
 
 
-def web_search(query: str, limit: int = 4):
-    """بحث في ويكيبيديا (عربي/إنجليزي) — مجاني بدون مفتاح، يعيد نتائج للوضع Agent"""
+_SEARCH_CACHE: dict = {}
+_SEARCH_CACHE_TTL = 600     # 10 دقائق — يوفّر زمن الرد عند تكرار السؤال نفسه
+_SEARCH_CACHE_MAX = 200
+
+
+def _web_search_uncached(query: str, limit: int = 4, full_query: str = ""):
+    """بحث في ويكيبيديا (عربي/إنجليزي) — مجاني بدون مفتاح"""
     results = []
     # حاول العربية أولاً، ثم الإنجليزية
     for lang in ("ar", "en"):
@@ -641,7 +649,7 @@ def web_search(query: str, limit: int = 4):
                 f"&srprop=snippet"
             )
             req = urllib.request.Request(url, headers={"User-Agent": "KhawarizmiBot/1.0"})
-            with urllib.request.urlopen(req, timeout=15) as r:
+            with urllib.request.urlopen(req, timeout=8) as r:
                 data = json.loads(r.read().decode("utf-8"))
             for item in data.get("query", {}).get("search", []):
                 title = item.get("title", "")
@@ -657,7 +665,427 @@ def web_search(query: str, limit: int = 4):
                 break  # نجحت العربية — توقف
         except Exception:
             continue
-    return results[:limit]
+    results = results[:limit]
+    # الأرقام والتواريخ لا تظهر في مقتطف البحث (srprop=snippet) لأنه يقتطع
+    # أول ~200 حرف من الفقرة، وفيها الاسم واللقب فقط. مثال "روميل": المقتطف
+    # يقول "كان مشيرًا ميدانيًا" بدون سنة الميلاد، فيضطر النموذج للتخمين.
+    # فإذا كان السؤال يطلب رقماً، نجلب مقدمة الصفحة كاملة (lead) وهي الفقرة
+    # الأولى بتمامها، وفي الغالب تحوي سنة الميلاد وسنة الوفاة داخلها.
+    # ⚠️ الفحص على النص الكامل (full_query) لا على جوهر البحث: _search_query
+    # يقصّ السؤال لجملته الأولى، فيضيع منه مثلاً "كم" أو "سنة ميلاده".
+    if results and _query_wants_number(full_query or query):
+        _enrich_with_lead(results)
+    return results
+
+
+# أسئلة تطلب رقماً أو تاريخاً — تستحق جلب المقدمة الكاملة بدل المقتطف القصير
+_NUM_ASK_RE = re.compile(
+    r"(سنة|سنت|عام|تاريخ|ميلاد|مولد|وفاة|توفي|مات|عمر|كم|عدد|رقم|"
+    r"year|born|died|age|population|how many)", re.IGNORECASE)
+
+
+def _query_wants_number(query: str) -> bool:
+    """هل يطلب السؤال رقماً أو تاريخاً محدَّداً؟"""
+    return bool(_NUM_ASK_RE.search(query or ""))
+
+
+def _enrich_with_lead(results: list, chars: int = 700) -> None:
+    """استبدال المقتطف بمقدمة الصفحة الكاملة (lead) — فيها الأرقام والتواريخ.
+
+    يعدّل النتائج في مكانها؛ الفشل الصامت مقبول (نتبقى بالمقتطف القصير).
+    """
+    for item in results[:3]:   # أول 3 فقط — كل نتيجة تطلب طلباً إضافياً من ويكيبيديا
+        title = item.get("title", "")
+        if not title:
+            continue
+        lang = "en" if "en.wikipedia.org" in item.get("url", "") else "ar"
+        try:
+            api = (f"https://{lang}.wikipedia.org/w/api.php?action=query"
+                   f"&prop=extracts&exintro=1&explaintext=1&format=json&utf8=1"
+                   f"&titles={urllib.parse.quote(title)}")
+            req = urllib.request.Request(
+                api, headers={"User-Agent": "KhawarizmiBot/1.0"})
+            with urllib.request.urlopen(req, timeout=8) as r:
+                data = json.loads(r.read().decode("utf-8"))
+            lead = ""
+            for page in data.get("query", {}).get("pages", {}).values():
+                lead = page.get("extract", "") or ""
+                if lead:
+                    break
+            if lead.strip():
+                item["snippet"] = lead.strip()[:chars]
+        except Exception:
+            continue
+
+
+# ===== بوابة البحث الذكي: متى نبحث ومتى نتخطى؟ =====
+# الهدف: لا مصادر بلا علاقة — البحث فقط للأسئلة المعرفية الحقيقية.
+_GREET_PREFIX = (
+    "مرحبا", "مرحباً", "اهلا", "أهلا", "هلا", "سلام",
+    "صباح الخير", "مساء الخير", "تحياتي",
+    "كيف حالك", "كيفك", "شو اخبارك", "شو أخبارك",
+    "شكرا", "شكراً", "thanks", "thank you",
+    "hi", "hello", "hey", "good morning", "good evening", "how are you",
+)
+_CHITCHAT_EXACT = {
+    "مشكور", "يسلمو", "تسلم", "ممتاز", "جميل", "تمام", "طيب",
+    "اوك", "أوك", "حسنا", "حسناً", "نعم", "لا", "باي",
+    "ok", "okay", "bye", "yes", "no",
+}
+# مهارات لا يفيدها بحث ويكيبيديا — البحث عنها كان ينتج مصادر بلا علاقة
+_NO_SEARCH_PATTERNS = (
+    # كود وبرمجة (طلباً أو لصقاً) وطريقة عمل
+    "```", " code", "code:", "اكتب كود", "اكتبلي كود", "كود", "أكواد",
+    "برمج", "برنامج",
+    "سكريبت", "سكربت", "دالة", "فنكشن",
+    "function", "def ", "import ", "print(", "console.", "class ",
+    "for (", "while (", "select ",
+    "خطأ", " error", "exception", "traceback", "debug", "صلح", " bug",
+    " json", "sql ", "regex",
+    "كيف أعمل", "كيف اعمل", "كيف أسوي", "كيف اسوي",
+    "كيف اصلح", "كيف أصلح", "طريقة عمل", "كيفية ",
+    "how to", "how do i", "how can i", "fix ",
+    # كود صريح بالإنجليزية (how to center a div...)
+    " a div", "div ", "css ", "html ", "موقع شخصي", "موقع ",
+    # طلبات مهارة/قدرة عامة (كيف أعمل X؟ ماذا تستطيع؟) — ليست أسئلة معرفية
+    # رياضيات
+    "احسب", "حل المعادلة", "حل معادلة", "مشتقة", "تكامل",
+    "solve ", "calculate",
+    # ترجمة (مهارة لغوية — لا بحث)
+    "ترجم", "translate", "مامعنى كلمة", "معنى كلمة",
+    # إبداع
+    "اكتب لي قصة", "اكتب قصة", "قصة قصيرة", "قصيدة", "شعر ",
+    "ديوان", "رواية", "خاطرة", "نكتة", "نكت ",
+    "write a story", "write a poem", " poem", " story about",
+    # رأي ونصيحة وتوصية
+    "برأيك", "برايك", "رأيك", "ما رأيك", "شو رأيك",
+    "نصيحة", "انصحني", "أيهما أفضل", "ايهما افضل",
+    "اقترح", "رشح", "what do you think", "your opinion", "advice", "recommend",
+    "هل يمكنك", "هل تستطيع", "هل تقدر", "can you", "could you", "would you",
+    # تلخيص (النص مُعطى من المستخدم — البحث عنه هراء)
+    "لخص", "ملخص", "اختصر", "summariz", "summary of",
+    # هوية المساعد وقدراته
+    "من أنت", "من انت", "من انا", "عرف بنفسك", "شو اسمك", "ما اسمك",
+    "who are you", "your name",
+    "ماذا تستطيع", "شو بتقدر", "what can you do",
+    # شخصي/عاطفي
+    "انا حزين", "أنا حزين", "انا تعبان", "أنا تعبان",
+    "قلقان", "متضايق", "i am sad", "i'm sad", "i feel ",
+)
+# نسخة موحّدة للهوية (بعد _norm_ar: همزة→ا، ة→ه) — تُفحص قبل بوابة _FACT_PREFIX
+# لأن "من أنت؟" تبدأ بـ "من" فيلتقطها _FACT_PREFIX خطأً
+_IDENTITY_PATTERNS = (
+    "من انت", "من انا", "عرف بنفسك", "شو اسمك", "ما اسمك",
+    "who are you", "your name",
+    "ماذا تستطيع", "شو بتقدر", "what can you do",
+)
+# أدوات استفهام في بداية السؤال — مؤشر قوي على سؤال معرفي
+# ملاحظة الترتيب: الأطول أولاً (من هو قبل من، كيف حالك ليس سؤالاً معرفياً)
+_FACT_PREFIX = (
+    "من هو", "من هي", "ما هو", "ما هي", "ماهو", "ماهي", "ماذا",
+    "مين هو", "مين هي",
+    "متى", "أين", "اين", "وين", "لماذا", "ليش", "كيف", "كم", "قديش",
+    "هل", "شو", "مين", "من",
+    "عرف", "اشرح", "فسر", "أخبرني", "اخبرني", "حدثني",
+    "what", "who", "when", "where", "why", "how", "which",
+    "define", "explain", "tell me",
+)
+# تحايا بصيغة سؤال — ليست أسئلة معرفية (تُفحص قبل _FACT_PREFIX)
+_NON_FACT_QUESTION = (
+    "كيف حالك", "كيفك", "شو اخبارك", "شو أخبارك", "كيف الحال",
+    "how are you",
+)
+# عبارات معرفية داخل النص (مواضيع وأخبار وأحداث)
+_FACT_CONTAINS = (
+    "من هو", "من هي", "ما هو", "ما هي", "ما المقصود", "ما تعريف",
+    "معلومات عن", "نبذة عن", "كم عدد",
+    "آخر", "الأخير", "حالياً", "حاليا",
+    "أخبار", "اخبار",
+    "عاصمة", "تأسس", "تأسست", "عدد سكان", "مساحة",
+    "who is", "what is", "when did", "how many",
+    "latest", "current", "today",
+    "capital of", "founded in", "population of",
+)
+
+
+def web_search(query: str, limit: int = 4, full_query: str = ""):
+    """بحث ويب مع تخزين مؤقت — يُستدعى قبل كل رد لتقليل الأجوبة الخاطئة
+
+    full_query = نص المستخدم كاملاً (بلا قصّ)، تُستخدم لتقرير نية الرقم فقط.
+    """
+    q = (query or "").strip().lower()[:200]
+    if not q:
+        return []
+    # نية الرقم جزء من هوية النتيجة: نفس الجوهر بسؤال رقمي ⇐ محتوى مختلف
+    key = (q, limit, _query_wants_number(full_query or query))
+    now = time.time()
+    hit = _SEARCH_CACHE.get(key)
+    if hit and now - hit[0] < _SEARCH_CACHE_TTL:
+        return hit[1]
+    results = _web_search_uncached(query, limit, full_query)
+    _SEARCH_CACHE[key] = (now, results)
+    if len(_SEARCH_CACHE) > _SEARCH_CACHE_MAX:
+        for k in list(_SEARCH_CACHE)[: _SEARCH_CACHE_MAX // 2]:
+            _SEARCH_CACHE.pop(k, None)
+    return results
+
+
+def _search_context(sources: list, query: str) -> str:
+    """سياق نتائج بحث مُفلترة الصلة — يُلزم النموذج بالدقة ويمنع اختلاق الحقائق"""
+    lines = "\n".join(
+        f"- {s['title']}: {s['snippet']} ({s['url']})" for s in sources
+    )
+    # بند 3أ — يعمل دائماً مع الأسئلة الرقمية: صندوق معلومات ويكيبيديا العربي
+    # (سنوات الميلاد/الوفاة/السكان) لا يظهر في نص المقتطف ولا في المقدمة، فلو
+    # التزمنا بالمنع الحرفي لأخفينا معلومة صحيحة معروفة. نسمح بالمعرفة الداخلية
+    # *مع التصريح*، وهو أأمن من الصمت ومن التخمين الصامت.
+    gap_rule = (
+        "\n3أ) بند خاص لأن السؤال يطلب رقماً أو تاريخاً: إذا لم يحتوِ نص النتائج "
+        "على الرقم المطلوب تحديداً، فاعتمد معرفتك الداخلية عن هذه الشخصية أو "
+        "الموضوع، واذكر الرقم مع التصريح بأنه من معرفتك لا من المصادر "
+        "(مثل: «١٨٩١ الميلاد، ١٩٤٤ الوفاة — من معرفت العامة لا من النص أعلاه»). "
+        "لا تكتب عبارة لم أجد معلومات في هذه الحالة، ولا تخترع رقماً لا تجده "
+        "باليقين في معرفتك.\n"
+        if _query_wants_number(query) else ""
+    )
+    return (
+        f"نتائج بحث حقيقية من الإنترنت (ويكيبيديا) عن: {query[:150]}\n"
+        + lines
+        + "\n\nقواعد إلزامية:\n"
+        "1) هذه النتائج مرتبطة مباشرة بالسؤال — اعتمد عليها كمصدرك الأساسي للحقائق والأرقام والتواريخ والأسماء.\n"
+        "2) إن تعارضت معلوماتك الداخلية مع النتائج فالأولوية للنتائج.\n"
+        "3) ممنوع منعاً باتاً اختراع أرقام أو تواريخ أو أسماء، والنتائج هي المرجع — "
+        "انسخ الأرقام والتواريخ حرفياً كما وردت ولا تُعد صياغتها تقريبياً. "
+        'وإن طُلبت معلومة دقيقة غير موجودة فقل: "لم أجد معلومات موثوقة كافية" بدل التخمين '
+        "(والاستثناء الوحيد للرقم المطلوب هو البند 3أ أدناه).\n"
+        + gap_rule
+        + "4) اذكر المصادر التي استخدمتها فعلاً في نهاية الجواب بصيغة: (المصدر: العنوان).\n"
+        "5) إن كان الجواب كوداً برمجياً فلا تذكر المصادر داخله ولا تُقحمها في الشرح — اكتب الكود نظيفاً كاملاً."
+    )
+
+
+def _needs_search(query: str) -> bool:
+    """هل يستحق هذا النص بحثاً في الإنترنت؟
+    نبحث عن الأسئلة المعرفية — ونتخطى التحيات والكود والرياضيات
+    والترجمة والإبداع والرأي والتلخيص."""
+    q = (query or "").strip()
+    if not q:
+        return False
+    ql = q.lower()
+    norm = re.sub(r"[؟?!.،,؛:\s]+$", "", ql).strip()
+
+    # تحية بصيغة سؤال (كيف حالك؟) — ليست سؤالاً معرفياً أبداً
+    if norm in _CHITCHAT_EXACT or norm.startswith(_NON_FACT_QUESTION):
+        return False
+    # هوية المساعد ومهاراته (من أنت؟ ماذا تستطيع؟) — تُفحص قبل بوابة _FACT_PREFIX
+    if any(p in _norm_ar(q) for p in _IDENTITY_PATTERNS):
+        return False
+    # 0) سؤال معرفي صريح (من هو X؟) — يُبحث، لكن بعد فحص المهارات أولاً:
+    # "كيف أعمل موقع؟" تبدأ بكيف لكنها مهارة لا معرفة — المهارات أولاً
+    # 2) مهارات لا يفيدها بحث ويكيبيديا
+    if any(p in ql for p in _NO_SEARCH_PATTERNS):
+        return False
+    if ql.startswith(_FACT_PREFIX):
+        rest = _SEARCH_STRIP_RE.sub("", q).strip()
+        rest = re.split(r"[؟?!.؛;]", rest)[0].strip()
+        # إسقاط بقايا ضمير بلا موضوع (مين هو؟ ← هو، من هو؟ ← هو)
+        if re.fullmatch(r"(هو|هي|هم|هذا|هذه|ذلك|ذاك)", rest):
+            return False
+        if len(rest) >= 2:
+            return True
+        return False
+    # 0.5) نص قصير جداً بلا أداة سؤال — تحية أو كلمة مفردة غالباً
+    if len(q) < 15:
+        return False
+    # 1) تحايا وشكر — إلا إذا تبعها سؤال فعلي (استفهام أو أداة سؤال)
+    if norm in _CHITCHAT_EXACT or norm.startswith(_GREET_PREFIX):
+        if not ("؟" in q or "?" in q
+                or ql.startswith(_FACT_PREFIX)
+                or any(t in ql for t in _FACT_CONTAINS)):
+            return False
+    # إن احتوى على علامة استفهام صريحة وطال بما يكفي فهو سؤال — ابحث
+    if ("؟" in q or "?" in q) and len(q) >= 40:
+        return True
+    # 3) مسألة حسابية صريحة (أرقام وعمليات)
+    if re.search(r"\d\s*[+\-*/^%=÷×]\s*\d", ql):
+        return False
+    # 4) سؤال معرفي صريح — ابحث
+    if ql.startswith(_FACT_PREFIX) or any(t in ql for t in _FACT_CONTAINS):
+        return True
+    # 5) نص طويل وصفي (سؤال حقيقي غالباً) — ابحث
+    if len(q) >= 40:
+        return True
+    return False
+
+
+_SEARCH_STRIP_RE = re.compile(
+    r"^(من هو|من هي|من|ما هو|ما هي|ما هى|ماهو|ماهي|ماذا|متى|اين|أين|وين|"
+    r"لماذا|ليش|كيف|كم عدد|كم|قديش|هل|شو|مين هو|مين هي|مين|"
+    r"عرفني|عرف|اشرح|فسر|"
+    r"اخبرني عن|أخبرني عن|حدثني عن|معلومات عن|نبذه عن|نبذة عن|"
+    r"ما المقصود|ما تعريف|"
+    r"what is|what are|who is|who was|when did|when was|where is|how many|"
+    r"define|explain|tell me about)\s+",
+    re.IGNORECASE,
+)
+_GREET_STRIP_RE = re.compile(
+    r"^(مرحبا|مرحباً|اهلا|أهلا|هلا|سلام|صباح الخير|مساء الخير|"
+    r"تحياتي|شكرا|شكراً)[،,\s]+",
+    re.IGNORECASE,
+)
+
+
+def _search_query(query: str) -> str:
+    """صياغة استعلام بحث مركّز: بدون تحية أو أدوات استفهام، الجملة الأولى فقط"""
+    q = (query or "").strip()
+    q = _GREET_STRIP_RE.sub("", q).strip()
+    q = _SEARCH_STRIP_RE.sub("", q).strip()
+    q = re.split(r"[؟?!.؛;]", q)[0].strip()
+    return (q or (query or "").strip())[:200]
+
+
+# ===== خيار B: Al-Khwarizmi Flash بطل البرمجة، والأسئلة المعرفية لنموذج أدق =====
+# Flash هو openai/gpt-oss-20b: ممتاز في كتابة الكود، لكنه ضعيف في الحقائق
+# الدقيقة (يلتبس بالأرقام والتواريخ). فنوجّه السؤال المعرفي إلى نموذج أقوى
+# مع مصادر ويكيبيديا، بدل تخمين Flash.
+# ⚠️ السلسلة مقصورة على مزوّدين مُتحقَّق من عملهما فعلياً (Gemini وGroq)،
+# لأن المزوّدات الأخرى تُرجع 402/429/404 فتنتهي بالسقوط بلا جواب.
+_FACTUAL_CHAIN = ("gemini-2.5-flash", "groq-gpt-oss-120b", "groq-qwen3")
+
+
+def _pick_factual_model(has_image: bool):
+    """أول نموذج قوي متاح فعلياً لهذا المسار — أو None إن لم يوجد."""
+    for mid in _FACTUAL_CHAIN:
+        entry = MODELS.get(mid)
+        if not entry or entry.get("kind", "chat") != "chat":
+            continue
+        if has_image and not entry.get("vision"):
+            continue
+        return mid
+    return None
+
+
+def _is_factual_query(query: str, build_task: bool) -> bool:
+    """هل هذا سؤال معرفي يستحق التوجيه؟
+
+    يعتمد على بوابة البحث نفسها: ما يحتاج بحثاً ليس سؤالاً معرفياً
+    (كود، تحية، هوية، ترجمة، رياضيات، إبداع، مهمة Agent) — فيبقى على Flash.
+    """
+    if build_task:
+        return False
+    return _needs_search(query)
+
+
+def _norm_ar(s: str) -> str:
+    """توحيد بسيط للعربية قبل المقارنة: همزات، تاء مربوطة، ألف مقصورة، وبدون تنقيط"""
+    s = (s or "").lower()
+    s = re.sub(r"[أإآ]", "ا", s)
+    s = re.sub(r"[؟?!.،,؛:\"'«»()\[\]-]", " ", s)  # ؟ ضمن النطاق العربي — يجب إسقاطها
+    return s.replace("ة", "ه").replace("ى", "ي")
+
+
+def _stem_ar(w: str) -> str:
+    # إسقاط أداة التعريف فقط (الجامعة/جامعة، النجاح/نجاح)
+    if w.startswith("ال") and len(w) > 5:
+        w = w[2:]
+    # الضمائر المتصلة بالأسماء (عاصمتها/عاصمه، جامعتهم/جامعه، رئيسها/رئيس)
+    for suf in ("هم", "هن", "هما", "ها", "نا", "كم", "كن"):
+        if w.endswith(suf) and len(w) - len(suf) >= 3:
+            w = w[: -len(suf)]
+            break
+    # تاء التأنيث المتبقية بعد الضمير (عاصمت ← عاصمه)
+    if w.endswith("ت") and len(w) >= 5 and not w.endswith("ات"):
+        w = w[:-1] + "ه"
+    # جمع المؤنث السالم ← المفرد (جامعات ← جامعه): أسقط "ات" وأضف هاء
+    if w.endswith("ات") and len(w) >= 6 and not w.endswith("هات"):
+        w = w[:-2] + "ه"
+    return w
+
+
+# كلمات boilerplate لا تدل على الموضوع — تُستبعد قبل حساب تداخل الصلة
+# ملاحظة: تُكتب هنا *بعد* التوحيد (همزة→ا، ة→ه، ى→ي) لأن المقارنة تتم بعد _norm_ar
+_AR_STOPWORDS = {
+    "من", "ما", "ماذا", "متي", "اين", "لماذا", "كيف", "كم", "قديش",
+    "هل", "شو", "مين", "وين", "ليش",
+    "في", "علي", "الي", "عن", "مع", "بين", "هذا", "هذه", "تلك",
+    "التي", "الذي", "الذين", "هو", "هي", "هم", "نحن", "انت", "انا",
+    "كان", "كانت", "يكون", "كل", "بعض", "غير", "جدا", "اي", "ان",
+    "او", "اليوم", "سنه", "عام", "تاريخ", "معلومات", "نبذه", "تعريف",
+    "معني", "شرح", "عرف", "عرفني", "اشرح", "فسر", "اخبرني", "حدثني",
+    "اذكر", "بحث", "سوال", "جواب",
+    "the", "a", "an", "of", "in", "on", "at", "to", "for", "and",
+    "or", "is", "are", "was", "were", "what", "who", "when", "where",
+    "why", "how", "which", "does", "did", "about",
+    "tell", "define", "explain",
+}
+
+
+def _query_tokens(query: str) -> set:
+    """الكلمات المفتاحية للسؤال بعد التوحيد وإسقاط الحشو"""
+    toks = set()
+    # الاستفهام/التنقيط ليس كلمة مفتاحية (؟ ؟ ! .) — تُستبعد من التوكنز
+    for w in re.findall(r"[\u0600-\u06FFa-zA-Z0-9]+", _norm_ar(query)):
+        if len(w) < 3 or w in _AR_STOPWORDS:
+            continue
+        t = _stem_ar(w)
+        if len(t) >= 3 and t not in _AR_STOPWORDS:
+            toks.add(t)
+    return toks
+
+
+def _fuzzy_contains(hay: str, tok: str) -> bool:
+    """احتواء عربي متسامح: يتجاوز اختلافات الإملاء الشائعة.
+    - يطابق التطابق المباشر أولاً (رومل ⊂ إرفين رومل)
+    - يتجاوز حروف العلة الضعيفة (ا/و/ي): روميل ≈ رومل
+    - يسمح بفرق حرف واحد للكلمات ≥4 (خطأ إملائي واحد)"""
+    if not tok or len(tok) < 3:
+        return tok in hay if tok else False
+    if tok in hay:
+        return True
+    weak = "اوي"
+    core = "".join(c for c in tok if c not in weak)
+    # جوهر ≥3 أحرف مشاركة — يطابق (رومل/روميل ← رمل)
+    if len(core) >= 3:
+        for w in hay.split():
+            if len(w) < 3:
+                continue
+            if "".join(c for c in w if c not in weak) == core:
+                return True
+    # فرق حرف واحد (استبدال) للكلمات الطويلة — إملاء قريب
+    if len(tok) >= 4:
+        tl = len(tok)
+        for w in hay.split():
+            if len(w) == tl and sum(1 for a, b in zip(w, tok) if a != b) == 1:
+                return True
+    return False
+
+
+def _filter_relevant(sources: list, query: str) -> list:
+    """إسقاط نتائج البحث التي لا تشترك مع السؤال في كلمتين مفتاحيتين على الأقل
+    (كلمة واحدة إن كان السؤال بكلمة مفتاحية وحيدة) — مع تطابق صرفي تقريبي.
+
+    نحسب التوكنز من *جوهر البحث* (_search_query) لا من النص كاملاً: فسؤال مثل
+    "من هو روميل؟ أعطِ سنة ميلاده ووفاته" يحوي توكنز زائدة (سنة/ميلاده/وفاته)
+    ترفع حدّ التطابق المطلوب فتحذف النتيجة الصحيحة (إرفين رومل).
+    """
+    qtoks = _query_tokens(_search_query(query))
+    if not qtoks:
+        return []
+    # التوازن: سؤال قصير (≤3 كلمات) — كلمة واحدة تكفي؛
+    # سؤال أطول — كلمتان، بلا تراجع (التراجع كان يُدخل الغريب مثل "باريس")
+    # ملاحظة: "القدس" بقيت لأنها تشترك فعلاً في "عاصمه"+"فلسطين" — صلة حقيقية
+    need = 1 if len(qtoks) <= 3 else 2
+    return _overlap(sources, qtoks, need)[:4]
+
+
+def _overlap(sources: list, qtoks: set, need: int) -> list:
+    kept = []
+    for s in sources or []:
+        hay = _norm_ar(f"{s.get('title', '')} {s.get('snippet', '')}")
+        hits = sum(1 for t in qtoks if _fuzzy_contains(hay, t))
+        if hits >= need:
+            kept.append(s)
+    return kept
 
 
 def _extract_last_user(messages: list) -> str:
@@ -771,31 +1199,138 @@ def extract_artifacts(reply: str) -> list[dict]:
         if counts[a["name"]] > 1:
             base, dot, ext = a["name"].partition(".")
             a["name"] = f"{base}-{counts[a['name']]}{dot}{ext}" if dot else f"{base}-{counts[a['name']]}"
-    # 5) ملف معاينة مدمج: إن وُجدت html+css/js منفصلة، ادمجها في preview.html
+    # 5) ملف معاينة مدمج: نبني/نحدّث preview.html ليشمل CSS/JS المنفصلة
+    #    حتى لو أنشأ النموذج preview.html بنفسه — كانت تُترك بلا حقن فتظهر فارغة
     langs = {a["lang"] for a in artifacts}
     names = {a["name"] for a in artifacts}
-    if ("html" in langs or "css" in langs or "javascript" in langs) and "preview.html" not in names:
+    if "html" in langs or "css" in langs or "javascript" in langs:
         merged = _merge_web_preview(artifacts)
         if merged:
-            artifacts.insert(0, {"name": "preview.html", "lang": "html", "code": merged})
+            if "preview.html" in names:
+                for a in artifacts:
+                    if a["name"] == "preview.html":
+                        a["code"] = merged[:60000]
+                        break
+            else:
+                artifacts.insert(0, {"name": "preview.html", "lang": "html", "code": merged})
     return artifacts
 
 
+def _inject_before(html: str, fragment: str, container: str) -> str:
+    """حقن fragment قبل نهاية حاوية — مع بدائل آمنة عند الردود المقصوصة"""
+    m = re.search(r"</\s*" + container + r"\s*>", html, flags=re.I)
+    if m:
+        return html[: m.start()] + fragment + "\n" + html[m.start():]
+    m2 = re.search(r"</\s*html\s*>", html, flags=re.I)
+    if m2:
+        return html[: m2.start()] + fragment + "\n" + html[m2.start():]
+    return html + "\n" + fragment
+
+
 def _merge_web_preview(artifacts: list) -> str:
-    """دمج أول html + أول css + أول js في ملف واحد للمعاينة الحية"""
-    html_p = next((a for a in artifacts if a["lang"] == "html"), None)
-    css_p = next((a for a in artifacts if a["lang"] in ("css", "scss")), None)
-    js_p = next((a for a in artifacts if a["lang"] in ("javascript", "typescript", "jsx", "tsx")), None)
-    if not html_p and not css_p and not js_p:
+    """دمج html + css + js في ملف واحد للمعاينة الحية.
+
+    معالجات مهمة:
+    - إغلاق أي وسم مفتوح (رد مقصوص على حد max_tokens) قبل الحقن، وإلا يبتلع
+      السكربت اللاحق ويبقى بلا تنفيذ.
+    - إزالة المراجع المحلية الميتة مثل <script src="game.js"> لأن الملف غير
+      موجود داخل الإطار المعزول → كانت الصفحة تُرسم فارغة بلا أي أداء.
+    - حقن CSS/JS دائماً حتى لو كانت الصفحة تحتوي وسوم <style>/<script> أخرى.
+    """
+    preview_p = next((a for a in artifacts if a["name"] == "preview.html"), None)
+    html_p = preview_p or next((a for a in artifacts if a["lang"] == "html"), None)
+    css_list = [a["code"] for a in artifacts if a["lang"] in ("css", "scss")]
+    js_list = [
+        a["code"]
+        for a in artifacts
+        if a["lang"] in ("javascript", "typescript", "jsx", "tsx")
+    ]
+    if not html_p and not css_list and not js_list:
         return ""
-    base = html_p["code"] if html_p else "<!DOCTYPE html><html dir=\"rtl\" lang=\"ar\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"></head><body></body></html>"
-    if css_p and "</style>" not in base.lower():
-        css_tag = f"<style>\n{css_p['code']}\n</style>"
-        base = base.replace("</head>", css_tag + "\n</head>") if "</head>" in base.lower() else css_tag + "\n" + base
-    if js_p and "</script>" not in base.lower():
-        js_tag = f"<script>\n{js_p['code']}\n</script>"
-        base = base.replace("</body>", js_tag + "\n</body>") if "</body>" in base.lower() else base + "\n" + js_tag
+
+    base = html_p["code"] if html_p else (
+        '<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        "</head><body></body></html>"
+    )
+
+    # 1) إغلاق وسوم مفتوحة (يحصل عند قصّ الرد)
+    if base.lower().count("<script") > base.lower().count("</script>"):
+        base += "\n</script>"
+    if base.lower().count("<style") > base.lower().count("</style>"):
+        base += "\n</style>"
+
+    # 2) إزالة المراجع المحلية الميتة (نحتفظ بـ http/https/data/blob)
+    base = re.sub(
+        r'<script\b[^>]*\bsrc\s*=\s*["\'](?!(?:https?:)?//|data:|blob:)[^"\']+["\']'
+        r'[^>]*>\s*</script>',
+        "",
+        base,
+        flags=re.I,
+    )
+    base = re.sub(
+        r'<link\b[^>]*\brel\s*=\s*["\']stylesheet["\'][^>]*\bhref\s*=\s*["\']'
+        r'(?!(?:https?:)?//|data:|blob:)[^"\']+["\'][^>]*/?>',
+        "",
+        base,
+        flags=re.I,
+    )
+
+    # 3) حقن كل ملفات الأنماط
+    css_code = "\n".join(c.strip() for c in css_list if c and c.strip())
+    if css_code.strip() and css_code not in base:
+        base = _inject_before(base, "<style>\n" + css_code + "\n</style>", "head")
+
+    # 4) حقن كل ملفات السكربتات
+    js_code = "\n".join(j.strip() for j in js_list if j and j.strip())
+    if js_code.strip() and js_code not in base:
+        base = _inject_before(base, "<script>\n" + js_code + "\n</script>", "body")
+
     return base
+
+# ===== مستويات التفكير (Reasoning Effort) =====
+# المستخدم يختار المستوى، ونحن نترجمه إلى بارامترات يفهمها كل مزوّد:
+#   off    = بلا تفكير إضافي (الأسرع/الأضعف)
+#   low    = منخفض
+#   medium = متوسط
+#   high   = عالي (أداء أقوى)
+#   max    = أقصى جهد + سقف رموز ومهلة أعلى (الأقوى أداءً)
+#   auto   = نترك القرار للنموذج نفسه
+THINK_LEVELS = ("auto", "off", "low", "medium", "high", "max")
+_THINK_EFFORT = {"low": "low", "medium": "medium", "high": "high", "max": "high"}
+
+
+def _thinking_kwargs(entry: dict, level: str) -> dict:
+    """بارامترات التفكير المناسبة لمزوّد النموذج — {} إذا كانت غير مدعومة"""
+    if level in ("", "auto", "off"):
+        return {}
+    effort = _THINK_EFFORT.get(level)
+    if not effort:
+        return {}
+    provider = entry.get("provider")
+    if provider == "openrouter":
+        # OpenRouter يستخدم كائن reasoning موحّداً
+        return {"extra_body": {"reasoning": {"effort": effort}}}
+    if provider in ("groq", "cerebras", "gemini", "apinex", "colab", "together"):
+        return {"reasoning_effort": effort}
+    return {}
+
+
+def _create_completion(client, base_kwargs: dict, think_kwargs: dict, timeout: int):
+    """تنفيذ الطلب — وإن رفض المزوّد بارامترات التفكير نعيد المحاولة بدونها"""
+    opts = {"timeout": timeout, "max_retries": 0}
+    if think_kwargs:
+        try:
+            return client.with_options(**opts).chat.completions.create(
+                **{**base_kwargs, **think_kwargs}
+            )
+        except OpenAIError as e:
+            # 400/404/422 = المزوّد لا يعرف هذه البارامترات — نتجاهلها ونكمل
+            if getattr(e, "status_code", None) not in (400, 404, 422):
+                raise
+    return client.with_options(**opts).chat.completions.create(**base_kwargs)
+
+
 
 
 @app.route("/api/chat", methods=["POST"])
@@ -820,6 +1355,13 @@ def chat_api():
     temperature = float(data.get("temperature", 0.7))
     temperature = max(0.0, min(1.5, temperature))
     max_tokens = int(data.get("max_tokens", 0) or 0)
+    # مستوى التفكير المطلوب (auto/off/low/medium/high/max)
+    thinking = (data.get("thinking") or "auto").strip().lower()
+    if thinking not in THINK_LEVELS:
+        thinking = "auto"
+    # البحث في الإنترنت قبل الجواب — مفعّل افتراضياً لتقليل الأجوبة الخاطئة
+    do_search = data.get("web_search", True)
+    do_search = True if do_search is None else bool(do_search)
 
     # بناء سجل المحادثة: شخصية البوت + الرسائل المُنقّاة (مع دعم إرفاق صور)
     # نرسل آخر صورتين فقط من المحادثة — حماية للحصص المجانية من الاحتراق
@@ -875,54 +1417,62 @@ def chat_api():
             return jsonify({"error": "اكتب وصف الفيديو الذي تريد توليده"}), 400
         return jsonify(build_video_payload(vprompt, requested))
 
-    # === وضع Agent: بحث في الإنترنت + تنفيذ المهام (برمجة/بناء) ===
+    # === البحث في الإنترنت *قبل* الجواب (في كل الأوضاع) ===
+    # الهدف: تقليل الأجوبة الخاطئة عبر إلزام النموذج بنتائج بحث حقيقية.
+    query = _text_of(_extract_last_user(messages))
+    # إزالة أوامر الصور/الفيديو من الاستعلام حتى لا يشوّش البحث
+    for prefix in ("/image", "/img", "/video", "/vid", "صورة:", "ارسم:", "فيديو:", "مقطع:"):
+        if query.startswith(prefix):
+            query = query[len(prefix):].strip()
+
+    # هل الطلب مهمة بناء كود؟ (نتائج ويكيبيديا لا تفيد الكود بل تشوّش النموذج)
+    build_task = mode == "agent" and any(k in query.lower() for k in (
+        "ابن", "اصنع", "صمم", "اكتب لي", "برمج", "برمجة", "إنشئ", "انشئ",
+        "أنشئ", "سوي", "سويلي", "اعمل", "اعملي", "جهز", "جهزلي",
+        "موقع", "صفحة", "تطبيق", "أداة", "اداة", "لعبة", "لعبه",
+        "متجر", "مدونة", "بورتفوليو", "معرض", "لوحة", "حاسبة", "آلة حاسبة",
+        "ساعة", "مؤقت", "قائمة", "نموذج", "فورم", "جدول", "تقويم",
+        "game", "build", "make", "create", "website", "webpage", "page",
+        "app", "html", "css", "javascript", "python", "code",
+        "write code", "landing", "portfolio", "dashboard", "clone",
+        "canvas", "snake", "tetris", "quiz", "todo", "calculator",
+        "stopwatch", "weather", "chatbot", "gallery", "slider",
+    ))
+
+    # بوابة البحث الذكي: نبحث فقط عن الأسئلة المعرفية الحقيقية —
+    # التحيات والكود والرياضيات والترجمة والإبداع والرأي لا تُبحث
+    # (البحث عنها كان ينتج مصادر بلا علاقة بالجواب).
     sources = []
-    if mode == "agent":
-        query = _text_of(_extract_last_user(messages))
-        # إزالة أوامر الصور من الاستعلام
-        for prefix in ("/image", "/img", "صورة:", "ارسم:"):
-            if query.startswith(prefix):
-                query = query[len(prefix):].strip()
-        if query:
-            sources = web_search(query)
-            context_parts = []
-            if sources:
-                context_parts.append(
-                    "نتائج بحث من ويكيبيديا (قد تكون حديثة أو جزئية):\n"
-                    + "\n".join(
-                        f"- {s['title']}: {s['snippet']} ({s['url']})"
-                        for s in sources
-                    )
-                    + "\nاستخدمها لتحسين إجابتك واذكر المصادر بصيغة: (المصدر: العنوان). لا تختلق إن لم تكن مفيدة."
-                )
-            # وضع مهمة بناء/برمجة — أعطِ النموذج قواعد إخراج مقاطع كود منظمة
-            wants_build = any(k in query.lower() for k in (
-                "ابن", "اصنع", "صمم", "اكتب لي", "برمج", "برمجة", "إنشئ", "انشئ",
-                "أنشئ", "سوي", "سويلي", "اعمل", "اعملي", "جهز", "جهزلي",
-                "موقع", "صفحة", "تطبيق", "أداة", "اداة", "لعبة", "لعبه",
-                "متجر", "مدونة", "بورتفوليو", "معرض", "لوحة", "حاسبة", "آلة حاسبة",
-                "ساعة", "مؤقت", "قائمة", "نموذج", "فورم", "جدول", "تقويم",
-                "game", "build", "make", "create", "website", "webpage", "page",
-                "app", "html", "css", "javascript", "python", "code",
-                "write code", "landing", "portfolio", "dashboard", "clone",
-                "canvas", "snake", "tetris", "quiz", "todo", "calculator",
-                "stopwatch", "weather", "chatbot", "gallery", "slider",
-            ))
-            if wants_build:
-                context_parts.append(
-                    "أنت الآن وكيل بناء تنفيذي (Builder Agent) — مهمتك كتابة كود حقيقي كامل يعمل فوراً، لا شرح نظري. "
-                    "قواعد صارمة للإخراج: "
-                    "1) أخرج كل ملف داخل صندوق كود منفصل بصيغة ```لغة:اسم-الملف (مثال: ```html:index.html ثم الكود ثم ```). "
-                    "2) للموقع/الصفحة/اللعبة: ملف واحد index.html يحتوي كل شيء (CSS داخل <style> وJS داخل <script>) — كامل ويعمل بالفتح مباشرة، مع دعم عربي RTL إن كان المحتوى عربياً. "
-                    "3) للعبة: استخدم <canvas> أو DOM مع requestAnimationFrame، أزرار تحكم، ونقاط/مراحل. "
-                    "4) لا تختصر الكود أبداً بـ '...' أو 'باقي الكود' — اكتبه كاملاً حتى النهاية. "
-                    "5) بعد الصناديق اكتب سطراً واحداً فقط يشرح كيف تشغّل النتيجة."
-                )
-            if context_parts:
-                messages.append({
-                    "role": "system",
-                    "content": "الوضع: وكيل تنفيذ (Agent). " + " ".join(context_parts),
-                })
+    searched = False
+    if do_search and not build_task and _needs_search(query):
+        searched = True
+        sources = _filter_relevant(
+            web_search(_search_query(query), full_query=query), query)
+    if sources:
+        messages.append({"role": "system", "content": _search_context(sources, query)})
+    elif searched:
+        # بُحث فعلاً لكن دون نتائج مرتبطة — إبلاغ صريح للنموذج بدل اختلاق الحقائق
+        messages.append({"role": "system", "content": (
+            f"بُحث في الإنترنت (ويكيبيديا) عن: {query[:150]} — ولم تُعثر على "
+            "نتائج مرتبطة بالسؤال. أجب من معلوماتك العامة، وإن كان السؤال يطلب "
+            "حقيقة دقيقة (رقماً أو تاريخاً أو اسماً) لا تعرفها بثقة فقل صراحة "
+            "إنك لا تعرفها ولا تخترعها. لا تذكر أي مصادر في جوابك."
+        )})
+
+    # === وضع Agent: قواعد تنفيذ المهام (برمجة/بناء) ===
+    if build_task:
+        messages.append({
+            "role": "system",
+            "content": (
+                "أنت الآن وكيل بناء تنفيذي (Builder Agent) — مهمتك كتابة كود حقيقي كامل يعمل فوراً، لا شرح نظري. "
+                "قواعد صارمة للإخراج: "
+                "1) أخرج كل ملف داخل صندوق كود منفصل بصيغة ```لغة:اسم-الملف (مثال: ```html:index.html ثم الكود ثم ```). "
+                "2) للموقع/الصفحة/اللعبة: ملف واحد index.html يحتوي كل شيء (CSS داخل <style> وJS داخل <script>) — كامل ويعمل بالفتح مباشرة، مع دعم عربي RTL إن كان المحتوى عربياً. "
+                "3) للعبة: استخدم <canvas> أو DOM مع requestAnimationFrame، أزرار تحكم، ونقاط/مراحل. "
+                "4) لا تختصر الكود أبداً بـ '...' أو 'باقي الكود' — اكتبه كاملاً حتى النهاية. "
+                "5) بعد الصناديق اكتب سطراً واحداً فقط يشرح كيف تشغّل النتيجة."
+            ),
+        })
 
     # هل توجد صورة مرفقة في الرسائل؟ — عندها نمرّ على النماذج التي تقرأ الصور فقط
     has_image = any(
@@ -930,12 +1480,26 @@ def chat_api():
         for m in history[-MAX_HISTORY:]
     )
 
+    # ===== خيار B: Al-Khwarizmi Flash بطل البرمجة، والأسئلة المعرفية لنموذج أدق =====
+    # Flash ممتاز في الكود لكنه ضعيف في الحقائق الدقيقة. فنوجّه السؤال المعرفي
+    # إلى نموذج أقوى. وFlash *لا* يبقى كبديل في هذا المسار: لو فشل المزوّد القوي
+    # نُبلغ المستخدم بصراحة (503 أسفل) بدل إعطائه تخميناً من نموذج أضعف.
+    routed = False
+    route_reason = ""
+    if requested == "al-khwarizmi" and _is_factual_query(query, build_task):
+        target = _pick_factual_model(has_image)
+        if target:
+            requested = target
+            routed = True
+            route_reason = "سؤال معرفي — أجاب نموذج أدق مع مصادر من الإنترنت"
+
     # ترتيب المحاولات: النموذج المطلوب أولاً، ثم بالتداخل بين المزوّدين —
     # عند فشل أحدهم ينتقل تلقائياً للتالي؛ وعند توفّر عدة مفاتيح لنفس المزوّد يتناوب بينها
     pool = [
         (mid, e) for mid, e in MODELS.items()
         if mid != requested and e.get("kind", "chat") == "chat"
         and (not has_image or e.get("vision"))
+        and not (routed and mid == "al-khwarizmi")   # لا نرجع للضعيف في المسار المعرفي
     ]
     by_provider: dict = {}
     for mid, e in pool:
@@ -973,6 +1537,12 @@ def chat_api():
     # 1) النموذج الذي اختاره المستخدم — أولاً دائماً
     if requested in MODELS:
         _push(requested, MODELS[requested])
+    # 1.b) في المسار المعرفي: بدائل قوية مُتحقَّق منها قبل أي مزوّد عرضة للخطأ
+    # (APInex/Cerebras تُرجع 402 وOpenRouter 429 — فلو سبقونا لأسقطنا الطلب)
+    if routed:
+        for mid in _FACTUAL_CHAIN:
+            if mid in MODELS and (not has_image or MODELS[mid].get("vision")):
+                _push(mid, MODELS[mid])
     # 2) نماذج APInex (أسرع مزوّد متاح حالياً)
     for mid, entry in MODELS.items():
         if entry.get("provider") == "apinex":
@@ -995,19 +1565,33 @@ def chat_api():
                 kwargs = {
                     "model": entry["id"],
                     "messages": messages,
-                    "temperature": temperature,
+                    # حرارة منخفضة عند وجود مصادر بحث: النموذج الصغير (20B) يهلوس
+                    # بحرارة عالية حتى مع المصادر أمامه — التبريد يُلزمه الالتزام بها
+                    "temperature": min(temperature, 0.3) if sources else temperature,
                 }
                 # طلبات البناء تحتاج ردوداً أطول لكي يكتمل الكود
+                # (كانت القيمة 900 من الإعداد الافتراضي "متوسط" فتُقصّ اللعبة/الموقع)
                 eff_max = max_tokens
-                if mode == "agent" and max_tokens <= 0:
-                    eff_max = 2000
+                if mode == "agent":
+                    eff_max = max(eff_max, 4000)
+                # التفكير يستهلك رموزاً إضافية (reasoning tokens) فوق الرد نفسه
+                if thinking in ("high", "max"):
+                    eff_max = max(eff_max, 6000)
+                elif thinking in ("low", "medium"):
+                    eff_max = max(eff_max, 3000)
                 if eff_max > 0:
                     kwargs["max_tokens"] = min(eff_max, 8000)
-                # ===== مهلة صارمة على الاتصال نفسه (12 ثانية) =====
+                # ===== المهلة: 12 ثانية محادثة عادية، وأطول للبناء والتفكير العميق =====
                 # ملاحظة مهمة: كان هنا ThreadPoolExecutor + result(timeout=10)، لكن الخروج
                 # من بلوك with كان ينتظر انتهاء الخيط البطيء (shutdown wait=True) —
                 # فتنمحي فائدة المهلة ويتعلّق الطلب دقائق. الآن المهلة على مستوى الطلب.
-                r = c.with_options(timeout=12, max_retries=0).chat.completions.create(**kwargs)
+                req_timeout = 45 if mode == "agent" else 12
+                if thinking in ("high", "max"):
+                    req_timeout = max(req_timeout, 75)
+                elif thinking == "medium":
+                    req_timeout = max(req_timeout, 40)
+                # المحاولة مع بارامترات التفكير، وإن رفضها المزوّد تُعاد بدونها تلقائياً
+                r = _create_completion(c, kwargs, _thinking_kwargs(entry, thinking), req_timeout)
                 _choice_msg = r.choices[0].message if r.choices else None
                 reply = (_choice_msg.content if _choice_msg else "") or ""
                 # دعم لنماذج التفكير (مثل GPT-OSS على Groq) التي قد تعيد الرد داخل reasoning إذا استهلك الـ max_tokens
@@ -1024,6 +1608,10 @@ def chat_api():
                     "model": mid,
                     "label": entry["label"],
                     "sources": sources,
+                    "thinking": thinking,
+                    "searched": searched,
+                    "routed": routed,
+                    "route_reason": route_reason,
                     "artifacts": artifacts,
                 })
             except OpenAIError as e:

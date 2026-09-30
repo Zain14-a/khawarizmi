@@ -7,7 +7,7 @@
 <link rel="icon" type="image/svg+xml" href="/static/logo.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800;900&family=Amiri:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800;900&family=Aref+Ruqaa:wght@400;700&family=Amiri:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <script>(function(){try{var t=localStorage.getItem('khawarizmi_theme');if(t!=='dark'&&t!=='light'){t='dark';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
@@ -62,9 +62,10 @@ html[data-theme="dark"] #sidebar{background:linear-gradient(180deg,#15120d,#0d0b
 #sidebar.hidden{margin-right:-284px}
 .side-head{display:flex;align-items:center;gap:11px;padding:18px 16px 16px}
 .logo{width:38px;height:38px;border-radius:12px;flex-shrink:0;box-shadow:0 4px 14px rgba(212,168,67,.35);border:1px solid rgba(255,255,255,.2)}
-.wordmark{font-weight:800;font-size:1.32rem;letter-spacing:-.3px;background:linear-gradient(135deg,var(--text) 30%,var(--accent) 100%);-webkit-background-clip:text;background-clip:text}
-#newChat{margin:6px 12px 12px;padding:11px;border:1px solid var(--border);border-radius:12px;background:var(--lux-grad);color:#fff;border:none;font-family:inherit;font-size:.87rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s;box-shadow:0 8px 20px -6px rgba(212,168,67,.5)}
-#newChat:hover{transform:translateY(-1px);filter:brightness(1.07);box-shadow:0 12px 26px -6px rgba(212,168,67,.6)}
+.wordmark{font-family:'Aref Ruqaa','Noto Sans Arabic',serif;font-weight:700;font-size:1.24rem;line-height:1.5;letter-spacing:normal;background:none;-webkit-background-clip:border-box;background-clip:border-box;-webkit-text-fill-color:currentColor;color:var(--text)}
+#newChat{margin:6px 12px 12px;padding:11px;border:none;border-radius:12px;background:#212121;color:var(--text);font-family:inherit;font-size:.87rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .16s;box-shadow:none}
+html[data-theme="light"] #newChat{background:var(--panel-2)}
+#newChat:hover{background:var(--hover);transform:none;filter:none;box-shadow:none}
 .list-label{font-size:.7rem;color:var(--muted);padding:0 16px 8px}
 #chatList{flex:1;overflow-y:auto;padding:0 8px;display:flex;flex-direction:column;gap:2px}
 .chat-item{display:flex;align-items:center;gap:8px;padding:10px 11px;border-radius:11px;cursor:pointer;color:var(--muted);font-size:.86rem;transition:all .15s;border:1px solid transparent}
@@ -110,6 +111,8 @@ html[data-theme="dark"] #sidebar{background:linear-gradient(180deg,#15120d,#0d0b
 .sources-title{font-size:.72rem;color:var(--muted);font-weight:600;margin-bottom:4px}
 .sources-box a{display:block;font-size:.78rem;color:var(--accent);text-decoration:none;padding:2px 0}
 .sources-box a:hover{text-decoration:underline}
+/* شارة التوجيه:Flash أجاب البرمجة، ونموذج أدق أجاب السؤال المعرفي */
+.routed-note{color:var(--accent);display:flex;align-items:center;gap:4px;margin-top:2px}
 /* أيقونات SVG عامة */
 svg.ic{flex-shrink:0;vertical-align:-2px}
 button svg{vertical-align:-2px}
@@ -206,7 +209,11 @@ a svg{vertical-align:-2px}
 .card b{display:block;font-size:.90rem;margin-bottom:4px;font-weight:800}
 .card small{color:var(--muted);font-size:.76rem;line-height:1.6}
 /* المحادثة */
-#chat{flex:1;overflow-y:auto;display:none;flex-direction:column;gap:24px;padding:32px 20px 20px;width:100%;max-width:820px;margin:0 auto}
+#chat{flex:1;overflow-y:auto;display:none;flex-direction:column;gap:24px;padding:32px 20px 20px;width:100%;max-width:none;margin:0;scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent}
+#chat>.row{width:100%;max-width:780px;margin-left:auto;margin-right:auto}
+#chat::-webkit-scrollbar{width:8px}
+#chat::-webkit-scrollbar-track{background:transparent}
+#chat::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:99px}
 .row{display:flex;gap:14px;align-items:flex-start}
 .row.user{flex-direction:row-reverse}
 .avatar{width:38px;height:38px;border-radius:13px;background:var(--panel);border:1px solid var(--border);padding:2px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.10)}
@@ -341,6 +348,241 @@ html[data-theme="dark"] .lux-badge{color:#E3D3A6;border-color:rgba(212,168,67,.3
 /* ===== تحسين الترحيب ===== */
 .w-sub-badge{display:inline-flex;align-items:center;gap:6px;font-size:.70rem;font-weight:700;color:var(--accent);background:linear-gradient(135deg,rgba(212,168,67,.12),rgba(58,90,82,.12));border:1px solid rgba(212,168,67,.28);padding:5px 13px;border-radius:999px;margin-bottom:2px}
 .code-view-btn{box-shadow:0 4px 14px -4px rgba(212,168,67,.4)}
+/* ==================================================================
+   نمط ChatGPT — خلفية سوداء، شريط جانبي بأيقونات، صندوق كتابة دائري
+   ================================================================== */
+:root{
+  --bg:#ffffff;--bg-side:#f9f9f9;--panel:#ffffff;--panel-2:#f4f4f4;--hover:#ececec;
+  --border:#e3e3e3;--border-strong:#d0d0d0;
+  --text:#0d0d0d;--text-2:#3c3c3c;--muted:#5d5d5d;
+  --accent:#2563eb;--accent2:#1d4ed8;--accent-soft:rgba(37,99,235,.10);
+  --bubble:#f4f4f4;--user-bubble:#f4f4f4;--user-bubble-text:#0d0d0d;
+  --r-sm:8px;--r-md:12px;--r-lg:18px;--r-xl:28px;--lux-grad:linear-gradient(135deg,#2563eb,#1d4ed8);
+  --shadow-xs:0 1px 2px rgba(0,0,0,.04);--shadow-sm:0 1px 3px rgba(0,0,0,.06);
+  --shadow-md:0 8px 24px rgba(0,0,0,.10);--shadow-lg:0 20px 48px rgba(0,0,0,.16);
+}
+html[data-theme="dark"]{
+  --bg:#0d0d0d;--bg-side:#000000;--panel:#0d0d0d;--panel-2:#212121;--hover:#2f2f2f;
+  --border:#2a2a2a;--border-strong:#3a3a3a;
+  --text:#ececec;--text-2:#d0d0d0;--muted:#9b9b9b;
+  --accent:#3b82f6;--accent2:#2563eb;--accent-soft:rgba(59,130,246,.16);
+  --bubble:#212121;--user-bubble:#2f2f2f;--user-bubble-text:#ececec;
+  --lux-grad:linear-gradient(135deg,#3b82f6,#2563eb);
+  --shadow-xs:0 1px 2px rgba(0,0,0,.6);--shadow-sm:0 2px 8px rgba(0,0,0,.5);
+  --shadow-md:0 10px 30px rgba(0,0,0,.6);--shadow-lg:0 24px 60px rgba(0,0,0,.7);
+  color-scheme:dark;
+}
+*{font-family:'Noto Sans Arabic','Segoe UI',system-ui,Tahoma,sans-serif}
+body,html[data-theme="dark"] body{background:var(--bg)}
+#luxBg{display:none}
+::selection{background:var(--accent-soft)}
+.lux-badge{display:none}
+
+/* ===== الشريط الجانبي ===== */
+#sidebar{width:266px;background:var(--bg-side);border-left:none;padding:0 8px;gap:0}
+html[data-theme="dark"] #sidebar{background:#000;border-left:1px solid #1c1c1c}
+#sidebar.hidden{margin-right:-266px}
+.side-head{display:flex;align-items:center;justify-content:space-between;padding:12px 6px 8px;gap:6px}
+.side-brand{display:flex;align-items:center;gap:9px;min-width:0}
+.side-head .logo{width:26px;height:26px;border-radius:8px;padding:0;border:none;box-shadow:none;background:none}
+.wordmark{font-family:'Aref Ruqaa','Noto Sans Arabic',serif;font-weight:700;font-size:1.24rem;line-height:1.5;letter-spacing:normal;background:none;-webkit-text-fill-color:currentColor;color:var(--text)}
+.side-head-actions{display:flex;align-items:center;gap:2px}
+.side-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:none;background:none;color:var(--text-2);border-radius:10px;cursor:pointer;transition:background .14s,color .14s;flex-shrink:0}
+.side-icon-btn:hover{background:var(--hover);color:var(--text)}
+.side-search{padding:0 4px 8px}
+.side-search.hidden{display:none}
+.side-search input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--panel-2);color:var(--text);font-family:inherit;font-size:.84rem;outline:none}
+.side-search input:focus{border-color:var(--accent)}
+.side-nav{display:flex;flex-direction:column;gap:1px;padding:2px 0 6px}
+.nav-item{display:flex;align-items:center;gap:12px;width:100%;padding:9px 12px;border:none;background:none;border-radius:10px;color:var(--text);font-family:inherit;font-size:.885rem;font-weight:500;cursor:pointer;text-align:right;transition:background .14s}
+.nav-item:hover{background:var(--hover)}
+.nav-item.active{background:var(--hover)}
+.nav-item span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav-item svg{opacity:.85}
+.nav-item-primary{margin:0 0 6px;background:#212121;font-weight:600}
+html[data-theme="light"] .nav-item-primary{background:var(--panel-2)}
+.nav-item-primary:hover{background:var(--hover)}
+.nav-extra{display:flex;flex-direction:column;gap:1px}
+.nav-extra.hidden{display:none}
+.list-label{font-size:.7rem;font-weight:600;color:var(--muted);padding:12px 12px 6px;letter-spacing:0}
+#chatList{flex:1;overflow-y:auto;padding:0 0 8px;gap:1px;display:flex;flex-direction:column}
+.chat-item{padding:9px 12px;border-radius:10px;color:var(--text-2);font-size:.865rem;border:none;font-weight:500}
+.chat-item:hover{background:var(--hover);color:var(--text);border-color:transparent}
+.chat-item.active{background:var(--hover);color:var(--text);font-weight:600;border-color:transparent}
+.chat-item button{color:var(--muted);background:none;border:none}
+.list-empty{padding:8px 12px;font-size:.8rem;color:var(--muted)}
+.side-user{margin:0 0 8px;padding:8px;border:none;border-radius:12px;gap:10px;background:none}
+.side-user:hover{background:var(--hover)}
+.u-avatar{width:32px;height:32px;background:var(--accent);color:#fff;font-weight:700;box-shadow:none;border-radius:50%}
+.u-name{font-size:.85rem;font-weight:600;color:var(--text)}
+.u-mail{display:none}
+.u-plan{font-size:.72rem;color:var(--muted)}
+#logout{opacity:0;transition:opacity .15s;background:none;color:var(--muted)}
+.side-user:hover #logout{opacity:1}
+#sideScrim{background:rgba(0,0,0,.55);backdrop-filter:blur(3px)}
+/* ===== الشريط العلوي ===== */
+#topbar{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:none;background:var(--bg);position:relative;z-index:20}
+.top-title{display:none}
+.segmented{position:absolute;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:2px;background:var(--panel-2);border:none;border-radius:999px;padding:3px}
+.seg-btn{display:inline-flex;align-items:center;gap:6px;border:none;background:none;color:var(--muted);font-family:inherit;font-size:.83rem;font-weight:600;padding:7px 20px;border-radius:999px;cursor:pointer;transition:all .16s;box-shadow:none}
+.seg-btn:hover{color:var(--text)}
+.seg-btn.active{background:var(--hover);color:var(--text)}
+html[data-theme="dark"] .seg-btn.active{background:#2f2f2f;color:#fff}
+html[data-theme="light"] .seg-btn.active{background:#fff;color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+#modelBtn{padding:7px 14px;border:1px solid var(--border);border-radius:999px;background:var(--panel-2);font-size:.83rem;font-weight:600;box-shadow:none;gap:8px}
+#modelBtn:hover{border-color:var(--border-strong);background:var(--hover);transform:none;box-shadow:none;filter:none}
+#modelMenu{background:var(--panel-2);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow-md)}
+#modelMenu button{color:var(--text)}
+#modelMenu button:hover{background:var(--hover)}
+#modelMenu button.active{background:var(--hover);color:var(--text);box-shadow:none}
+#themeBtn,#settingsBtn,#toggle{color:var(--text-2)}
+
+/* ===== شاشة البداية (نمط ChatGPT) ===== */
+#welcome{flex:1;display:flex;align-items:center;justify-content:center;padding:0 20px;text-align:center}
+#welcome h1{font-size:clamp(1.55rem,3.2vw,2rem);font-weight:500;letter-spacing:-.3px;background:none;-webkit-text-fill-color:currentColor;color:var(--text);margin:0}
+.w-logo,.w-sub-badge{display:none}
+.cards{display:none}
+
+/* ===== صندوق الكتابة ===== */
+#composer{padding:18px 20px 10px;max-width:780px;width:100%;margin:0 auto}
+.box{background:var(--panel-2);border:none;border-radius:28px;padding:14px 18px 10px;box-shadow:none;transition:box-shadow .18s;gap:0}
+html[data-theme="dark"] .box{background:#212121;border:none}
+.box:focus-within{border:none;box-shadow:0 0 0 1.5px var(--border-strong);transform:none}
+#input{width:100%;font-size:.97rem;color:var(--text);padding:2px 2px 6px;line-height:1.7;background:none;border:none;outline:none;resize:none;max-height:200px;min-height:26px;font-family:inherit}
+#input::placeholder{color:var(--muted)}
+.box-footer{margin-top:4px;padding-top:0}
+.box-tools{gap:6px}
+.tool-btn{border:1px solid var(--border);background:none;color:var(--text-2);border-radius:999px;padding:6px 13px;font-size:.78rem;font-weight:500}
+.tool-btn:hover{background:var(--hover);border-color:var(--border-strong);color:var(--text)}
+.tool-pill{display:none}
+.attach-btn{width:34px;height:34px;border-radius:50%;background:none;border:1px solid var(--border);color:var(--text-2);justify-content:center;align-items:center;padding:0;margin:0}
+.attach-btn:hover{background:var(--hover);color:var(--text);border-color:var(--border-strong)}
+#send{width:36px;height:36px;border-radius:50%;background:var(--accent);box-shadow:none;color:#fff}
+#send:hover:not(:disabled){background:var(--accent2);transform:scale(1.05);filter:none}
+#send:disabled{background:var(--panel-2);color:var(--muted)}
+html[data-theme="light"] #send:disabled{background:#e5e5e5}
+.hint{display:none}
+.attach-preview{background:var(--panel);border:1px solid var(--border);border-radius:14px}
+
+/* ===== اقتراحات البداية ===== */
+#suggestions{width:100%;max-width:780px;margin:0 auto;padding:2px 20px 26px;display:flex;flex-direction:column;gap:0}
+.sug-item{display:flex;align-items:center;gap:14px;padding:13px 12px;border:none;background:none;color:var(--text-2);font-family:inherit;font-size:.925rem;font-weight:400;cursor:pointer;border-radius:12px;text-align:right;transition:background .14s,color .14s}
+.sug-item:hover{background:var(--hover);color:var(--text)}
+.sug-item svg{color:var(--muted);flex-shrink:0}
+#main.empty #welcome{flex:0 0 auto;margin-top:auto;padding-bottom:2px}
+#main.empty #composer{margin-bottom:0}
+#main.empty #suggestions{margin-bottom:auto}
+#main:not(.empty) #suggestions{display:none}
+#main:not(.empty) #welcome{display:none}
+/* ===== المحادثة ===== */
+#chat{max-width:none;padding:26px 20px 6px;gap:22px}
+.row{gap:12px}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--panel-2);border:none;padding:0;box-shadow:none}
+html[data-theme="dark"] .avatar{background:#212121;border:none;box-shadow:none}
+.row.user .avatar{background:var(--accent);border:none}
+.bubble{font-size:.95rem;line-height:1.85}
+.row.user .bubble{background:var(--user-bubble);color:var(--user-bubble-text);border:none;box-shadow:none;font-weight:400;padding:11px 16px;border-radius:18px;border-top-left-radius:6px}
+.bot-text{color:var(--text)}
+.bot-text h1,.bot-text h2,.bot-text h3{color:var(--text)}
+.bot-text code{background:var(--panel-2);border:none;color:var(--text);border-radius:6px}
+.action-btn{background:none;border:1px solid var(--border);color:var(--muted);border-radius:999px;font-size:.72rem;padding:4px 11px}
+.action-btn:hover{background:var(--hover);color:var(--text);border-color:var(--border-strong)}
+.typing-wrap{background:transparent;border:none;padding:4px 0}
+.typing-dots i{background:var(--muted)}
+.typing-text{color:var(--muted)}
+.fallback-note{border-top:1px solid var(--border);font-size:.72rem}
+.sources-box{border-top:1px solid var(--border)}
+.sources-title{color:var(--muted)}
+.sources-box a{color:var(--accent)}
+.generated-image-card{background:var(--panel-2);border:1px solid var(--border);border-radius:16px;box-shadow:none}
+.img-card-info{background:var(--panel-2);border-top:1px solid var(--border)}
+.img-prompt-text{color:var(--text-2)}
+.img-badge{background:var(--panel);color:var(--text-2);border-color:var(--border)}
+.img-btn{background:var(--panel);border:1px solid var(--border-strong);color:var(--text);border-radius:999px}
+.img-btn:hover{background:var(--hover)}
+.art-view-btn{background:var(--accent);color:#fff;box-shadow:none;border-radius:10px;font-weight:700}
+.art-view-btn:hover{background:var(--accent2);filter:none;transform:none}
+.code-view-btn{background:var(--accent-soft);border:1px solid var(--accent);color:var(--accent);box-shadow:none}
+.code-lang-badge{background:var(--accent-soft);color:var(--accent)}
+
+/* ===== المودالات ===== */
+.modal-overlay{background:rgba(0,0,0,.62);backdrop-filter:blur(4px)}
+.modal-box{background:var(--panel-2);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow-lg)}
+.modal-box::before{display:none}
+.modal-title{color:var(--text)}
+.modal-title .ic-holder{color:var(--text-2)}
+.modal-close{color:var(--muted);border-radius:50%}
+.modal-close:hover{color:var(--text);background:var(--hover)}
+.modal-label{color:var(--text-2)}
+.modal-textarea,.modal-select{background:var(--bg);border:1px solid var(--border-strong);color:var(--text);border-radius:12px}
+.modal-textarea:focus,.modal-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.set-section{background:var(--panel);border:1px solid var(--border);border-radius:16px}
+.set-section-title{color:var(--text)}
+.set-label{color:var(--text)}
+.set-desc{color:var(--muted)}
+.set-row{border-bottom:1px solid var(--border)}
+.switch .sl{background:var(--border-strong)}
+.switch input:checked + .sl{background:var(--accent)}
+.set-model-item{background:var(--panel);border:1px solid var(--border)}
+.set-model-item:hover{background:var(--hover);border-color:var(--border-strong)}
+.set-model-item .m-name{color:var(--text)}
+.set-model-item .m-check{background:var(--panel-2);border-color:var(--border-strong)}
+.set-model-item.on .m-check{background:var(--accent);border-color:var(--accent)}
+.set-model-actions button{background:var(--panel);border:1px solid var(--border-strong);color:var(--text-2)}
+.set-model-actions button:hover{background:var(--hover);border-color:var(--accent);color:var(--accent)}
+.img-btn.primary{background:var(--accent);border:none;color:#fff;box-shadow:none}
+.img-btn.primary:hover{background:var(--accent2);filter:none;transform:none}
+.img-key-hint{background:var(--panel);border:1px solid var(--border);color:var(--muted)}
+
+/* ===== لوحة المعاينة والكود (Artifacts / Canvas) بنمط ChatGPT/Claude ===== */
+#artPanel{background:var(--panel-2);border-left:1px solid var(--border);color:var(--text);box-shadow:var(--shadow-lg)}
+html[data-theme="dark"] #artPanel{background:#171717;border-left:1px solid #2a2a2a}
+.art-head{background:var(--bg);border-bottom:1px solid var(--border);color:var(--text)}
+html[data-theme="dark"] .art-head{background:#111;border-bottom:1px solid #262626}
+.art-title{color:var(--text)}
+.art-title .live-dot{background:#10a37f;box-shadow:0 0 6px rgba(16,163,127,.6)}
+.art-actions button{background:var(--panel-2);border:1px solid var(--border);color:var(--text-2);border-radius:8px}
+.art-actions button:hover{background:var(--hover);color:var(--text);border-color:var(--border-strong)}
+.art-tabs{background:var(--bg);border-bottom:1px solid var(--border)}
+html[data-theme="dark"] .art-tabs{background:#111;border-bottom:1px solid #262626}
+.art-tab{color:var(--muted)}
+.art-tab:hover{color:var(--text)}
+.art-tab.active{background:var(--panel-2);color:var(--text);border-color:var(--border)}
+html[data-theme="dark"] .art-tab.active{background:#1e1e1e;border-color:#333;color:#fff}
+.art-body{background:var(--panel-2)}
+html[data-theme="dark"] .art-body{background:#141414}
+.art-body pre{color:var(--text)}
+.art-frame-bar{background:var(--bg);border-bottom:1px solid var(--border);color:var(--muted)}
+html[data-theme="dark"] .art-frame-bar{background:#111;border-bottom:1px solid #262626}
+.codebox{background:var(--panel-2);border:1px solid var(--border);border-radius:12px}
+html[data-theme="dark"] .codebox{background:#1a1a1a;border-color:#2a2a2a}
+.codebox-head{background:var(--bg);border-bottom:1px solid var(--border);color:var(--muted)}
+html[data-theme="dark"] .codebox-head{background:#141414;border-color:#262626}
+.code-lang{color:var(--accent)}
+.codebox-head button{background:var(--panel-2);border:1px solid var(--border);color:var(--text-2)}
+.codebox-head button:hover{background:var(--hover);color:var(--text)}
+.codebox pre{background:transparent}
+
+/* ===== الجوال ===== */
+@media(max-width:860px){
+  .segmented{position:static;transform:none;margin:0 auto}
+  #modelBtn{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
+@media(max-width:768px){
+  #sidebar{width:280px;padding:0 8px;box-shadow:none}
+  #sidebar.hidden{margin-right:-280px}
+  #topbar{padding:8px 10px;gap:6px}
+  #composer{padding:12px 12px 8px}
+  #suggestions{padding:0 12px 18px}
+  #chat{padding:18px 12px 6px;gap:18px}
+  .row.user .bubble{max-width:88%}
+  .modal-box{border-radius:16px;padding:18px}
+}
+@media(max-width:560px){
+  .seg-btn{padding:6px 13px;font-size:.78rem}
+  #modelBtn{padding:6px 11px;font-size:.78rem}
+  .sug-item{font-size:.88rem;padding:11px 8px}
+}
 </style>
 </head>
 <body>
@@ -372,53 +614,68 @@ html[data-theme="dark"] .lux-badge{color:#E3D3A6;border-color:rgba(212,168,67,.3
 <!-- الشريط الجانبي -->
 <aside id="sidebar">
   <div class="side-head">
-    <img class="logo" src="/static/logo.svg" alt="الخوارزمي">
-    <span class="wordmark">الخوارزمي</span>
+    <div class="side-brand">
+      <img class="logo" src="/static/logo.svg" alt="الخوارزمي">
+      <span class="wordmark">الخوارزمي</span>
+    </div>
+    <div class="side-head-actions">
+      <button id="searchBtn" class="side-icon-btn" title="ابحث في المحادثات"></button>
+      <button id="collapseBtn" class="side-icon-btn" title="إخفاء القائمة"></button>
+    </div>
   </div>
-  <button id="newChat">+ محادثة جديدة</button>
-  <div class="list-label">المحادثات</div>
+
+  <div class="side-search hidden" id="sideSearch">
+    <input id="searchInput" type="text" placeholder="ابحث في المحادثات..." autocomplete="off">
+  </div>
+
+  <button id="newChat" class="nav-item nav-item-primary"></button>
+
+  <nav class="side-nav">
+    <button class="nav-item" id="navImages"></button>
+    <button class="nav-item" id="navResults"></button>
+    <button class="nav-item" id="navCode"></button>
+    <button class="nav-item" id="navAgent"></button>
+    <button class="nav-item" id="navSettings"></button>
+    <button class="nav-item" id="navMore"></button>
+    <div id="navExtra" class="nav-extra hidden">
+      <button class="nav-item" id="navTheme"></button>
+    </div>
+  </nav>
+
+  <div class="list-label">المحادثات الأخيرة</div>
   <div id="chatList"></div>
+
   <div class="side-user">
     <div class="u-avatar">{{ (name or email)[:1] }}</div>
     <div class="u-info">
       <div class="u-name">{{ name or email }}</div>
-      <div class="u-mail">{{ email }}</div>
+      <div class="u-plan">مجاني</div>
     </div>
-    <button id="logout">خروج</button>
+    <button id="logout" class="side-icon-btn" title="خروج"></button>
   </div>
 </aside>
 
 <!-- المنطقة الرئيسية -->
 <main id="main">
   <header id="topbar">
-    <button id="toggle" title="إظهار/إخفاء القائمة"></button>
+    <button id="toggle" class="side-icon-btn" title="إظهار/إخفاء القائمة"></button>
     <div class="top-title" id="topTitle">محادثة جديدة</div>
+    <div class="segmented" id="modeToggle" role="tablist">
+      <button type="button" class="seg-btn active" data-mode="chat" id="modeChat" role="tab"></button>
+      <button type="button" class="seg-btn" data-mode="agent" id="modeAgent" role="tab"></button>
+    </div>
     <div class="spacer"></div>
     <div class="model-wrap">
-      <button id="modelBtn"><span class="dot"></span><span id="modelLabel">Gemini 2.5 Flash</span></button>
+      <button id="modelBtn"><span class="dot"></span><span id="modelLabel">Al-Khwarizmi Flash</span></button>
       <div id="modelMenu" class="hidden"></div>
     </div>
-    <div class="settings-wrap">
-      <span class="lux-badge"><i></i> من فلسطين</span>
-      <button id="themeBtn" class="icon-btn" title="تبديل المظهر" aria-label="تبديل المظهر"></button>
-      <button id="settingsBtn" class="icon-btn" title="إعدادات الموقع"></button>
-    </div>
+    <button id="themeBtn" class="side-icon-btn" title="تبديل المظهر" aria-label="تبديل المظهر"></button>
+    <button id="settingsBtn" class="side-icon-btn" title="إعدادات الموقع"></button>
   </header>
 
   <!-- شاشة الترحيب -->
   <div id="welcome">
-    <div class="w-sub-badge">✦ مساعد ذكي فاخر — نماذج مفتوحة المصدر</div>
-    <img class="w-logo" src="/static/logo.svg" alt="">
-    <h1>كيف بقدر أساعدك اليوم؟</h1>
-    <p>اسأل الخوارزمي عن أي شي — كتابة، برمجة، شرح، تحليل صور وأكثر</p>
-    <div class="cards">
-      <button class="card"><b>اشرحلي فكرة معقدة</b><small>تبسيط المواضيع الصعبة بأسلوب سهل</small></button>
-      <button class="card"><b>ساعدني بالكتابة</b><small>رسائل، مقالات، ومحتوى إبداعي</small></button>
-      <button class="card agent-card-trigger"><b>ابنِ لي موقعاً</b><small>صفحة كاملة بمعاينة حية بجانب المحادثة</small></button>
-      <button class="card agent-card-game"><b>اصنع لي لعبة</b><small>لعبة تفاعلية تعمل فوراً مع معاينة</small></button>
-      <button class="card"><b>اكتبلي كود برمجي</b><small>بأي لغة مع الشرح خطوة بخطوة</small></button>
-      <button class="card img-card-trigger"><b>ولّد صورة بالذكاء الاصطناعي</b><small>بنموذجنا الفني الحصري</small></button>
-    </div>
+    <h1>من وين نبدأ؟</h1>
   </div>
 
   <!-- منطقة المحادثة -->
@@ -432,25 +689,27 @@ html[data-theme="dark"] .lux-badge{color:#E3D3A6;border-color:rgba(212,168,67,.3
         <span class="attach-name" id="attachPreviewName"></span>
         <button type="button" class="attach-del" id="attachRemove" title="إزالة الصورة"></button>
       </div>
-      <textarea id="input" rows="1" placeholder="اكتب رسالتك للخوارزمي... أو اكتب: /image وصف الصورة"></textarea>
+      <textarea id="input" rows="1" placeholder="اسأل عن أي شي... أو اكتب: /image وصف الصورة"></textarea>
       <div class="box-footer">
         <div class="box-tools">
-          <div class="mode-toggle" id="modeToggle" title="تبديل وضع المحادثة">
-            <button type="button" class="mode-btn active" data-mode="chat" id="modeChat"></button>
-            <button type="button" class="mode-btn" data-mode="agent" id="modeAgent"></button>
-          </div>
           <button type="button" class="attach-btn" id="attachBtn" title="إرفاق صورة"></button>
           <input type="file" id="attachInput" accept="image/*" hidden>
           <button type="button" class="tool-btn" id="openImgModalBtn" title="توليد صورة بالذكاء الاصطناعي">
             <span class="ic-holder ic-image-btn"></span>
-            <span>توليد صورة</span>
+            <span>صورة</span>
           </button>
-          <span class="tool-pill">Shift+Enter لسطر جديد</span>
         </div>
         <button id="send" title="إرسال (Enter)"></button>
       </div>
     </div>
-    <p class="hint">الخوارزمي يدعم المحادثة وتوليد الصور عبر نماذج فنية متعددة</p>
+  </div>
+
+  <!-- اقتراحات البداية (تظهر فقط عندما لا توجد محادثة) -->
+  <div id="suggestions">
+    <button class="sug-item" data-sug="image"></button>
+    <button class="sug-item" data-sug="write"></button>
+    <button class="sug-item" data-sug="web"></button>
+    <button class="sug-item" data-sug="build"></button>
   </div>
 </main>
 
@@ -511,8 +770,8 @@ html[data-theme="dark"] .lux-badge{color:#E3D3A6;border-color:rgba(212,168,67,.3
         </div>
         <div class="set-row">
           <div class="set-info">
-            <div class="set-label">عرض المصادر في وضع Agent</div>
-            <div class="set-desc">إظهار روابط ويكيبيديا تحت ردود الوكيل</div>
+            <div class="set-label">عرض المصادر</div>
+            <div class="set-desc">إظهار روابط نتائج البحث تحت الردود</div>
           </div>
           <div class="set-control">
             <label class="switch"><input type="checkbox" id="showSourcesSet"><span class="sl"></span></label>
@@ -566,6 +825,31 @@ html[data-theme="dark"] .lux-badge{color:#E3D3A6;border-color:rgba(212,168,67,.3
             </select>
           </div>
         </div>
+        <div class="set-row">
+          <div class="set-info">
+            <div class="set-label">البحث في الإنترنت قبل الجواب</div>
+            <div class="set-desc">يبحث فقط عن الأسئلة المعرفية ويعرض المصادر المرتبطة فعلاً — التحيات والكود والترجمة لا تُبحث</div>
+          </div>
+          <div class="set-control">
+            <label class="switch"><input type="checkbox" id="webSearchSet"><span class="sl"></span></label>
+          </div>
+        </div>
+        <div class="set-row">
+          <div class="set-info">
+            <div class="set-label">مستوى التفكير</div>
+            <div class="set-desc">أعلى = تحليل أعمق وأداء أقوى (أبطأ) • أدنى = رد أسرع وأخف</div>
+          </div>
+          <div class="set-control">
+            <select id="thinkSelect" class="modal-select">
+              <option value="auto">تلقائي — حسب النموذج</option>
+              <option value="off">بدون تفكير — الأسرع</option>
+              <option value="low">منخفض</option>
+              <option value="medium">متوسط (متوازن)</option>
+              <option value="high">عالي — أداء أقوى</option>
+              <option value="max">أقصى — أقوى أداء</option>
+            </select>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -604,10 +888,10 @@ html[data-theme="dark"] .lux-badge{color:#E3D3A6;border-color:rgba(212,168,67,.3
     <div class="art-actions">
       <button onclick="artToggleView()" id="artViewBtn" title="تبديل معاينة/كود"></button>
       <button onclick="artOpenTab()" id="artOpenBtn" title="فتح بتبويب جديد"></button>
-      <button onclick="artCopy()" title="نسخ الكود"></button>
-      <button onclick="artDownload()" title="تحميل الملف"></button>
+      <button onclick="artCopy()" id="artCopyBtn" title="نسخ الكود"></button>
+      <button onclick="artDownload()" id="artDownloadBtn" title="تحميل الملف"></button>
       <button onclick="artDownloadAll()" id="artAllBtn" title="تحميل الكل ZIP"></button>
-      <button onclick="closeArtifacts()" title="إغلاق"></button>
+      <button onclick="closeArtifacts()" id="artCloseBtn" title="إغلاق"></button>
     </div>
   </div>
   <div class="art-tabs" id="artTabs"></div>
@@ -651,6 +935,15 @@ const ICON = {
   plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
   attach: '<path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
   layout: '<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>',
+  search: '<circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.65" y2="16.65"/>',
+  panel: '<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/>',
+  dots: '<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
+  arrowUp: '<line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>',
+  sparkle: '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/>',
+  pencil: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18z"/>',
+  exit: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+  chevron: '<polyline points="6 9 12 15 18 9"/>',
 };
 function ic(name, size = 16, cls = 'ic') {
   return `<svg class="${cls}" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[name] || ''}</svg>`;
@@ -658,11 +951,11 @@ function ic(name, size = 16, cls = 'ic') {
 
 // ===== النماذج (تُحمّل ديناميكياً من السيرفر) =====
 let models = [
-  { id: 'khwarizmi-flash', label: 'Al-Khwarizmi Flash', desc: 'نموذجنا الخاص — سريع وخفيف', icon: 'bolt' },
+  { id: 'al-khwarizmi', label: 'Al-Khwarizmi Flash', desc: 'بطل البرمجة', icon: 'bolt' },
   { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', desc: 'الأذكى والأدق — متعدد اللغات' },
   { id: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite', desc: 'الأسرع — خفيف وسريع الاستجابة' },
 ];
-let model = localStorage.getItem('khawarizmi_model');
+let model = localStorage.getItem('khawarizmi_model') || 'al-khwarizmi';
 
 // النماذج المخفية من القائمة (إعدادات الموقع) — تُحفظ في المتصفح
 let hiddenModels = [];
@@ -728,7 +1021,7 @@ async function loadModels() {
 }
 
 // ===== إعدادات الموقع (تُحفظ في المتصفح) =====
-const DEFAULT_SETTINGS = { temperature: 0.7, maxTokens: 900, defaultMode: 'chat', showSources: true, typewriter: true, hidden: [] };
+const DEFAULT_SETTINGS = { temperature: 0.7, maxTokens: 900, defaultMode: 'chat', showSources: true, typewriter: true, thinking: 'auto', webSearch: true, hidden: [] };
 let settings = { ...DEFAULT_SETTINGS };
 let savedHidden = [];
 try {
@@ -746,6 +1039,8 @@ const lenSelect = document.getElementById('lenSelect');
 const modeDefaultSelect = document.getElementById('modeDefaultSelect');
 const showSourcesSet = document.getElementById('showSourcesSet');
 const typewriterSet = document.getElementById('typewriterSet');
+const thinkSelect = document.getElementById('thinkSelect');
+const webSearchSet = document.getElementById('webSearchSet');
 const settingsModal = document.getElementById('settingsModal');
 
 // ===== أزرار قائمة النماذج في الإعدادات =====
@@ -791,6 +1086,8 @@ function openSettings() {
   modeDefaultSelect.value = settings.defaultMode;
   showSourcesSet.checked = settings.showSources;
   typewriterSet.checked = settings.typewriter;
+  thinkSelect.value = settings.thinking || 'auto';
+  webSearchSet.checked = settings.webSearch !== false;
   renderSetModelList();
   settingsModal.style.display = 'flex';
 }
@@ -801,7 +1098,7 @@ function applyModeUI() {
   const hint = document.querySelector('.hint');
   if (hint) hint.innerHTML = mode === 'agent'
     ? ic('robot', 13) + ' وضع Agent — يبحث في الإنترنت، ينفّذ المهام، ويعرض النتائج بمصادر موثقة'
-    : 'الخوارزمي يدعم المحادثة وتوليد الصور عبر نماذج مفتوحة المصدر';
+    : ic('globe', 13) + ' الخوارزمي يبحث في الإنترنت قبل كل جواب — لتقليل الأخطاء';
 }
 document.getElementById('modeChat').onclick = () => { mode = 'chat'; applyModeUI(); };
 document.getElementById('modeAgent').onclick = () => { mode = 'agent'; applyModeUI(); };
@@ -813,6 +1110,8 @@ document.getElementById('saveSettingsBtn').onclick = () => {
   settings.defaultMode = modeDefaultSelect.value;
   settings.showSources = showSourcesSet.checked;
   settings.typewriter = typewriterSet.checked;
+  settings.thinking = thinkSelect.value;
+  settings.webSearch = webSearchSet.checked;
   settings.hidden = hiddenModels.slice();
   localStorage.setItem('khawarizmi_settings', JSON.stringify(settings));
   localStorage.setItem('khawarizmi_hidden_models', JSON.stringify(hiddenModels));
@@ -831,8 +1130,63 @@ tempSlider.oninput = () => { tempVal.textContent = parseFloat(tempSlider.value).
 applyModeUI();
 
 // ===== تعبئة الأيقونات في العناصر الثابتة =====
-document.getElementById('toggle').innerHTML = ic('menu', 20);
+document.getElementById('toggle').innerHTML = ic('panel', 20);
 document.getElementById('settingsBtn').innerHTML = ic('gear', 19);
+
+// ===== الشريط الجانبي: أيقونات + أوامر (نمط ChatGPT) =====
+let chatFilter = '';
+const sideSearchBox = document.getElementById('sideSearch');
+const searchInput = document.getElementById('searchInput');
+document.getElementById('searchBtn').innerHTML = ic('search', 18);
+document.getElementById('collapseBtn').innerHTML = ic('panel', 18);
+document.getElementById('logout').innerHTML = ic('exit', 17);
+document.getElementById('newChat').innerHTML = ic('plus', 18) + '<span>محادثة جديدة</span>';
+document.getElementById('navImages').innerHTML = ic('image', 18) + '<span>الصور</span>';
+document.getElementById('navResults').innerHTML = ic('layout', 18) + '<span>النتائج</span>';
+document.getElementById('navCode').innerHTML = ic('code', 18) + '<span>البرمجة</span>';
+document.getElementById('navAgent').innerHTML = ic('robot', 18) + '<span>وضع الوكيل</span>';
+document.getElementById('navSettings').innerHTML = ic('gear', 18) + '<span>الإعدادات</span>';
+document.getElementById('navMore').innerHTML = ic('dots', 18) + '<span>المزيد</span>';
+document.getElementById('navTheme').innerHTML = ic('moon', 18) + '<span>تبديل المظهر</span>';
+
+function setActiveNav(id) {
+  document.querySelectorAll('.side-nav .nav-item').forEach(b => b.classList.remove('active'));
+  const el = id ? document.getElementById(id) : null;
+  if (el) el.classList.add('active');
+}
+// كتابة نص جاهز داخل صندوق الكتابة
+function prefill(t) {
+  input.value = t;
+  input.focus();
+  try { input.setSelectionRange(t.length, t.length); } catch (e) {}
+  input.style.height = 'auto';
+  input.style.height = Math.min(input.scrollHeight, 170) + 'px';
+}
+document.getElementById('searchBtn').onclick = () => {
+  sideSearchBox.classList.toggle('hidden');
+  if (!sideSearchBox.classList.contains('hidden')) { searchInput.focus(); }
+  else { searchInput.value = ''; chatFilter = ''; renderList(); }
+};
+searchInput.addEventListener('input', () => { chatFilter = searchInput.value.trim(); renderList(); });
+document.getElementById('collapseBtn').onclick = () => sidebar.classList.add('hidden');
+document.getElementById('navImages').onclick = () => { setActiveNav('navImages'); openImgModal(); };
+document.getElementById('navResults').onclick = () => { setActiveNav('navResults'); openLastArtifacts(); };
+document.getElementById('navCode').onclick = () => {
+  setActiveNav('navCode'); mode = 'agent'; applyModeUI();
+  prefill('اكتب لي كوداً كاملاً يعمل فوراً يقوم بـ ');
+};
+document.getElementById('navAgent').onclick = () => {
+  setActiveNav('navAgent');
+  mode = mode === 'agent' ? 'chat' : 'agent';
+  applyModeUI();
+  if (mode === 'agent') prefill('ابنِ لي موقعاً كاملاً بملف index.html واحد ');
+};
+document.getElementById('navSettings').onclick = () => { setActiveNav('navSettings'); openSettings(); };
+document.getElementById('navMore').onclick = () => {
+  document.getElementById('navExtra').classList.toggle('hidden');
+  setActiveNav('navMore');
+};
+document.getElementById('navTheme').onclick = () => setTheme(currentTheme() === 'dark' ? 'light' : 'dark');
 function currentTheme(){return document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light';}
 function syncThemeBtn(){try{var b=document.getElementById('themeBtn');if(!b)return;var d=currentTheme()==='dark';b.innerHTML=ic(d?'sun':'moon',18);b.title=d?'تبديل للوضع النهاري':'تبديل للوضع الليلي';}catch(e){}}
 function setTheme(t){try{document.documentElement.setAttribute('data-theme',t==='dark'?'dark':'light');localStorage.setItem('khawarizmi_theme',t==='dark'?'dark':'light');}catch(e){}syncThemeBtn();}
@@ -840,8 +1194,8 @@ syncThemeBtn();
 var _themeBtn=document.getElementById('themeBtn');if(_themeBtn){_themeBtn.onclick=()=>setTheme(currentTheme()==='dark'?'light':'dark');}
 document.getElementById('modeChat').innerHTML = ic('chat', 13) + ' Chat';
 document.getElementById('modeAgent').innerHTML = ic('robot', 13) + ' Agent';
-document.getElementById('send').innerHTML = ic('send', 18);
-document.getElementById('attachBtn').innerHTML = ic('attach', 17);
+document.getElementById('send').innerHTML = ic('arrowUp', 18);
+document.getElementById('attachBtn').innerHTML = ic('plus', 18);
 document.getElementById('attachRemove').innerHTML = ic('x', 14);
 document.querySelector('#openImgModalBtn .ic-image-btn').innerHTML = ic('image', 14);
 document.getElementById('imgModalIc').innerHTML = ic('image', 18);
@@ -856,10 +1210,10 @@ document.querySelector('.code-panel-actions .ic-close-b').innerHTML = ic('x', 13
 document.querySelector('.art-title .ic-tools').innerHTML = ic('tools', 13);
 document.getElementById('artViewBtn').innerHTML = ic('eye', 13) + ' معاينة';
 document.getElementById('artOpenBtn').innerHTML = ic('eye', 12) + ' تبويب';
-document.querySelector('.art-actions button:nth-child(3)').innerHTML = ic('copy', 12) + ' نسخ';
-document.querySelector('.art-actions button:nth-child(4)').innerHTML = ic('download', 12) + ' تحميل';
+document.getElementById('artCopyBtn').innerHTML = ic('copy', 12) + ' نسخ';
+document.getElementById('artDownloadBtn').innerHTML = ic('download', 12) + ' تحميل';
 document.getElementById('artAllBtn').innerHTML = ic('download', 12) + ' الكل';
-document.querySelector('.art-actions button:nth-child(6)').innerHTML = ic('x', 13);
+document.getElementById('artCloseBtn').innerHTML = ic('x', 13);
 
 modelBtn.onclick = e => {
   e.stopPropagation();
@@ -880,7 +1234,16 @@ const save = () => localStorage.setItem('khawarizmi_chats', JSON.stringify(chats
 
 function renderList() {
   chatList.innerHTML = '';
-  chats.forEach(c => {
+  const q = (chatFilter || '').toLowerCase();
+  const list = q ? chats.filter(c => String(c.title || '').toLowerCase().includes(q)) : chats;
+  if (!list.length) {
+    const empty = document.createElement('div');
+    empty.className = 'list-empty';
+    empty.textContent = q ? 'لا توجد محادثة مطابقة' : 'لا توجد محادثات بعد';
+    chatList.appendChild(empty);
+    return;
+  }
+  list.forEach(c => {
     const d = document.createElement('div');
     d.className = 'chat-item' + (current && current.id === c.id ? ' active' : '');
     const title = document.createElement('span');
@@ -918,7 +1281,26 @@ function delChat(id) {
   renderList();
 }
 
+// بعض النماذج/المزوّدين يعيدون أسطر الرد كنص حرفي بدل سطر جديد حقيقي.
+// نفكّها خارج الأكواد فقط (داخل الأكواد لا نمسّ شيئاً حتى لا ينكسر الكود).
+function normalizeReplyBreaks(text) {
+  const s = String(text == null ? '' : text);
+  const BS = String.fromCharCode(92);
+  const NL = String.fromCharCode(10);
+  const TAB = String.fromCharCode(9);
+  const CR = String.fromCharCode(13);
+  if (s.indexOf(BS + 'n') === -1 && s.indexOf(BS + 't') === -1) return s;
+  const FENCE = new RegExp('```[\\s\\S]*?```|`[^`\n]+`', 'g');
+  return s.split(new RegExp('(' + FENCE.source + ')', 'g')).map(function(seg) {
+    if (!seg) return '';
+    const isFence = seg.slice(0, 3) === '```' || (seg.charAt(0) === '`' && seg.charAt(seg.length - 1) === '`');
+    if (isFence) return seg;
+    return seg.split(BS + 'r' + BS + 'n').join(NL).split(BS + 'n').join(NL).split(BS + 't').join(TAB).split(CR).join('');
+  }).join('');
+}
+
 function md(text) {
+  text = normalizeReplyBreaks(text);
   try {
     if (window.marked && window.DOMPurify) {
       marked.setOptions({
@@ -956,6 +1338,20 @@ function enhanceCodeBlocks(container) {
       }
     }
     const codeText = code ? code.textContent : pre.textContent;
+    // تلوين الكود عبر highlight.js (مثل وضع Agent) — النسخ يبقى من النص الأصلي
+    if (code) {
+      try {
+        if (window.hljs) {
+          let hv = '';
+          if (lang && lang !== 'code' && hljs.getLanguage(lang)) {
+            hv = hljs.highlight(codeText, { language: lang }).value;
+          } else {
+            hv = hljs.highlightAuto(codeText).value;
+          }
+          if (hv) code.innerHTML = hv;
+        }
+      } catch (e) {}
+    }
     const wrap = document.createElement('div');
     wrap.className = 'codebox';
     const head = document.createElement('div');
@@ -992,6 +1388,8 @@ function renderChat() {
   const empty = !current || current.messages.length === 0;
   welcome.style.display = empty ? 'flex' : 'none';
   chat.style.display = empty ? 'none' : 'flex';
+  const mainEl = document.getElementById('main');
+  if (mainEl) mainEl.classList.toggle('empty', empty);
   chat.innerHTML = '';
   if (current) {
     current.messages.forEach(m => {
@@ -1020,6 +1418,15 @@ function addBubble(role, text, image) {
     const b = row.querySelector('.bubble');
     b.innerHTML = md(text);
     enhanceCodeBlocks(b);
+    // استخراج أي نتائج/أكواد من الرد لإتاحة المعاينة الحية (حتى للمحادثات المحفوظة)
+    try {
+      const histArts = jsExtractArtifacts(text);
+      if (histArts.length) {
+        lastArtifacts = histArts;
+        const botWrap = row.querySelector('.bot-wrap');
+        if (botWrap) botWrap.appendChild(artifactsViewBtn(histArts));
+      }
+    } catch (e) {}
     row.querySelector('.copy-msg').onclick = (e) => {
       const btn = e.currentTarget;
       navigator.clipboard.writeText(text).then(() => {
@@ -1113,6 +1520,7 @@ async function generateImage(userPrompt, chosenModel = 'flux') {
 
   welcome.style.display = 'none';
   chat.style.display = 'flex';
+  document.getElementById('main').classList.remove('empty');
   addBubble('user', 'توليد صورة: ' + userPrompt);
   current.messages.push({ role: 'user', content: 'توليد صورة: ' + userPrompt });
   save();
@@ -1125,7 +1533,7 @@ async function generateImage(userPrompt, chosenModel = 'flux') {
   t.className = 'row assistant';
   t.innerHTML = `
     <img class="avatar" src="/static/logo.svg" alt="الخوارزمي">
-    <div class="bubble">
+    <div class="bubble bot-text">
       <div class="typing-wrap">
         <span class="typing-dots"><i></i><i></i><i></i></span>
         <span class="typing-text">هندسة الوصف... ${ic('hourglass', 12)}</span>
@@ -1207,6 +1615,7 @@ async function send(text) {
 
   welcome.style.display = 'none';
   chat.style.display = 'flex';
+  document.getElementById('main').classList.remove('empty');
   addBubble('user', text, imgAtt);
   const userMsg = { role: 'user', content: text };
   if (imgAtt) userMsg.image = imgAtt;
@@ -1222,7 +1631,7 @@ async function send(text) {
   t.className = 'row assistant';
   t.innerHTML = `
     <img class="avatar" src="/static/logo.svg" alt="الخوارزمي">
-    <div class="bubble">
+    <div class="bubble bot-text">
       <div class="typing-wrap">
         <span class="typing-dots"><i></i><i></i><i></i></span>
         <span class="typing-text">الخوارزمي يكتب الآن...</span>
@@ -1242,6 +1651,8 @@ async function send(text) {
         mode,
         temperature: settings.temperature,
         max_tokens: settings.maxTokens,
+        thinking: settings.thinking || 'auto',
+        web_search: settings.webSearch !== false,
       }),
     });
     if (res.status === 401) { location.href = '/login'; return; }
@@ -1279,21 +1690,40 @@ async function send(text) {
       const bubbleEl = t.querySelector('.bubble');
       if (bubbleEl) bubbleEl.appendChild(note);
     }
-    // ===== عرض مصادر وضع Agent =====
-    if (settings.showSources && data.sources && data.sources.length) {
-      const srcBox = document.createElement('div');
-      srcBox.className = 'sources-box';
-      srcBox.innerHTML = `<div class="sources-title">${ic('book', 12)} المصادر (من ويكيبيديا):</div>` +
-        data.sources.map(s =>
-          `<a href="${s.url}" target="_blank" rel="noopener">${s.title}</a>`
-        ).join('');
-      const bubbleEl = t.querySelector('.bubble');
-      if (bubbleEl) bubbleEl.appendChild(srcBox);
+    // ===== عرض مصادر البحث (نتائج مُفلترة الصلة فقط) + مستوى التفكير =====
+    // ملاحظة: لا تُعرض المصادر مع الردود البرمجية — الكود يبقى نظيفاً
+    if (settings.showSources && data && (data.sources || data.searched || data.thinking || data.routed)) {
+      const thinkNames = { off: 'بدون تفكير', low: 'تفكير منخفض', medium: 'تفكير متوسط', high: 'تفكير عالي', max: 'تفكير أقصى' };
+      const tName = thinkNames[data.thinking];
+      const hasSrc = !!(data.sources && data.sources.length);
+      const isCode = /```/.test(reply || '');
+      let html = '';
+      if (hasSrc && !isCode) {
+        html += `<div class="sources-title">${ic('globe', 12)} المصادر — ${data.sources.length}</div>` +
+          data.sources.map(s =>
+            `<a href="${s.url}" target="_blank" rel="noopener">${s.title}</a>`
+          ).join('');
+      } else if (data.searched && !hasSrc && !isCode) {
+        html += `<div class="sources-title">${ic('globe', 12)} بحثت في الإنترنت — لا توجد نتائج مرتبطة بالسؤال</div>`;
+      }
+      if (tName && (html || isCode)) html += `<div class="sources-title">${ic('bolt', 12)} ${tName}</div>`;
+      if (data.routed) {
+        // شفافية: Flash هو بطل البرمجة، لكن السؤال المعرفي يذهب لنموذج أدق
+        html += `<div class="sources-title routed-note">${ic('sparkle', 12)} ${data.route_reason || 'أجاب نموذج أدق'}</div>`;
+      }
+      if (html) {
+        const srcBox = document.createElement('div');
+        srcBox.className = 'sources-box';
+        srcBox.innerHTML = html;
+        const bubbleEl = t.querySelector('.bubble');
+        if (bubbleEl) bubbleEl.appendChild(srcBox);
+      }
     }
     // ===== عرض زر النتيجة (Artifacts) في وضع Agent — يفتح تلقائياً مثل Claude =====
     if (data.artifacts && data.artifacts.length) {
-      const bubbleEl = t.querySelector('.bubble');
-      if (bubbleEl) bubbleEl.appendChild(artifactsViewBtn(data.artifacts));
+      lastArtifacts = data.artifacts;
+      const botWrap = t.querySelector('.bot-wrap') || t;
+      botWrap.appendChild(artifactsViewBtn(data.artifacts));
       // فتح تلقائي للوحة الجانبية إن كانت النتيجة قابلة للمعاينة (موقع/لعبة)
       try {
         if (data.artifacts.some(isPreviewable)) {
@@ -1308,6 +1738,26 @@ async function send(text) {
   setBusy(false);
 }
 
+// ===== كتابة تدريجية مع Markdown منظم =====
+// تعرض النص تدريجياً وهو منسّق عبر md() بدل النص الخام (تحل مشكلة ظهور ** خام)
+async function typeMarkdownProgressive(text, container) {
+  const src = String(text == null ? '' : text);
+  if (!src) { container.innerHTML = ''; return; }
+  const total = src.length;
+  const step = Math.max(2, Math.ceil(total / 110));
+  const delayMs = total > 800 ? 18 : 26;
+  let i = 0;
+  while (i < total) {
+    i = Math.min(total, i + step);
+    container.innerHTML = md(src.slice(0, i));
+    try { chat.scrollTop = chat.scrollHeight; } catch (e) {}
+    await sleep(delayMs);
+  }
+  container.innerHTML = md(src);
+  enhanceCodeBlocks(container);
+  try { chat.scrollTop = chat.scrollHeight; } catch (e) {}
+}
+
 // ===== تأثير الكتابة التدريجي (Typewriter) =====
 async function typewriterEffect(text, bubbleEl) {
   const typingWrap = bubbleEl.querySelector('.typing-wrap');
@@ -1315,18 +1765,22 @@ async function typewriterEffect(text, bubbleEl) {
   const b = bubbleEl.querySelector('.bubble');
   if (!b) return;
   b.style.position = 'relative';
+  // نكتب تدريجياً مع Markdown منظم (يحل مشكلة ظهور ** خام)
+  await typeMarkdownProgressive(text, b);
+}
+
+// (النسخة القديمة الغنية بالأكواد محفوظة هنا للمرجع فقط)
+async function typewriterEffectLegacy(text, bubbleEl) {
+  const b = bubbleEl.querySelector('.bubble');
+  if (!b) return;
+  b.style.position = 'relative';
   // ننشئ عنصر الكود اللي هيظهر تدريجياً
   const codeContainer = document.createElement('div');
   codeContainer.className = 'code-inline-wrap';
   codeContainer.style.cssText = 'margin-top:8px;';
-  
   // نكشف إذا الكود موجود
   const codeMatch = text.match(/```(\w*)\n([\s\S]*?)```/);
   const hasCode = !!codeMatch;
-  let displayedText = '';
-  const md = marked ? marked.parse(text) : text.replace(/\n/g, '<br>');
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = md;
   
   // نستخرج النص العادي من الـ markdown
   const plainText = text.replace(/```[\s\S]*?```/g, '').trim();
@@ -1335,10 +1789,12 @@ async function typewriterEffect(text, bubbleEl) {
   const codeContent = codeMatch ? codeMatch[2].trim() : '';
 
   if (hasCode && codeBlock) {
-    // نعرض النص العادي أولاً
+    // نعرض النص العادي أولاً (Markdown منظم تدريجياً)
     const textPart = plainText ? plainText : '';
+    const textDiv = document.createElement('div');
+    b.appendChild(textDiv);
     if (textPart) {
-      await typeCharacterByCharacter(textPart, b);
+      await typeMarkdownProgressive(textPart, textDiv);
     }
     // نضيف زر فتح الكود
     const viewBtn = document.createElement('button');
@@ -1394,8 +1850,8 @@ async function typewriterEffect(text, bubbleEl) {
     b.style.position = 'relative';
     b.appendChild(copyBtn);
   } else {
-    // بدون كود — نكتب حرف بحرف
-    await typeCharacterByCharacter(text, b);
+    // بدون كود — نعرض Markdown منظم تدريجياً
+    await typeMarkdownProgressive(text, b);
   }
 }
 
@@ -1524,14 +1980,31 @@ imgPromptInput.addEventListener('keydown', (e) => {
   }
 });
 
-// بطاقة التوليد السريع بشاشة الترحيب
-document.querySelectorAll('.card').forEach(c => {
-  c.onclick = () => {
-    if (c.classList.contains('img-card-trigger')) {
-      openImgModal('منظر طبيعي ساحر لقلعة عربية قديمة تحت النجوم');
-    } else {
-      send(c.querySelector('b').textContent);
+// ===== اقتراحات البداية (نمط ChatGPT) =====
+const SUGGESTIONS = {
+  image: { icon: 'image', label: 'أنشئ صورة أو ملصقاً' },
+  write: { icon: 'pencil', label: 'اكتب أو حرّر نصاً' },
+  web: { icon: 'globe', label: 'ابحث في الويب' },
+  build: { icon: 'code', label: 'ابنِ موقعاً أو لعبة' },
+};
+document.querySelectorAll('#suggestions .sug-item').forEach(btn => {
+  const key = btn.dataset.sug;
+  const cfg = SUGGESTIONS[key];
+  if (!cfg) return;
+  btn.innerHTML = ic(cfg.icon, 20) + '<span>' + cfg.label + '</span>';
+  btn.onclick = () => {
+    if (key === 'image') { openImgModal('منظر طبيعي ساحر لقلعة عربية قديمة تحت النجوم'); return; }
+    if (key === 'web') {
+      mode = 'agent'; applyModeUI();
+      prefill('ابحث في الويب عن ');
+      return;
     }
+    if (key === 'build') {
+      mode = 'agent'; applyModeUI();
+      prefill('ابنِ لي لعبة تفاعلية بملف index.html واحد ');
+      return;
+    }
+    prefill('اكتب لي ');
   };
 });
 document.getElementById('newChat').onclick = newChat;
@@ -1613,6 +2086,45 @@ function downloadCode() {
 let currentArtifacts = [];
 let currentArtIndex = 0;
 let artViewMode = 'preview'; // preview | code — يتذكر اختيار المستخدم
+let lastArtifacts = [];      // آخر نتائج ظهرت — لزر "النتائج" في الشريط الجانبي
+
+// استخراج الأكواد من نص الرد في المتصفح (يعمل حتى مع المحادثات المحفوظة سابقاً)
+const JS_EXT = { python:'py', javascript:'js', typescript:'ts', html:'html', htm:'html', css:'css', json:'json', bash:'sh', sql:'sql', cpp:'cpp', java:'java', rust:'rs', go:'go', ruby:'rb', php:'php', markdown:'md', text:'txt' };
+function jsExtractArtifacts(text) {
+  const out = [];
+  if (!text) return out;
+  const re = /```(\w[\w+#-]*)?(?:\s*:\s*([^\n]+))?\n([\s\S]*?)```/g;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const rawLang = (m[1] || 'text').toLowerCase();
+    const lang = JS_EXT[rawLang] ? rawLang : (rawLang === 'js' ? 'javascript' : rawLang);
+    const code = (m[3] || '').replace(/^\n+|\n+$/g, '');
+    if (code.trim().length < 8) continue;
+    const name = (m[2] || '').trim() || ('file.' + (JS_EXT[lang] || lang || 'txt'));
+    out.push({ name: name.replace(/[^\w.\-\u0600-\u06FF ]/g, ''), lang: lang, code: code });
+  }
+  return out;
+}
+
+// زر "النتائج" بالشريط الجانبي: يفتح آخر نتيجة ظهرت أو يستخرجها من المحادثة الحالية
+function openLastArtifacts() {
+  let arts = (lastArtifacts && lastArtifacts.length) ? lastArtifacts : [];
+  if (!arts.length && current && current.messages) {
+    for (let i = current.messages.length - 1; i >= 0; i--) {
+      const msg = current.messages[i];
+      if (msg.role === 'assistant' && typeof msg.content === 'string') {
+        const found = jsExtractArtifacts(msg.content);
+        if (found.length) { arts = found; break; }
+      }
+    }
+  }
+  if (arts.length) {
+    lastArtifacts = arts;
+    openArtifacts(arts);
+  } else {
+    addBubble('assistant', 'ما في نتائج بعد في هذه المحادثة — اطلب مني في وضع الوكيل أن أبني موقعاً أو لعبة وستظهر النتيجة هنا مع معاينة حية.');
+  }
+}
 
 function isPreviewable(a) {
   if (!a) return false;
@@ -1748,7 +2260,8 @@ function artCopy() {
   const art = currentArtifacts[currentArtIndex];
   if (!art) return;
   navigator.clipboard.writeText(art.code).then(() => {
-    const btn = document.querySelector('.art-actions button:nth-child(2)');
+    const btn = document.getElementById('artCopyBtn');
+    if (!btn) return;
     const orig = btn.dataset.orig || btn.innerHTML;
     btn.dataset.orig = orig;
     btn.innerHTML = ic('check', 12) + ' تم';

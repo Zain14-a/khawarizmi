@@ -13,7 +13,7 @@ __pycache__/
 *.pyo
 
 # ملفات النظام والاختبار
-server.log
+*.log
 nul
 *.tmp
 ck*.tmp
