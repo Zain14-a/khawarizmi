@@ -149,6 +149,20 @@ if os.getenv("COLABC_URL") and os.getenv("COLABC_KEY"):
             "id": "khwarizmi",
             "icon": "bolt",
         },
+        "my-deepseek-7b": {
+            "label": "DeepSeek Coder 7B",
+            "desc": "وحش البرمجة - يفكر قبل الكود",
+            "provider": "colab",
+            "id": "deepseek-coder-7b",
+            "icon": "bolt",
+        },
+        "my-qwen-3b": {
+            "label": "Qwen Coder 3B Thinking",
+            "desc": "سريع + تفكير عميق قبل الكود",
+            "provider": "colab",
+            "id": "qwen-coder-3b",
+            "icon": "bolt",
+        },
     })
 
 # ═══════════ مزوّدون إضافيون (يظهر كل واحد إذا ضعفت مفتاحه في .env) ═══════════

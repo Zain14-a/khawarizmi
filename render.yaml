@@ -18,3 +18,7 @@ services:
         sync: false
       - key: OPENROUTER_API_KEY
         sync: false
+      - key: COLABC_URL
+        sync: false
+      - key: COLABC_KEY
+        sync: false
