@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>الخوارزمي — مساعد ذكي</title>
+<title>الخوارزمي — مساعدك الذكي</title>
 <link rel="icon" type="image/svg+xml" href="/static/logo.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800;900&family=Aref+Ruqaa:wght@400;700&family=Amiri:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Aref+Ruqaa:wght@400;700&display=swap" rel="stylesheet">
 <script>(function(){try{var t=localStorage.getItem('khawarizmi_theme');if(t!=='dark'&&t!=='light'){t='dark';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Noto Sans Arabic','Segoe UI',Tahoma,sans-serif}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'IBM Plex Sans Arabic','Inter','Segoe UI',Tahoma,sans-serif}
 :root{--bg:#ffffff;--panel:#f7f8f9;--border:#e6e8ec;--text:#101418;--muted:#6b7684;--accent:#D4A843;--accent2:#C18A54;--bubble:#f1f4f5;--lux-gold:#D4A843;--lux-grad:linear-gradient(135deg,#D4A843,#3A5A52 55%,#C18A54)}
 html[data-theme="dark"]{--bg:#0d0b08;--panel:#15120d;--border:#2a2418;--text:#f1e9d8;--muted:#9b9077;--accent:#D4A843;--accent2:#3A5A52;--bubble:#1c1812}
 html,body{height:100%}
@@ -61,7 +61,7 @@ html[data-theme="light"] #luxBg{display:none}
 html[data-theme="dark"] #sidebar{background:linear-gradient(180deg,#15120d,#0d0b08);border-left-color:#2a2418}
 #sidebar.hidden{margin-right:-284px}
 .side-head{display:flex;align-items:center;gap:11px;padding:18px 16px 16px}
-.logo{width:38px;height:38px;border-radius:12px;flex-shrink:0;box-shadow:0 4px 14px rgba(212,168,67,.35);border:1px solid rgba(255,255,255,.2)}
+.logo{width:38px;height:38px;border-radius:12px;flex-shrink:0;box-shadow:none!important;border:none;background:none;filter:none!important;animation:none!important}
 .wordmark{font-family:'Aref Ruqaa','Noto Sans Arabic',serif;font-weight:700;font-size:1.24rem;line-height:1.5;letter-spacing:normal;background:none;-webkit-background-clip:border-box;background-clip:border-box;-webkit-text-fill-color:currentColor;color:var(--text)}
 #newChat{margin:6px 12px 12px;padding:11px;border:none;border-radius:12px;background:#212121;color:var(--text);font-family:inherit;font-size:.87rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .16s;box-shadow:none}
 html[data-theme="light"] #newChat{background:var(--panel-2)}
@@ -197,7 +197,7 @@ a svg{vertical-align:-2px}
 /* شاشة الترحيب —  */
 #welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:28px 24px;text-align:center;overflow-y:auto;animation:luxFadeUp .5s cubic-bezier(.16,1,.3,1)}
 @keyframes luxFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-.w-logo{width:76px;height:76px;border-radius:22px;box-shadow:0 0 0 1px rgba(212,164,93,.35),0 14px 34px -10px rgba(0,0,0,.6);margin-bottom:8px;animation:luxGlow 4.2s ease-in-out infinite}
+.w-logo{width:76px;height:76px;border-radius:22px;box-shadow:none!important;margin-bottom:8px;animation:none!important;filter:none!important}
 @keyframes luxGlow{0%,100%{box-shadow:0 0 0 1px rgba(212,164,93,.35),0 14px 34px -10px rgba(0,0,0,.6)}50%{box-shadow:0 0 0 1px rgba(212,164,93,.55),0 20px 48px -12px rgba(0,0,0,.65)}}
 #welcome h1{font-size:clamp(1.5rem,3.4vw,2.1rem);font-weight:800;letter-spacing:-.5px;background:linear-gradient(135deg,var(--text) 20%,var(--accent) 70%,var(--lux-gold) 110%);-webkit-background-clip:text;background-clip:text}
 #welcome p{color:var(--muted);font-size:.93rem;max-width:520px;line-height:1.8}
@@ -306,6 +306,8 @@ html[data-theme="dark"] .box{background:rgba(17,25,34,.92);border-color:#22303d;
 @media(max-width:768px){
 #sidebar{position:fixed;top:0;bottom:0;right:0;z-index:40;box-shadow:-4px 0 16px rgba(0,0,0,.06)}
 .cards{grid-template-columns:1fr;width:100%;max-width:340px}
+  .prompt-cards{grid-template-columns:repeat(2,minmax(0,1fr));width:100%;max-width:380px}
+  .prompt-card{min-height:104px}
 #composer{padding:10px 12px 14px}
 #chat{padding:20px 12px 12px}
 }
@@ -349,30 +351,32 @@ html[data-theme="dark"] .lux-badge{color:#E3D3A6;border-color:rgba(212,168,67,.3
 .w-sub-badge{display:inline-flex;align-items:center;gap:6px;font-size:.70rem;font-weight:700;color:var(--accent);background:linear-gradient(135deg,rgba(212,168,67,.12),rgba(58,90,82,.12));border:1px solid rgba(212,168,67,.28);padding:5px 13px;border-radius:999px;margin-bottom:2px}
 .code-view-btn{box-shadow:0 4px 14px -4px rgba(212,168,67,.4)}
 /* ==================================================================
-   نمط ChatGPT — خلفية سوداء، شريط جانبي بأيقونات، صندوق كتابة دائري
+   هوية الخوارزمي 2.5 — بروح Gemini × Claude: نظيف، متدرجات هادئة، زجاجي
    ================================================================== */
 :root{
-  --bg:#ffffff;--bg-side:#f9f9f9;--panel:#ffffff;--panel-2:#f4f4f4;--hover:#ececec;
-  --border:#e3e3e3;--border-strong:#d0d0d0;
-  --text:#0d0d0d;--text-2:#3c3c3c;--muted:#5d5d5d;
-  --accent:#2563eb;--accent2:#1d4ed8;--accent-soft:rgba(37,99,235,.10);
-  --bubble:#f4f4f4;--user-bubble:#f4f4f4;--user-bubble-text:#0d0d0d;
+  --bg:#fbfbfd;--bg-side:#f4f4f6;--panel:#ffffff;--panel-2:#f1f2f5;--hover:#e9eaef;
+  --border:#e5e6eb;--border-strong:#d4d5dc;
+  --text:#131318;--text-2:#3d3d47;--muted:#6e6e7a;
+  --accent:#6d5ef0;--accent2:#3b82f6;--accent3:#10b981;--accent-grad:linear-gradient(120deg,#6d5ef0 0%,#3b82f6 52%,#10b981 110%);
+  --accent-soft:rgba(109,94,240,.10);
+  --bubble:#f4f4f6;--user-bubble:linear-gradient(135deg,#4f46e5,#6d5ef0);--user-bubble-text:#ffffff;
   --r-sm:8px;--r-md:12px;--r-lg:18px;--r-xl:28px;--lux-grad:linear-gradient(135deg,#2563eb,#1d4ed8);
   --shadow-xs:0 1px 2px rgba(0,0,0,.04);--shadow-sm:0 1px 3px rgba(0,0,0,.06);
   --shadow-md:0 8px 24px rgba(0,0,0,.10);--shadow-lg:0 20px 48px rgba(0,0,0,.16);
 }
 html[data-theme="dark"]{
-  --bg:#0d0d0d;--bg-side:#000000;--panel:#0d0d0d;--panel-2:#212121;--hover:#2f2f2f;
-  --border:#2a2a2a;--border-strong:#3a3a3a;
-  --text:#ececec;--text-2:#d0d0d0;--muted:#9b9b9b;
-  --accent:#3b82f6;--accent2:#2563eb;--accent-soft:rgba(59,130,246,.16);
-  --bubble:#212121;--user-bubble:#2f2f2f;--user-bubble-text:#ececec;
+  --bg:#0e0f14;--bg-side:#0a0b0f;--panel:#14151c;--panel-2:#1c1e27;--hover:#262936;
+  --border:#23262f;--border-strong:#333845;
+  --text:#f2f3f7;--text-2:#c9ccda;--muted:#8b8fa3;
+  --accent:#8b7cf6;--accent2:#60a5fa;--accent3:#34d399;--accent-grad:linear-gradient(120deg,#8b7cf6 0%,#60a5fa 52%,#34d399 110%);
+  --accent-soft:rgba(139,124,246,.15);
+  --bubble:#1c1e27;--user-bubble:linear-gradient(135deg,#6d5ef0,#3b82f6);--user-bubble-text:#ffffff;
   --lux-grad:linear-gradient(135deg,#3b82f6,#2563eb);
   --shadow-xs:0 1px 2px rgba(0,0,0,.6);--shadow-sm:0 2px 8px rgba(0,0,0,.5);
   --shadow-md:0 10px 30px rgba(0,0,0,.6);--shadow-lg:0 24px 60px rgba(0,0,0,.7);
   color-scheme:dark;
 }
-*{font-family:'Noto Sans Arabic','Segoe UI',system-ui,Tahoma,sans-serif}
+*{font-family:'IBM Plex Sans Arabic','Inter','Segoe UI',system-ui,Tahoma,sans-serif}
 body,html[data-theme="dark"] body{background:var(--bg)}
 #luxBg{display:none}
 ::selection{background:var(--accent-soft)}
@@ -383,8 +387,8 @@ body,html[data-theme="dark"] body{background:var(--bg)}
 html[data-theme="dark"] #sidebar{background:#000;border-left:1px solid #1c1c1c}
 #sidebar.hidden{margin-right:-266px}
 .side-head{display:flex;align-items:center;justify-content:space-between;padding:12px 6px 8px;gap:6px}
-.side-brand{display:flex;align-items:center;gap:9px;min-width:0}
-.side-head .logo{width:26px;height:26px;border-radius:8px;padding:0;border:none;box-shadow:none;background:none}
+.side-brand{display:flex;align-items:center;gap:9px;min-width:0;animation:none!important;transition:none!important}
+.side-head .logo{width:26px;height:26px;border-radius:8px;padding:0;border:none;box-shadow:none!important;background:none;filter:none!important;animation:none!important;transition:none!important}
 .wordmark{font-family:'Aref Ruqaa','Noto Sans Arabic',serif;font-weight:700;font-size:1.24rem;line-height:1.5;letter-spacing:normal;background:none;-webkit-text-fill-color:currentColor;color:var(--text)}
 .side-head-actions{display:flex;align-items:center;gap:2px}
 .side-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:none;background:none;color:var(--text-2);border-radius:10px;cursor:pointer;transition:background .14s,color .14s;flex-shrink:0}
@@ -563,6 +567,64 @@ html[data-theme="dark"] .codebox-head{background:#141414;border-color:#262626}
 .codebox-head button:hover{background:var(--hover);color:var(--text)}
 .codebox pre{background:transparent}
 
+
+/* ===== توهج الخوارزمي 2.5 — طبقة Gemini × Claude ===== */
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(560px 340px at 82% -60px, rgba(109,94,240,.14), transparent 62%),
+    radial-gradient(520px 340px at 12% 108%, rgba(16,185,129,.10), transparent 62%),
+    radial-gradient(640px 380px at 50% 50%, rgba(59,130,246,.05), transparent 70%);}
+html[data-theme="dark"] body::before{
+  background:
+    radial-gradient(620px 380px at 82% -60px, rgba(139,124,246,.16), transparent 62%),
+    radial-gradient(560px 360px at 10% 108%, rgba(52,211,153,.10), transparent 62%),
+    radial-gradient(700px 420px at 50% 55%, rgba(96,165,250,.06), transparent 70%);}
+#main,#sidebar{position:relative;z-index:1}
+#sidebar{backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-radius:0 22px 22px 0;box-shadow:0 12px 40px -18px rgba(20,20,60,.22)}
+html[data-theme="dark"] #sidebar{box-shadow:0 12px 44px -16px rgba(0,0,0,.7)}
+#topbar{backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:0 0 18px 18px}
+/* الترحيب الجديد */
+#welcome{gap:14px}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;font-size:.74rem;font-weight:600;color:var(--text-2);
+  background:var(--panel);border:1px solid var(--border);border-radius:999px;padding:7px 15px;box-shadow:0 4px 16px -6px rgba(109,94,240,.25)}
+.pulse-dot{width:8px;height:8px;border-radius:50%;background:#10b981;box-shadow:0 0 0 0 rgba(16,185,129,.5);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(16,185,129,.45)}70%{box-shadow:0 0 0 9px rgba(16,185,129,0)}100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}}
+.hero-logo{width:74px;height:74px;border-radius:24px;overflow:hidden;display:flex;align-items:center;justify-content:center;box-shadow:none!important;animation:none!important;
+  background:var(--accent-grad);padding:0;background:none;}
+.hero-logo img{width:100%;height:100%;border-radius:21px;background:none;box-shadow:none!important;filter:none!important;animation:none!important}
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+#welcome h1{font-size:clamp(1.7rem,3.6vw,2.35rem)!important;font-weight:700!important;letter-spacing:-.4px;line-height:1.5}
+#welcome h1 .grad{background:var(--accent-grad);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+.hero-sub{color:var(--muted)!important;font-size:.95rem!important;max-width:560px}
+.prompt-cards{display:grid;grid-template-columns:repeat(4,minmax(0,158px));gap:10px;margin-top:14px;justify-content:center}
+.prompt-card{display:flex;flex-direction:column;align-items:flex-start;gap:5px;text-align:right;padding:15px 14px;border-radius:18px;cursor:pointer;
+  background:var(--panel);border:1px solid var(--border);color:var(--text);font-family:inherit;transition:all .22s cubic-bezier(.16,1,.3,1);min-height:118px}
+.prompt-card:hover{transform:translateY(-4px);border-color:transparent;box-shadow:0 18px 40px -14px rgba(109,94,240,.45)}
+.prompt-card b{font-size:.87rem;font-weight:700}
+.prompt-card small{color:var(--muted);font-size:.73rem;line-height:1.5}
+.pc-ic{width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;margin-bottom:3px}
+.pc-write{background:linear-gradient(135deg,#6d5ef0,#3b82f6)}
+.pc-build{background:linear-gradient(135deg,#0ea5e9,#10b981)}
+.pc-web{background:linear-gradient(135deg,#f59e0b,#ef4444)}
+.pc-image{background:linear-gradient(135deg,#ec4899,#8b5cf6)}
+/* فقاعة المستخدم بتدرج Gemini */
+.row.user .bubble{background:var(--user-bubble)!important;color:var(--user-bubble-text)!important;border:none!important;
+  box-shadow:0 10px 26px -10px rgba(109,94,240,.55)!important;font-weight:500!important;border-radius:20px 20px 6px 20px!important}
+/* صندوق الكتابة العائم */
+.box{box-shadow:0 16px 44px -16px rgba(30,30,80,.20)!important;border:1px solid var(--border)!important}
+html[data-theme="dark"] .box{box-shadow:0 18px 50px -14px rgba(0,0,0,.65)!important}
+.box:focus-within{box-shadow:0 0 0 2px var(--accent-soft),0 18px 50px -14px rgba(109,94,240,.4)!important;border-color:var(--accent)!important}
+#send{background:var(--accent-grad)!important;box-shadow:0 10px 24px -8px rgba(109,94,240,.6)!important}
+#send:hover:not(:disabled){filter:brightness(1.08);transform:scale(1.06)}
+/* حركات دخول ناعمة */
+#welcome{animation:heroIn .55s cubic-bezier(.16,1,.3,1)}
+@keyframes heroIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.row{animation:rowIn .3s ease}
+@keyframes rowIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chat-item,.nav-item{transition:background .15s,transform .15s!important}
+.chat-item:hover{transform:translateX(-2px)}
+/* الاقتراحات القديمة مخفية (استبدلت بالبطاقات) */
+#suggestions{display:none!important}
 /* ===== الجوال ===== */
 @media(max-width:860px){
   .segmented{position:static;transform:none;margin:0 auto}
@@ -666,7 +728,7 @@ html[data-theme="dark"] .codebox-head{background:#141414;border-color:#262626}
     </div>
     <div class="spacer"></div>
     <div class="model-wrap">
-      <button id="modelBtn"><span class="dot"></span><span id="modelLabel">Al-Khwarizmi Flash</span></button>
+      <button id="modelBtn"><span class="dot"></span><span id="modelLabel">GPT-OSS 120B</span></button>
       <div id="modelMenu" class="hidden"></div>
     </div>
     <button id="themeBtn" class="side-icon-btn" title="تبديل المظهر" aria-label="تبديل المظهر"></button>
@@ -675,7 +737,16 @@ html[data-theme="dark"] .codebox-head{background:#141414;border-color:#262626}
 
   <!-- شاشة الترحيب -->
   <div id="welcome">
-    <h1>من وين نبدأ؟</h1>
+    <div class="hero-badge"><span class="pulse-dot"></span> الخوارزمي 2.5 — أسرع وأذكى</div>
+    <div class="hero-logo"><img src="/static/logo.svg" alt="الخوارزمي"></div>
+    <h1>أهلاً بك، <span class="grad">كيف أساعدك اليوم؟</span></h1>
+    <p class="hero-sub">اسأل عن أي شيء — برمجة، كتابة، بحث في الويب، توليد صور، وبناء مواقع كاملة</p>
+    <div class="prompt-cards">
+      <button class="prompt-card" data-sug="write"><span class="pc-ic pc-write"></span><b>اكتب نصاً</b><small>مقال، إيميل، قصة...</small></button>
+      <button class="prompt-card" data-sug="build"><span class="pc-ic pc-build"></span><b>ابنِ موقعاً</b><small>صفحة أو لعبة كاملة</small></button>
+      <button class="prompt-card" data-sug="web"><span class="pc-ic pc-web"></span><b>ابحث في الويب</b><small>معلومات محدثة بمصادر</small></button>
+      <button class="prompt-card" data-sug="image"><span class="pc-ic pc-image"></span><b>ولّد صورة</b><small>فن بالذكاء الاصطناعي</small></button>
+    </div>
   </div>
 
   <!-- منطقة المحادثة -->
@@ -951,11 +1022,11 @@ function ic(name, size = 16, cls = 'ic') {
 
 // ===== النماذج (تُحمّل ديناميكياً من السيرفر) =====
 let models = [
-  { id: 'al-khwarizmi', label: 'Al-Khwarizmi Flash', desc: 'بطل البرمجة', icon: 'bolt' },
+  { id: 'groq-gpt-oss-120b', label: 'GPT-OSS 120B', desc: 'أقوى نموذج متاح — برمجة واستنتاج متقدم' },
   { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', desc: 'الأذكى والأدق — متعدد اللغات' },
   { id: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite', desc: 'الأسرع — خفيف وسريع الاستجابة' },
 ];
-let model = localStorage.getItem('khawarizmi_model') || 'al-khwarizmi';
+let model = localStorage.getItem('khawarizmi_model') || 'groq-gpt-oss-120b';
 
 // النماذج المخفية من القائمة (إعدادات الموقع) — تُحفظ في المتصفح
 let hiddenModels = [];
@@ -977,10 +1048,21 @@ function buildModelMenu() {
     b.dataset.model = m.id;
     const row = document.createElement('span');
     row.style.cssText = 'display:flex;align-items:center;gap:6px;';
-    if (m.icon && ICON[m.icon]) row.innerHTML = ic(m.icon, 14) + '<span>' + m.label.replace(/&/g,'&amp;') + '</span>';
-    else row.textContent = m.label;
+    let inner = m.icon && ICON[m.icon]
+      ? ic(m.icon, 14) + '<span>' + m.label.replace(/&/g,'&amp;') + '</span>'
+      : '<span>' + m.label.replace(/&/g,'&amp;') + '</span>';
+    // شعار "خاص" + نقطة الحالة لنموذجك على Colab
+    if (m.private) {
+      const dotColor = m.live ? '#22c55e' : '#ef4444';
+      const dotTitle = m.live ? 'متصل الآن' : 'غير متصل — شغّل النوتبوك على Colab';
+      inner += '<span title="' + dotTitle + '" style="width:8px;height:8px;border-radius:50%;background:' + dotColor + ';display:inline-block;flex:0 0 auto"></span>';
+      inner += '<span style="font-size:.62rem;font-weight:700;padding:1px 6px;border-radius:999px;background:linear-gradient(135deg,rgba(212,164,93,.22),rgba(58,90,82,.22));color:var(--accent);border:1px solid rgba(212,168,67,.35)">خاص</span>';
+    }
+    row.innerHTML = inner;
     const sm = document.createElement('small');
-    sm.textContent = m.desc + (m.vision ? ' · يقرأ الصور' : '');
+    let desc = m.desc + (m.vision ? ' · يقرأ الصور' : '');
+    if (m.private && m.live === false) desc += ' · غير متصل حالياً';
+    sm.textContent = desc;
     b.append(row, sm);
     b.onclick = () => {
       model = m.id;
@@ -1019,6 +1101,22 @@ async function loadModels() {
   } catch (e) {}
   buildModelMenu();
 }
+
+// تحديث دوري لحالة النموذج الخاص (النقطة الخضراء/الحمراء)
+setInterval(async () => {
+  const priv = models.find(m => m.private);
+  if (!priv) return;
+  try {
+    const res = await fetch('/api/colab/status');
+    if (!res.ok) return;
+    const st = await res.json();
+    const newLive = !!st.live;
+    if (priv.live !== newLive) {
+      priv.live = newLive;
+      buildModelMenu();
+    }
+  } catch (e) {}
+}, 45000);
 
 // ===== إعدادات الموقع (تُحفظ في المتصفح) =====
 const DEFAULT_SETTINGS = { temperature: 0.7, maxTokens: 900, defaultMode: 'chat', showSources: true, typewriter: true, thinking: 'auto', webSearch: true, hidden: [] };
@@ -1987,7 +2085,7 @@ const SUGGESTIONS = {
   web: { icon: 'globe', label: 'ابحث في الويب' },
   build: { icon: 'code', label: 'ابنِ موقعاً أو لعبة' },
 };
-document.querySelectorAll('#suggestions .sug-item').forEach(btn => {
+document.querySelectorAll('#suggestions .sug-item, .prompt-card').forEach(btn => {
   const key = btn.dataset.sug;
   const cfg = SUGGESTIONS[key];
   if (!cfg) return;
@@ -2007,6 +2105,14 @@ document.querySelectorAll('#suggestions .sug-item').forEach(btn => {
     prefill('اكتب لي ');
   };
 });
+// أيقونات بطاقات الترحيب (Gemini-style)
+try {
+  const pcMap = { write: 'pencil', build: 'code', web: 'globe', image: 'image' };
+  document.querySelectorAll('.prompt-card').forEach(c => {
+    const k = c.dataset.sug; const el = c.querySelector('.pc-ic');
+    if (el && pcMap[k]) el.innerHTML = ic(pcMap[k], 17);
+  });
+} catch (e) {}
 document.getElementById('newChat').onclick = newChat;
 document.getElementById('toggle').onclick = () => sidebar.classList.toggle('hidden');
 document.getElementById('logout').onclick = async () => {

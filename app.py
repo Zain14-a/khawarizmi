@@ -79,49 +79,16 @@ if os.getenv("GROQ_API_KEY"):
             "provider": "groq",
             "id": "openai/gpt-oss-120b",
         },
-        "al-khwarizmi": {
-            "label": "Al-Khwarizmi Flash",
-            "desc": "بطل البرمجة",
-            "provider": "groq",
-            "id": "openai/gpt-oss-20b",
-            "icon": "bolt",
-        },
-        "groq-qwen3": {
-            "label": "Qwen 3.8 27B",
-            "desc": "قوي بالعربية والبرمجة",
-            "provider": "groq",
-            "id": "qwen/qwen3.8-27b",
-        },
     })
 
-# نماذج عبر Cerebras — تظهر إذا انحط مفتاح CEREBRAS_API_KEY في .env
-# (أسرع مزوّد نصي بالعالم، حصته المجانية تعتمد على تفعيل الحساب)
-if os.getenv("CEREBRAS_API_KEY"):
-    MODELS.update({
-        "cerebras-gpt-oss-120b": {
-            "label": "GPT-OSS 120B",
-            "desc": "الأسرع استجابة — قوي بالعموم",
-            "provider": "cerebras",
-            "id": "gpt-oss-120b",
-        },
-        "cerebras-qwen": {
-            "label": "Qwen 3.8 27B",
-            "desc": "سريع وخفيف — مثالي للمحادثة",
-            "provider": "cerebras",
-            "id": "qwen-3.8-27b",
-        },
-    })
+# نماذج عبر Cerebras — معطّلة حالياً: المفتاح يرجع 402 (يطلب تفعيل الفوترة)
+# لإعادة التفعيل بعد شحن الحساب، أعد كتلة MODELS الخاصة بـ cerebras من Git
+# if os.getenv("CEREBRAS_API_KEY"):
 
-# نماذج عبر NVIDIA NIM (build.nvidia.com) — تظهر إذا انحط مفتاح NVIDIA_API_KEY في .env
-# مكتبة حرة غنية 80+ نموذجاً — فيها رؤية حقيقية عبر Llama Vision
+# نماذج عبر NVIDIA NIM — بقي فقط Llama 11B (الوحيد الذي يستجيب بهذا المفتاح)
+# gemma-4-31b و llama-90b أُزيلا: مهلة متكررة (timeout) بهذا المفتاح
 if os.getenv("NVIDIA_API_KEY"):
     MODELS.update({
-        "nvidia-gemma-4": {
-            "label": "Gemma 4 31B",
-            "desc": "قوي بالعربية — فهم عميق",
-            "provider": "nvidia",
-            "id": "google/gemma-4-31b-it",
-        },
         "nvidia-llama-vision": {
             "label": "Llama 3.2 Vision 11B",
             "desc": "يقرأ الصور والوثائق بدقة",
@@ -129,41 +96,22 @@ if os.getenv("NVIDIA_API_KEY"):
             "id": "meta/llama-3.2-11b-vision-instruct",
             "vision": True,
         },
-        "nvidia-llama-vision-90b": {
-            "label": "Llama 3.2 Vision 90B",
-            "desc": "يقرأ الصور — النسخة الأقوى",
-            "provider": "nvidia",
-            "id": "meta/llama-3.2-90b-vision-instruct",
-            "vision": True,
-        },
     })
 
-# نموذجك الخاص "Al-Khwarizmi Local" — يعمل على جهازك أو كولاب عبر بوابة خاصة
-# يظهر إذا ضبطت COLABC_URL (رابط النفق) و COLABC_KEY (المفتاح السري) في .env
-if os.getenv("COLABC_URL") and os.getenv("COLABC_KEY"):
-    MODELS.update({
-        "khwarizmi-local": {
-            "label": "Al-Khwarizmi Local",
-            "desc": "نموذجك الخاص — يشتغل على جهازك/كولاب",
-            "provider": "colab",
-            "id": "khwarizmi",
-            "icon": "bolt",
-        },
-        "my-deepseek-7b": {
-            "label": "DeepSeek Coder 7B",
-            "desc": "وحش البرمجة - يفكر قبل الكود",
-            "provider": "colab",
-            "id": "deepseek-coder-7b",
-            "icon": "bolt",
-        },
-        "my-qwen-3b": {
-            "label": "Qwen Coder 3B Thinking",
-            "desc": "سريع + تفكير عميق قبل الكود",
-            "provider": "colab",
-            "id": "qwen-coder-3b",
-            "icon": "bolt",
-        },
-    })
+# نموذجك الخاص "الخوارزمي — خاص" — يعمل على Colab عبر بوابة Ollama الخاصة
+# يُسجَّل دائماً (وليس فقط عند وجود المتغيّرات) حتى يظهر في الواجهة فور ربط النفق.
+# الحالة الحقيقية (متصل/غير متصل) تُقرأ من COLABC_RUNTIME.
+MODELS.update({
+    "khwarizmi-local": {
+        "label": "الخوارزمي — خاص",
+        "desc": "نموذجك الخاص على Colab — برمجة وبناء مشاريع",
+        "provider": "colab",
+        "id": "khwarizmi",
+        "icon": "bolt",
+        "private": True,          # شعار "خاص" في الواجهة
+    },
+})
+COLABC_MODEL_IDS = ("khwarizmi-local",)
 
 # ═══════════ مزوّدون إضافيون (يظهر كل واحد إذا ضعفت مفتاحه في .env) ═══════════
 if os.getenv("MISTRAL_API_KEY"):
@@ -174,12 +122,6 @@ if os.getenv("MISTRAL_API_KEY"):
             "provider": "mistral",
             "id": "mistral-small-latest",
             "vision": True,
-        },
-        "mistral-mixtral": {
-            "label": "Mixtral 8x7B",
-            "desc": "قوي بالعموم — متعدد المهام",
-            "provider": "mistral",
-            "id": "mistral.mixtral-8x7b-instruct-v0.1",
         },
     })
 if os.getenv("TOGETHER_API_KEY"):
@@ -219,43 +161,81 @@ if os.getenv("FIREWORKS_API_KEY"):
         },
     })
 
-# ═══════ نماذج APInex (مجاني 100% — 1M token لكل الموديلات) ═══════
-# التسجيل: apinex.bond + أدخل الكود TMKTL35G
-# المفتاح: APINEX_API_KEY من لوحة المطورين
-if os.getenv("APINEX_API_KEY"):
+# ═══════ نماذج APInex — معطّلة حالياً: الحساب يرجع 403 (suspended/missing) ═══════
+# لإعادة التفعيل بمفتاح جديد، أعد كتلة MODELS الخاصة بـ apinex من Git
+# if os.getenv("APINEX_API_KEY"):
+
+# ═══════ نماذج PlugSky (مجاني — متوافق مع OpenAI) ═══════
+# المفتاح: PLUGSKY_API_KEY | Base URL: https://api.plugsky.com/v1
+if os.getenv("PLUGSKY_API_KEY"):
     MODELS.update({
-        "apnx-glm-5.3-flash": {
-            "label": "GLM-5.3 Flash",
-            "desc": "قوي وسريع — تفكير متقدم",
-            "provider": "apinex",
-            "id": "free/glm-5.3-flash",
+        "plugsky-micro": {
+            "label": "Plugsky Micro",
+            "desc": "مجاني — سريع + يقرأ الصور — 262K سياق",
+            "provider": "plugsky",
+            "id": "plugsky-micro",
             "vision": True,
         },
-        "apnx-dsv4-pro": {
-            "label": "DeepSeek V4 Pro",
-            "desc": "أقوى نسخة — استنتاج وتحليل عميق",
-            "provider": "apinex",
-            "id": "free/deepseek-v4-pro-0813",
-            "vision": True,
+        "plugsky-lite": {
+            "label": "Plugsky Lite",
+            "desc": "مجاني — خفيف وسريع الاستجابة",
+            "provider": "plugsky",
+            "id": "plugsky-lite",
         },
-        "apnx-dsv4-flash": {
-            "label": "DeepSeek V4 Flash",
-            "desc": "سريع وذكي — خفيف على الجهاز",
-            "provider": "apinex",
-            "id": "free/deepseek-v4.1-flash",
+        "plugsky-coder-fast": {
+            "label": "Plugsky Coder",
+            "desc": "متخصص بالبرمجة والكود",
+            "provider": "plugsky",
+            "id": "plugsky-coder-fast",
+        },
+        "plugsky-vision-fast": {
+            "label": "Plugsky Vision",
+            "desc": "يقرأ الصور والوثائق بدقة",
+            "provider": "plugsky",
+            "id": "plugsky-vision-fast",
+            "vision": True,
         },
     })
 
-# ═══════════ نماذج OpenRouter ═══════════
-if os.getenv("OPENROUTER_API_KEY"):
+# ═══════ نماذج XKiro AI (مجاني — متوافق مع OpenAI) ═══════
+# المفتاح: XKIRO_API_KEY | Base URL: https://api.xkiro.com/v1
+if os.getenv("XKIRO_API_KEY"):
     MODELS.update({
-        "or-glm-5.2": {
-            "label": "GLM-5.2",
-            "desc": "سريع وذكي — متعدد اللغات",
-            "provider": "openrouter",
-            "id": "z-ai/glm-5.2:free",
+        "xk-qwen-plus": {
+            "label": "Qwen Plus",
+            "desc": "مجاني — قوي بالعربية — يقرأ الصور",
+            "provider": "xkiro",
+            "id": "qwen/qwen-plus-2025-07-28:free",
             "vision": True,
         },
+        "xk-qwen3-max": {
+            "label": "Qwen 3 Max",
+            "desc": "مجاني — الأقوى — يقرأ الصور",
+            "provider": "xkiro",
+            "id": "qwen/qwen3-max:free",
+            "vision": True,
+        },
+        "xk-qwen-coder": {
+            "label": "Qwen Coder Plus",
+            "desc": "مجاني — متخصص بالبرمجة — يقرأ الصور",
+            "provider": "xkiro",
+            "id": "qwen/qwen3-coder-plus:free",
+            "vision": True,
+        },
+        "xk-ministral-14b": {
+            "label": "Ministral 14B",
+            "desc": "مجاني — سريع وذكي — يقرأ الصور",
+            "provider": "xkiro",
+            "id": "mistralai/ministral-14b",
+            "vision": True,
+        },
+    })
+
+# ═══════════ نماذج OpenRouter (فقط الشغالة — حُذفت الميتة بتاريخ اليوم) ═══════════
+# المحذوف: or-glm-5.2 و or-qwen-3.8 و or-nex-pro (404: لم تعد مجانية)
+# + or-ling-fin و or-ling-sante (404: لا endpoints) — تُسترجع من Git عند توفرها
+if os.getenv("OPENROUTER_API_KEY"):
+    MODELS.update({
         "or-nemotron-ultra": {
             "label": "Nemotron 3 Ultra 550B",
             "desc": "أضخم نموذج متاح — استنتاج عميق",
@@ -269,12 +249,6 @@ if os.getenv("OPENROUTER_API_KEY"):
             "id": "google/gemma-4-31b-it:free",
             "vision": True,
         },
-        "or-qwen-3.8": {
-            "label": "Qwen 3.8 27B",
-            "desc": "قوي بالعربية والبرمجة",
-            "provider": "openrouter",
-            "id": "qwen/qwen3.8-27b:free",
-        },
         "or-north-code": {
             "label": "North Mini Code",
             "desc": "متخصص بالبرمجة والكود",
@@ -286,25 +260,6 @@ if os.getenv("OPENROUTER_API_KEY"):
             "desc": "خفيف وسريع — استجابة لحظية",
             "provider": "openrouter",
             "id": "liquid/lfm-2.5-2.6b:free",
-        },
-        "or-ling-fin": {
-            "label": "Ling 3.0 Flash (مالية)",
-            "desc": "متخصص بالتحليل المالي",
-            "provider": "openrouter",
-            "id": "inclusionai/ling-3.0-flash-fin:free",
-        },
-        "or-ling-sante": {
-            "label": "Ling 3.0 Flash (صحة)",
-            "desc": "متخصص بالمجال الصحي",
-            "provider": "openrouter",
-            "id": "inclusionai/ling-3.0-flash-sante:free",
-        },
-        "or-nex-pro": {
-            "label": "Nex N2.5 Pro",
-            "desc": "النسخة الأقوى من عائلتنا — تفكير عميق",
-            "provider": "openrouter",
-            "id": "nex-agi/nex-n2.5-pro:free",
-            "vision": True,
         },
     })
 
@@ -336,9 +291,11 @@ PROVIDER_CONFIGS = {
         "timeout": 10,
     },
     "colab": {
-        "base_url": os.getenv("COLABC_URL", ""),   # رابط نفق Cloudflare من جهازك/كولاب
+        # رابط نفق Cloudflare — يُقرأ من المتغيّر العام COLABC_RUNTIME حتى يمكن
+        # تحديثه من النوتبوك بدون إعادة تشغيل الموقع (شوف api_colab_update_tunnel)
+        "base_url": "",   # تُملأ أدناه من COLABC_RUNTIME
         "key_env": "COLABC_KEY",
-        "timeout": 15,
+        "timeout": 60,   # نماذج محلية بطيئة — مهلة أطول من المزوّدين السحابيين
     },
     "mistral": {
         "base_url": "https://api.mistral.ai/v1",
@@ -360,10 +317,32 @@ PROVIDER_CONFIGS = {
         "key_env": "APINEX_API_KEY",
         "timeout": 10,
     },
+    "plugsky": {
+        "base_url": "https://api.plugsky.com/v1",
+        "key_env": "PLUGSKY_API_KEY",
+        "timeout": 10,
+    },
+    "xkiro": {
+        "base_url": "https://api.xkiro.com/v1",
+        "key_env": "XKIRO_API_KEY",
+        "timeout": 10,
+    },
 }
 
 _clients: dict = {}
 _rot_count: dict = {}
+
+# ===== حالة "الخوارزمي المحلي" القابلة للتحديث وقت التشغيل =====
+# النوتبوك على كولاب يرسل الرابط والمفتاح الجديدين إلى /api/colab/update-tunnel
+# فنحدّثهما هنا فوراً — بدون إعادة تشغيل الموقع.
+COLABC_RUNTIME = {
+    "url": os.getenv("COLABC_URL", "").strip(),
+    "key": os.getenv("COLABC_KEY", "").strip(),
+    "model": os.getenv("COLABC_MODEL", "qwen2.5-coder:14b").strip(),
+    "updated_at": 0.0,
+    "live": False,          # هل النفق يستجيب فعلاً؟ (يُحدَّث عند كل فحص)
+}
+PROVIDER_CONFIGS["colab"]["base_url"] = COLABC_RUNTIME["url"]
 
 # ذاكرة صحة المفاتيح: المفتاح الذي وصل حده (429) أو رُفض (401/403) يُجمَّد مؤقتاً
 # حتى لا يُعاد تجربته مع كل طلب جديد فيضيع وقت الموقع على الردود المرفوضة.
@@ -394,6 +373,9 @@ def _keys_of(provider: str) -> list:
     cfg = PROVIDER_CONFIGS[provider]
     base = cfg["key_env"]
     raw = os.getenv(base, "").strip()
+    # مزوّد كولاب: المفتاح يأتي من الحالة القابلة للتحديث (النوتبوك يرسله)
+    if provider == "colab" and COLABC_RUNTIME["key"]:
+        raw = COLABC_RUNTIME["key"]
     keys = [k.strip() for k in re.split(r"[,;\s]+", raw) if k.strip()]
     n = 2
     while n <= 9:
@@ -637,12 +619,102 @@ def api_logout():
 @login_required
 def api_models():
     # نضع Al-Khwarizmi Flash دائماً في رأس القائمة، وباقي النماذج بترتيبها (فرز مستقر)
-    entries = sorted(MODELS.items(), key=lambda kv: 0 if kv[0] == "al-khwarizmi" else 1)
+    entries = list(MODELS.items())
+    colab_live = _colab_is_live()
     return jsonify([
         {"id": mid, "label": e["label"], "desc": e["desc"], "kind": e.get("kind", "chat"),
-         "icon": e.get("icon"), "vision": bool(e.get("vision"))}
+         "icon": e.get("icon"), "vision": bool(e.get("vision")),
+         "private": bool(e.get("private")),
+         # حالة المزوّد الخاص: true/false/null (null = نموذج عادي ليس خاصاً)
+         "live": (colab_live if e.get("provider") == "colab" else None)}
         for mid, e in entries
     ])
+
+
+# ===== ربط "الخوارزمي الخاص" على Colab =====
+def _colab_is_live() -> bool:
+    """هل رابط النفق الحالي يستجيب فعلاً؟ (فحص سريع مع كاش قصير لتجنّب الإبطاء)"""
+    url = COLABC_RUNTIME.get("url") or ""
+    if not url:
+        return False
+    now = time.time()
+    # كاش لمدّة 20 ثانية — لا نفحص مع كل طلب واجهة
+    if now - COLABC_RUNTIME.get("live_checked", 0) < 20:
+        return bool(COLABC_RUNTIME.get("live"))
+    COLABC_RUNTIME["live_checked"] = now
+    base = url.rstrip("/")
+    if base.endswith("/v1"):
+        base = base[:-3]
+    try:
+        req = urllib.request.Request(base + "/health", headers={"User-Agent": "KhawarizmiBot/1.0"})
+        with urllib.request.urlopen(req, timeout=6) as r:
+            COLABC_RUNTIME["live"] = (r.status == 200)
+    except Exception:
+        COLABC_RUNTIME["live"] = False
+    return bool(COLABC_RUNTIME["live"])
+
+
+def _push_models_if_needed():
+    """تسجيل نموذج colab يحدث دائماً عند الاستيراد، فلا حاجة لعمل شيء هنا."""
+    return
+
+
+@app.route("/api/colab/update-tunnel", methods=["POST"])
+def api_colab_update_tunnel():
+    """يستدعيه النوتبوك على Colab لربط/تحديث رابط النفق تلقائياً.
+    الحماية عبر هيدر X-Colab-Secret المطابق لمتغيّر COLAB_SECRET في .env"""
+    secret = os.getenv("COLAB_SECRET", "").strip()
+    if not secret:
+        return jsonify({"error": "COLAB_SECRET غير مضبوط على السيرفر — أضفه إلى .env"}), 503
+    if request.headers.get("X-Colab-Secret", "") != secret:
+        return jsonify({"error": "unauthorized"}), 401
+
+    data = request.get_json(force=True, silent=True) or {}
+    url = (data.get("url") or "").strip().rstrip("/")
+    key = (data.get("key") or "").strip()
+    model = (data.get("model") or "").strip()
+
+    if not url or not url.startswith("http"):
+        return jsonify({"error": "رابط غير صالح"}), 400
+    if not key:
+        return jsonify({"error": "مفتاح مفقود"}), 400
+
+    # توحيد الشكل: يجب أن ينتهي الرابط بـ /v1
+    if not url.endswith("/v1"):
+        url = url + "/v1"
+
+    old_key = COLABC_RUNTIME.get("key")
+    COLABC_RUNTIME["url"] = url
+    COLABC_RUNTIME["key"] = key
+    COLABC_RUNTIME["updated_at"] = time.time()
+    COLABC_RUNTIME.pop("live_checked", None)   # فحص جديد فوراً
+    if model:
+        COLABC_RUNTIME["model"] = model
+
+    # حدّث إعدادات المزوّد + أعد بناء العميل (الرابط/المفتاح الجديدان)
+    PROVIDER_CONFIGS["colab"]["base_url"] = url
+    for (p, k) in list(_clients.keys()):
+        if p == "colab":
+            _clients.pop((p, k), None)
+    # ارفع التجميد عن المفاتيح القديمة حتى لا يبقى المفتاح السابق معطلاً
+    if old_key and old_key != key:
+        _KEY_COOLDOWN.pop(("colab", old_key), None)
+
+    live = _colab_is_live()
+    print(f"🔗 تم تحديث نفق الخوارزمي: {url} | النموذج: {COLABC_RUNTIME['model']} | حيّ: {live}")
+    return jsonify({"ok": True, "url": url, "model": COLABC_RUNTIME["model"], "live": live})
+
+
+@app.route("/api/colab/status")
+@login_required
+def api_colab_status():
+    """حالة النموذج الخاص — تعرضها الواجهة كنقطة خضراء/حمراء"""
+    return jsonify({
+        "configured": bool(COLABC_RUNTIME.get("url") and COLABC_RUNTIME.get("key")),
+        "live": _colab_is_live(),
+        "model": COLABC_RUNTIME.get("model"),
+        "updated_at": COLABC_RUNTIME.get("updated_at", 0),
+    })
 
 
 _SEARCH_CACHE: dict = {}
@@ -964,7 +1036,7 @@ def _search_query(query: str) -> str:
 # مع مصادر ويكيبيديا، بدل تخمين Flash.
 # ⚠️ السلسلة مقصورة على مزوّدين مُتحقَّق من عملهما فعلياً (Gemini وGroq)،
 # لأن المزوّدات الأخرى تُرجع 402/429/404 فتنتهي بالسقوط بلا جواب.
-_FACTUAL_CHAIN = ("gemini-2.5-flash", "groq-gpt-oss-120b", "groq-qwen3")
+_FACTUAL_CHAIN = ("gemini-2.5-flash", "groq-gpt-oss-120b")
 
 
 def _pick_factual_model(has_image: bool):
@@ -1325,7 +1397,7 @@ def _thinking_kwargs(entry: dict, level: str) -> dict:
     if provider == "openrouter":
         # OpenRouter يستخدم كائن reasoning موحّداً
         return {"extra_body": {"reasoning": {"effort": effort}}}
-    if provider in ("groq", "cerebras", "gemini", "apinex", "colab", "together"):
+    if provider in ("groq", "cerebras", "gemini", "apinex", "colab", "together", "plugsky", "xkiro"):
         return {"reasoning_effort": effort}
     return {}
 
@@ -1487,7 +1559,6 @@ def chat_api():
                 "5) بعد الصناديق اكتب سطراً واحداً فقط يشرح كيف تشغّل النتيجة."
             ),
         })
-
     # هل توجد صورة مرفقة في الرسائل؟ — عندها نمرّ على النماذج التي تقرأ الصور فقط
     has_image = any(
         m.get("role") == "user" and _valid_image(m.get("image"))
@@ -1500,7 +1571,7 @@ def chat_api():
     # نُبلغ المستخدم بصراحة (503 أسفل) بدل إعطائه تخميناً من نموذج أضعف.
     routed = False
     route_reason = ""
-    if requested == "al-khwarizmi" and _is_factual_query(query, build_task):
+    if requested == "al-khwarizmi" and requested in MODELS and _is_factual_query(query, build_task):
         target = _pick_factual_model(has_image)
         if target:
             requested = target
@@ -1513,7 +1584,6 @@ def chat_api():
         (mid, e) for mid, e in MODELS.items()
         if mid != requested and e.get("kind", "chat") == "chat"
         and (not has_image or e.get("vision"))
-        and not (routed and mid == "al-khwarizmi")   # لا نرجع للضعيف في المسار المعرفي
     ]
     by_provider: dict = {}
     for mid, e in pool:
@@ -1522,7 +1592,7 @@ def chat_api():
     # التوزيع المتبادل يُبنى من المزوّدين الموجودين فعلاً (لا قائمة ثابتة!)
     # ⚠️ كان هنا خلل: قائمة ثابتة تنسى "openrouter" فتبقى قائمته غير فارغة
     # والحلقة while لا تنتهي أبداً — فيتجمّد كل طلب محادثة للأبد.
-    priority = ("apinex", "gemini", "groq", "openrouter", "mistral",
+    priority = ("apinex", "plugsky", "xkiro", "gemini", "groq", "openrouter", "mistral",
                 "cerebras", "nvidia", "together", "fireworks", "colab", "ollama")
     queues = {p: list(v) for p, v in by_provider.items()}
     order = sorted(queues, key=lambda p: priority.index(p) if p in priority else len(priority))
@@ -1604,6 +1674,9 @@ def chat_api():
                     req_timeout = max(req_timeout, 75)
                 elif thinking == "medium":
                     req_timeout = max(req_timeout, 40)
+                # النموذج المحلي (Colab) أبطأ من السحابي — مهلة أوسع حتى لا نقطع ردّه
+                if entry.get("provider") == "colab":
+                    req_timeout = max(req_timeout, 180 if mode == "agent" else 90)
                 # المحاولة مع بارامترات التفكير، وإن رفضها المزوّد تُعاد بدونها تلقائياً
                 r = _create_completion(c, kwargs, _thinking_kwargs(entry, thinking), req_timeout)
                 _choice_msg = r.choices[0].message if r.choices else None
@@ -1661,6 +1734,11 @@ def chat_api():
         return jsonify({
             "error": "النموذج المختار لا يدعم الصور — جرّب Al-Khwarizmi Flash أو Gemini 2.5 Flash"
         }), 400
+    # النموذج الخاص على Colab غير متاح (الجلسة منقطعة أو النفق لم يُربط بعد)
+    if requested in COLABC_MODEL_IDS and not _colab_is_live():
+        return jsonify({
+            "error": "الخوارزمي الخاص غير متاح حالياً — شغّل النوتبوك على Colab ليشتغل تلقائياً"
+        }), 503
     return jsonify({
         "error": "النماذج المجانية مشبعّة حالياً — جرّب مرة ثانية بعد دقيقة"
     }), 503
@@ -1713,6 +1791,8 @@ def enhance_image_prompt(prompt: str) -> str:
 
     # استخدام نموذج سريع لتحويل الطلب العربي لوصف احترافي لـ FLUX
     providers_to_try = [
+        ("plugsky", "plugsky-micro"),
+        ("xkiro", "qwen/qwen-plus-2025-07-28:free"),
         ("groq", "qwen/qwen3.8-27b"),
         ("gemini", "gemini-2.5-flash-lite"),
     ]
