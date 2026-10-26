@@ -1374,6 +1374,163 @@ def _merge_web_preview(artifacts: list) -> str:
 
     return base
 
+# ===== أدوات الوكيل (Agent Tools) — بحث وقراءة صفحات =====
+# تُستخدم في وضع Agent (function calling) — Groq GPT-OSS 120B يدعمها (OpenAI-compatible)
+AGENT_TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "web_search",
+            "description": "البحث في الإنترنت عن معلومة أو موضوع. استخدمه عندما تحتاج لمعلومات حديثة أو حقائق أو مصادر.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "استعلام البحث"},
+                },
+                "required": ["query"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "fetch_url",
+            "description": "جلب محتوى صفحة ويب (نص) من رابط. استخدمه لقراءة مقال أو توثيق.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {"type": "string", "description": "رابط الصفحة"},
+                },
+                "required": ["url"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "create_file",
+            "description": "إنشاء ملف جديد (كود/نص) ضمن المشروع. استخدمه لكتابة ملفات HTML/CSS/JS/Python إلخ. يمكن إنشاء عدة ملفات.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "اسم الملف (مثال: index.html, style.css, app.py)"},
+                    "language": {"type": "string", "description": "لغة الملف (html, css, javascript, python, ...)"},
+                    "content": {"type": "string", "description": "محتوى الملف كاملاً"},
+                },
+                "required": ["name", "language", "content"],
+            },
+        },
+    },
+]
+
+def _html_to_text(html: str) -> str:
+    """استخراج نص من HTML (تجاهل script/style)"""
+    from html.parser import HTMLParser
+
+    class _P(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.parts = []
+            self.skip = 0
+
+        def handle_starttag(self, tag, attrs):
+            if tag in ("script", "style", "noscript"):
+                self.skip += 1
+
+        def handle_endtag(self, tag):
+            if tag in ("script", "style", "noscript") and self.skip > 0:
+                self.skip -= 1
+
+        def handle_data(self, data):
+            if self.skip == 0:
+                self.parts.append(data)
+
+    p = _P()
+    try:
+        p.feed(html)
+    except Exception:
+        pass
+    text = " ".join(" ".join(p.parts).split())
+    return text
+
+
+def tool_web_search(query: str) -> str:
+    """بحث في DuckDuckGo (HTML) — يرجع قائمة نتائج"""
+    query = (query or "").strip()
+    if not query:
+        return "استعلام فارغ."
+    try:
+        data = urllib.parse.urlencode({"q": query}).encode("utf-8")
+        req = urllib.request.Request(
+            "https://html.duckduckgo.com/html/", data=data,
+            headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=12) as r:
+            html = r.read().decode("utf-8", "ignore")
+    except Exception as e:
+        # fallback: ويكيبيديا
+        try:
+            return _wiki_search_text(query)
+        except Exception:
+            return f"تعذر البحث: {e}"
+
+    # استخراج النتائج
+    links = re.findall(
+        r'<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>(.*?)</a>',
+        html, re.S)
+    snippets = re.findall(
+        r'<a[^>]*class="result__snippet"[^>]*>(.*?)</a>', html, re.S)
+    if not snippets:
+        snippets = re.findall(
+            r'<div[^>]*class="result__snippet"[^>]*>(.*?)</div>', html, re.S)
+
+    def _strip(t):
+        t = re.sub(r"<[^>]+>", "", t)
+        return " ".join(t.split())
+
+    out = []
+    for i, (href, title) in enumerate(links[:6]):
+        # DuckDuckGo يُغلّف الرابط — استخراج uddg
+        m = re.search(r"uddg=([^&]+)", href)
+        real = urllib.parse.unquote(m.group(1)) if m else href
+        if real.startswith("//"):
+            real = "https:" + real
+        snip = _strip(snippets[i]) if i < len(snippets) else ""
+        out.append(f"{i+1}. {_strip(title)}\n   {real}\n   {snip}")
+    if not out:
+        return "لم تُعثر على نتائج."
+    return "\n\n".join(out)
+
+
+def _wiki_search_text(query: str) -> str:
+    """fallback: بحث ويكيبيديا"""
+    res = _web_search_uncached(query, limit=4, full_query=query)
+    if not res:
+        return "لم تُعثر على نتائج."
+    return "\n\n".join(f"- {s['title']}: {s['snippet']} ({s['url']})" for s in res)
+
+
+def tool_fetch_url(url: str) -> str:
+    """جلب نص صفحة (محدود)"""
+    url = (url or "").strip()
+    if not url or not url.startswith("http"):
+        return "رابط غير صالح."
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=15) as r:
+            ctype = (r.headers.get("Content-Type") or "").lower()
+            data = r.read(200000)
+        if "html" in ctype or b"<" in data[:200]:
+            text = _html_to_text(data.decode("utf-8", "ignore"))
+        else:
+            text = data.decode("utf-8", "ignore")
+        text = " ".join(text.split())
+        if not text:
+            return "الصفحة فارغة أو تعذّر استخراج النص."
+        return text[:4000]
+    except Exception as e:
+        return f"تعذر جلب الصفحة: {e}"
+
+
 # ===== مستويات التفكير (Reasoning Effort) =====
 # المستخدم يختار المستوى، ونحن نترجمه إلى بارامترات يفهمها كل مزوّد:
 #   off    = بلا تفكير إضافي (الأسرع/الأضعف)
@@ -1528,9 +1685,11 @@ def chat_api():
     # بوابة البحث الذكي: نبحث فقط عن الأسئلة المعرفية الحقيقية —
     # التحيات والكود والرياضيات والترجمة والإبداع والرأي لا تُبحث
     # (البحث عنها كان ينتج مصادر بلا علاقة بالجواب).
+    # في وضع Agent: لا بحث تلقائي — الوكيل يقرر متى يبحث عبر أداة web_search
+    use_tools = (mode == "agent")
     sources = []
     searched = False
-    if do_search and not build_task and _needs_search(query):
+    if (not use_tools) and do_search and not build_task and _needs_search(query):
         searched = True
         sources = _filter_relevant(
             web_search(_search_query(query), full_query=query), query)
@@ -1556,7 +1715,8 @@ def chat_api():
                 "2) للموقع/الصفحة/اللعبة: ملف واحد index.html يحتوي كل شيء (CSS داخل <style> وJS داخل <script>) — كامل ويعمل بالفتح مباشرة، مع دعم عربي RTL إن كان المحتوى عربياً. "
                 "3) للعبة: استخدم <canvas> أو DOM مع requestAnimationFrame، أزرار تحكم، ونقاط/مراحل. "
                 "4) لا تختصر الكود أبداً بـ '...' أو 'باقي الكود' — اكتبه كاملاً حتى النهاية. "
-                "5) بعد الصناديق اكتب سطراً واحداً فقط يشرح كيف تشغّل النتيجة."
+                "5) بعد الصناديق اكتب سطراً واحداً فقط يشرح كيف تشغّل النتيجة. "
+                "6) لديك أدوات بحث (web_search)، قراءة صفحات (fetch_url)، وإنشاء ملفات (create_file) — استخدمها: ابحث قبل الجواب عندما تحتاج لمعلومات حديثة، وأنشئ ملفات المشروع عبر create_file، واذكر المصادر."
             ),
         })
     # هل توجد صورة مرفقة في الرسائل؟ — عندها نمرّ على النماذج التي تقرأ الصور فقط
@@ -1641,55 +1801,115 @@ def chat_api():
     # بينها تلقائياً، فيجرب نفس النموذج بمفتاح تالٍ عند وصول المفتاح الأول لحده
     last_error = None
     rate_limited = 0
+    agent_steps: list = []
     for mid, entry in ordered[:3]:   # النموذج المطلوب + بديلان
         key_slots = len(_keys_of(entry["provider"])) or 1
         for _slot in range(min(key_slots, 2)):   # مفتاحين بدل 3
             c, used_key = get_client_and_key(entry["provider"])
             try:
-                kwargs = {
-                    "model": entry["id"],
-                    "messages": messages,
-                    # حرارة منخفضة عند وجود مصادر بحث: النموذج الصغير (20B) يهلوس
-                    # بحرارة عالية حتى مع المصادر أمامه — التبريد يُلزمه الالتزام بها
-                    "temperature": min(temperature, 0.3) if sources else temperature,
-                }
-                # طلبات البناء تحتاج ردوداً أطول لكي يكتمل الكود
-                # (كانت القيمة 900 من الإعداد الافتراضي "متوسط" فتُقصّ اللعبة/الموقع)
                 eff_max = max_tokens
                 if mode == "agent":
                     eff_max = max(eff_max, 4000)
-                # التفكير يستهلك رموزاً إضافية (reasoning tokens) فوق الرد نفسه
                 if thinking in ("high", "max"):
                     eff_max = max(eff_max, 6000)
                 elif thinking in ("low", "medium"):
                     eff_max = max(eff_max, 3000)
-                if eff_max > 0:
-                    kwargs["max_tokens"] = min(eff_max, 8000)
-                # ===== المهلة: 12 ثانية محادثة عادية، وأطول للبناء والتفكير العميق =====
-                # ملاحظة مهمة: كان هنا ThreadPoolExecutor + result(timeout=10)، لكن الخروج
-                # من بلوك with كان ينتظر انتهاء الخيط البطيء (shutdown wait=True) —
-                # فتنمحي فائدة المهلة ويتعلّق الطلب دقائق. الآن المهلة على مستوى الطلب.
+
                 req_timeout = 45 if mode == "agent" else 12
                 if thinking in ("high", "max"):
                     req_timeout = max(req_timeout, 75)
                 elif thinking == "medium":
                     req_timeout = max(req_timeout, 40)
-                # النموذج المحلي (Colab) أبطأ من السحابي — مهلة أوسع حتى لا نقطع ردّه
                 if entry.get("provider") == "colab":
                     req_timeout = max(req_timeout, 180 if mode == "agent" else 90)
-                # المحاولة مع بارامترات التفكير، وإن رفضها المزوّد تُعاد بدونها تلقائياً
-                r = _create_completion(c, kwargs, _thinking_kwargs(entry, thinking), req_timeout)
-                _choice_msg = r.choices[0].message if r.choices else None
-                reply = (_choice_msg.content if _choice_msg else "") or ""
-                # دعم لنماذج التفكير (مثل GPT-OSS على Groq) التي قد تعيد الرد داخل reasoning إذا استهلك الـ max_tokens
-                if not reply.strip() and _choice_msg:
-                    reply = getattr(_choice_msg, "reasoning", "") or getattr(_choice_msg, "reasoning_content", "") or ""
-                # تتبّع التوكنز المستخدمة لكل مستخدم
+
+                base_kwargs = {
+                    "model": entry["id"],
+                    "messages": messages,
+                    "temperature": min(temperature, 0.3) if sources else temperature,
+                }
+                if eff_max > 0:
+                    base_kwargs["max_tokens"] = min(eff_max, 8000)
+
+                this_use_tools = use_tools
+                reply = ""
+                total_tokens = 0
+                steps_this: list = []
+                created_files_this: list = []
+
+                if this_use_tools:
+                    tool_messages = [m for m in messages]
+                    for _it in range(6):
+                        call_kwargs = dict(base_kwargs)
+                        call_kwargs["messages"] = tool_messages
+                        call_kwargs["tools"] = AGENT_TOOLS
+                        call_kwargs["tool_choice"] = "auto"
+                        r = _create_completion(c, call_kwargs, _thinking_kwargs(entry, thinking), req_timeout)
+                        total_tokens += (r.usage.total_tokens if r.usage else 0)
+                        choice_msg = r.choices[0].message if r.choices else None
+                        if choice_msg and getattr(choice_msg, "tool_calls", None):
+                            tool_messages.append(choice_msg)
+                            for tc in choice_msg.tool_calls:
+                                try:
+                                    args = json.loads(tc.function.arguments or "{}")
+                                except Exception:
+                                    args = {}
+                                name = tc.function.name
+                                if name == "web_search":
+                                    res = tool_web_search(str(args.get("query", "")))
+                                    steps_this.append({"type": "search", "query": str(args.get("query", "")), "result": res[:240]})
+                                elif name == "fetch_url":
+                                    res = tool_fetch_url(str(args.get("url", "")))
+                                    steps_this.append({"type": "fetch", "url": str(args.get("url", "")), "result": res[:240]})
+                                elif name == "create_file":
+                                    fname = str(args.get("name", "file.txt"))
+                                    lang = str(args.get("language", "text"))
+                                    content = str(args.get("content", ""))
+                                    created_files_this.append({"name": fname, "lang": lang, "code": content})
+                                    steps_this.append({"type": "file", "name": fname, "result": f"تم إنشاء {fname} ({len(content)} حرف)"})
+                                    res = f"تم إنشاء الملف {fname} بنجاح."
+                                else:
+                                    res = "أداة غير معروفة"
+                                    steps_this.append({"type": "unknown", "name": name, "result": res})
+                                tool_messages.append({"role": "tool", "tool_call_id": tc.id, "content": res})
+                            continue
+                        reply = (choice_msg.content if choice_msg else "") or ""
+                        if not reply.strip() and choice_msg:
+                            reply = getattr(choice_msg, "reasoning", "") or getattr(choice_msg, "reasoning_content", "") or ""
+                        break
+                    else:
+                        try:
+                            final_kwargs = dict(base_kwargs)
+                            final_kwargs["messages"] = tool_messages + [{"role": "system", "content": "أجب الآن (بدون أدوات) بناءً على المعلومات المجموعة."}]
+                            r = _create_completion(c, final_kwargs, _thinking_kwargs(entry, thinking), req_timeout)
+                            total_tokens += (r.usage.total_tokens if r.usage else 0)
+                            cm = r.choices[0].message if r.choices else None
+                            reply = (cm.content if cm else "") or ""
+                        except Exception:
+                            pass
+                else:
+                    r = _create_completion(c, base_kwargs, _thinking_kwargs(entry, thinking), req_timeout)
+                    total_tokens += (r.usage.total_tokens if r.usage else 0)
+                    choice_msg = r.choices[0].message if r.choices else None
+                    reply = (choice_msg.content if choice_msg else "") or ""
+                    if not reply.strip() and choice_msg:
+                        reply = getattr(choice_msg, "reasoning", "") or getattr(choice_msg, "reasoning_content", "") or ""
+
                 try:
-                    _record_user_tokens(session.get("email", ""), r.usage.total_tokens if r.usage else 0)
+                    _record_user_tokens(session.get("email", ""), total_tokens)
                 except Exception:
                     pass
-                artifacts = extract_artifacts(reply) if mode == "agent" else []
+
+                extracted = extract_artifacts(reply) if mode == "agent" else []
+                artifacts = created_files_this if created_files_this else extracted
+                # دمج: ملفات من الأدوات + ملفات مستخرجة من الرد (بدون تكرار)
+                if created_files_this and extracted:
+                    seen = {(a["name"], a["code"][:80]) for a in artifacts}
+                    for a in extracted:
+                        if (a["name"], a["code"][:80]) not in seen:
+                            artifacts.append(a)
+                            seen.add((a["name"], a["code"][:80]))
+                agent_steps.extend(steps_this)
                 return jsonify({
                     "reply": reply,
                     "model": mid,
@@ -1700,14 +1920,44 @@ def chat_api():
                     "routed": routed,
                     "route_reason": route_reason,
                     "artifacts": artifacts,
+                    "agent_steps": agent_steps,
                 })
             except OpenAIError as e:
                 last_error = e
                 status = getattr(e, "status_code", None)
-                # 429 = تجاوز الحد، 402 = الحساب بلا حصة، 404 = نموذج غير موجود، 503 = ضغط،
-                # 400/401/403 = الطلب غير مقبول (مثل صورة غير مدعومة)، None = خطأ اتصال
+                # إن كان الفشل بسبب عدم دعم الأدوات — أعد المحاولة بدونها
+                if this_use_tools and status in (400, 404, 422):
+                    try:
+                        fallback_kwargs = dict(base_kwargs)
+                        # إزالة الأدوات
+                        fallback_kwargs.pop("tools", None)
+                        fallback_kwargs.pop("tool_choice", None)
+                        r = _create_completion(c, fallback_kwargs, _thinking_kwargs(entry, thinking), req_timeout)
+                        total_tokens = (r.usage.total_tokens if r.usage else 0)
+                        cm = r.choices[0].message if r.choices else None
+                        reply = (cm.content if cm else "") or ""
+                        if not reply.strip() and cm:
+                            reply = getattr(cm, "reasoning", "") or getattr(cm, "reasoning_content", "") or ""
+                        try:
+                            _record_user_tokens(session.get("email", ""), total_tokens)
+                        except Exception:
+                            pass
+                        artifacts = extract_artifacts(reply) if mode == "agent" else []
+                        return jsonify({
+                            "reply": reply,
+                            "model": mid,
+                            "label": entry["label"],
+                            "sources": sources,
+                            "thinking": thinking,
+                            "searched": searched,
+                            "routed": routed,
+                            "route_reason": route_reason,
+                            "artifacts": artifacts,
+                            "agent_steps": [],
+                        })
+                    except Exception:
+                        pass
                 if status in (400, 401, 402, 403, 404, 429, 503) or status is None:
-                    # جمّد المفتاح الفاشل مؤقتاً حتى لا يُعاد تجربته مع كل طلب جديد
                     if status in (401, 402, 403, 429):
                         _mark_key_down(entry["provider"], used_key)
                     elif status == 503:
@@ -1716,14 +1966,13 @@ def chat_api():
                         _mark_key_down(entry["provider"], used_key, seconds=15)
                     if status == 429:
                         rate_limited += 1
-                        time.sleep(0.3)  # هدّئ شوي ثم جرّب التالي
+                        time.sleep(0.3)
                         continue
                     if status == 503:
                         time.sleep(0.5)
-                    break  # جرّب النموذج التالي
-                break  # خطأ غير متوقع — اترك هذا النموذج
+                    break
+                break
             except Exception as e:
-                # أي خطأ غير متوقع — جرّب النموذج التالي بدل إسقاط الطلب
                 last_error = e
                 time.sleep(0.5)
                 break

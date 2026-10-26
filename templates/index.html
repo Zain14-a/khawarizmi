@@ -1777,7 +1777,7 @@ async function send(text) {
       if (bubbleEl) { bubbleEl.innerHTML = md(reply); enhanceCodeBlocks(bubbleEl); }
     }
     if (data.reply) {
-      current.messages.push({ role: 'assistant', content: data.reply });
+      current.messages.push({ role: 'assistant', content: data.reply, agent_steps: data.agent_steps || [] });
       save();
     }
     // ملاحظة شفافة: الرد جاء من نموذج بديل لأن النموذج المختار مشبع
@@ -1816,6 +1816,24 @@ async function send(text) {
         const bubbleEl = t.querySelector('.bubble');
         if (bubbleEl) bubbleEl.appendChild(srcBox);
       }
+    }
+    // ===== عرض خطوات الوكيل (بحث/قراءة صفحات) =====
+    if (data.agent_steps && data.agent_steps.length) {
+      const stepBox = document.createElement('div');
+      stepBox.className = 'sources-box';
+      let shtml = `<div class="sources-title">${ic('tools', 12)} خطوات الوكيل — ${data.agent_steps.length}</div>`;
+      data.agent_steps.forEach(st => {
+        if (st.type === 'search') {
+          shtml += `<div style="font-size:.78rem;margin:2px 0">${ic('search', 11)} بحث: ${String(st.query).replace(/</g,'&lt;')}</div>`;
+        } else if (st.type === 'fetch') {
+          shtml += `<div style="font-size:.78rem;margin:2px 0">${ic('globe', 11)} قراءة: ${String(st.url).replace(/</g,'&lt;')}</div>`;
+        } else if (st.type === 'file') {
+          shtml += `<div style="font-size:.78rem;margin:2px 0">${ic('code', 11)} ملف: ${String(st.name).replace(/</g,'&lt;')}</div>`;
+        }
+      });
+      stepBox.innerHTML = shtml;
+      const bubbleEl2 = t.querySelector('.bubble');
+      if (bubbleEl2) bubbleEl2.appendChild(stepBox);
     }
     // ===== عرض زر النتيجة (Artifacts) في وضع Agent — يفتح تلقائياً مثل Claude =====
     if (data.artifacts && data.artifacts.length) {
