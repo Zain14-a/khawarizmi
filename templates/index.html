@@ -1754,44 +1754,60 @@ async function send(text) {
       }),
     });
     if (res.status === 401) { location.href = '/login'; return; }
-    if (!res.ok || !res.body) {
-      t.remove();
-      addBubble('assistant', 'ما قدرت أوصل للسيرفر — تأكد إنه شغّال');
-      setBusy(false);
-      return;
-    }
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
     let data = null;
-    const typingTextEl = t.querySelector('.typing-text');
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      let idx;
-      while ((idx = buffer.indexOf('\n\n')) !== -1) {
-        const chunk = buffer.slice(0, idx);
-        buffer = buffer.slice(idx + 2);
-        const lines = chunk.split('\n');
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const ev = JSON.parse(line.slice(6));
-              if (ev.type === 'status') {
-                if (typingTextEl) typingTextEl.textContent = ev.message || '...';
-              } else if (ev.type === 'error') {
-                t.remove();
-                addBubble('assistant', ev.error || 'خطأ');
-                setBusy(false);
-                return;
-              } else if (ev.type === 'result') {
-                data = ev;
-              }
-            } catch (e) {}
+    if (res && res.ok && res.body) {
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      const typingTextEl = t.querySelector('.typing-text');
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        let idx;
+        while ((idx = buffer.indexOf('\n\n')) !== -1) {
+          const chunk = buffer.slice(0, idx);
+          buffer = buffer.slice(idx + 2);
+          const lines = chunk.split('\n');
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const ev = JSON.parse(line.slice(6));
+                if (ev.type === 'status') {
+                  if (typingTextEl) typingTextEl.textContent = ev.message || '...';
+                } else if (ev.type === 'error') {
+                  t.remove();
+                  addBubble('assistant', ev.error || 'خطأ');
+                  setBusy(false);
+                  return;
+                } else if (ev.type === 'result') {
+                  data = ev;
+                }
+              } catch (e) {}
+            }
           }
         }
       }
+    }
+    if (!data) {
+      // fallback إلى JSON (إذا فشل SSE على Render/الشبكة)
+      try {
+        const r2 = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: current.messages,
+            model,
+            mode,
+            temperature: settings.temperature,
+            max_tokens: settings.maxTokens,
+            thinking: settings.thinking || 'auto',
+            web_search: settings.webSearch !== false,
+          }),
+        });
+        if (r2.status === 401) { location.href = '/login'; return; }
+        if (r2.ok) data = await r2.json();
+      } catch (e) {}
     }
     if (!data) {
       t.remove();
