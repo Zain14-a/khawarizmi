@@ -22,7 +22,7 @@ if sys.platform == "win32":
 
 from dotenv import load_dotenv
 from flask import (Flask, jsonify, redirect, render_template, request,
-                   session, url_for)
+                   session, url_for, Response, stream_with_context)
 from openai import OpenAI, OpenAIError
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -1576,21 +1576,21 @@ def _create_completion(client, base_kwargs: dict, think_kwargs: dict, timeout: i
 
 
 
-@app.route("/api/chat", methods=["POST"])
-@login_required
-def chat_api():
-    data = request.get_json(force=True, silent=True) or {}
+def _chat_events(data):
+    """مولد أحداث (SSE) لمحادثة/وكيل — yields dict events (status/result/error)."""
 
     # حماية الحصص: حد للاستخدام لكل مستخدم — قبل أي عملية تستهلك الميزانية
     ok_rate, rate_msg = _check_user_rate(session.get("email", ""))
     if not ok_rate:
-        return jsonify({"error": rate_msg}), 429
+        yield {"type": "error", "error": rate_msg}
+        return
     _record_user_call(session.get("email", ""))
 
     # حماية التوكنز: حد يومي لكل مستخدم
     ok_tokens, token_msg = _check_user_tokens(session.get("email", ""))
     if not ok_tokens:
-        return jsonify({"error": token_msg}), 429
+        yield {"type": "error", "error": token_msg}
+        return
 
     history = data.get("messages", [])
     requested = data.get("model")
@@ -1605,6 +1605,8 @@ def chat_api():
     # البحث في الإنترنت قبل الجواب — مفعّل افتراضياً لتقليل الأجوبة الخاطئة
     do_search = data.get("web_search", True)
     do_search = True if do_search is None else bool(do_search)
+
+    yield {"type": "status", "step": "thinking", "message": "🤔 بفكر..."}
 
     # بناء سجل المحادثة: شخصية البوت + الرسائل المُنقّاة (مع دعم إرفاق صور)
     # نرسل آخر صورتين فقط من المحادثة — حماية للحصص المجانية من الاحتراق
@@ -1629,7 +1631,8 @@ def chat_api():
                 messages.append({"role": role, "content": content[:MAX_MSG_LEN]})
 
     if len(messages) == 1:
-        return jsonify({"error": "الرسالة فارغة"}), 400
+        yield {"type": "error", "error": "الرسالة فارغة"}
+        return
 
     # إذا النموذج المختار لتوليد الصور: حول آخر رسالة لصورة
     req_entry = MODELS.get(requested)
@@ -1643,8 +1646,13 @@ def chat_api():
             if prompt.startswith(prefix):
                 prompt = prompt[len(prefix):].strip()
         if not prompt:
-            return jsonify({"error": "اكتب وصف الصورة التي تريد توليدها"}), 400
-        return jsonify(build_image_payload(prompt, req_entry["id"]))
+            yield {"type": "error", "error": "اكتب وصف الصورة التي تريد توليدها"}
+            return
+        yield {"type": "result", "image": build_image_payload(prompt, req_entry["id"]),
+               "reply": None, "model": requested, "label": req_entry["label"],
+               "sources": [], "thinking": thinking, "searched": False,
+               "routed": False, "route_reason": "", "artifacts": [], "agent_steps": []}
+        return
 
     # إذا النموذج المختار لتوليد الفيديو: حول آخر رسالة لفيديو
     if req_entry and req_entry.get("kind") == "video":
@@ -1657,8 +1665,13 @@ def chat_api():
             if vprompt.startswith(prefix):
                 vprompt = vprompt[len(prefix):].strip()
         if not vprompt:
-            return jsonify({"error": "اكتب وصف الفيديو الذي تريد توليده"}), 400
-        return jsonify(build_video_payload(vprompt, requested))
+            yield {"type": "error", "error": "اكتب وصف الفيديو الذي تريد توليده"}
+            return
+        yield {"type": "result", "video": build_video_payload(vprompt, requested),
+               "reply": None, "model": requested, "label": req_entry["label"],
+               "sources": [], "thinking": thinking, "searched": False,
+               "routed": False, "route_reason": "", "artifacts": [], "agent_steps": []}
+        return
 
     # === البحث في الإنترنت *قبل* الجواب (في كل الأوضاع) ===
     # الهدف: تقليل الأجوبة الخاطئة عبر إلزام النموذج بنتائج بحث حقيقية.
@@ -1856,12 +1869,15 @@ def chat_api():
                                     args = {}
                                 name = tc.function.name
                                 if name == "web_search":
+                                    yield {"type": "status", "step": "search", "message": f"🔍 بحث: {args.get('query','')}", "query": args.get("query","")}
                                     res = tool_web_search(str(args.get("query", "")))
                                     steps_this.append({"type": "search", "query": str(args.get("query", "")), "result": res[:240]})
                                 elif name == "fetch_url":
+                                    yield {"type": "status", "step": "fetch", "message": f"🌐 قراءة: {args.get('url','')}", "url": args.get("url","")}
                                     res = tool_fetch_url(str(args.get("url", "")))
                                     steps_this.append({"type": "fetch", "url": str(args.get("url", "")), "result": res[:240]})
                                 elif name == "create_file":
+                                    yield {"type": "status", "step": "file", "message": f"🔨 بناء: {args.get('name','')}", "name": args.get("name","")}
                                     fname = str(args.get("name", "file.txt"))
                                     lang = str(args.get("language", "text"))
                                     content = str(args.get("content", ""))
@@ -1910,7 +1926,7 @@ def chat_api():
                             artifacts.append(a)
                             seen.add((a["name"], a["code"][:80]))
                 agent_steps.extend(steps_this)
-                return jsonify({
+                yield {"type": "result",
                     "reply": reply,
                     "model": mid,
                     "label": entry["label"],
@@ -1921,7 +1937,8 @@ def chat_api():
                     "route_reason": route_reason,
                     "artifacts": artifacts,
                     "agent_steps": agent_steps,
-                })
+                }
+                return
             except OpenAIError as e:
                 last_error = e
                 status = getattr(e, "status_code", None)
@@ -1943,7 +1960,7 @@ def chat_api():
                         except Exception:
                             pass
                         artifacts = extract_artifacts(reply) if mode == "agent" else []
-                        return jsonify({
+                        yield {"type": "result",
                             "reply": reply,
                             "model": mid,
                             "label": entry["label"],
@@ -1954,7 +1971,8 @@ def chat_api():
                             "route_reason": route_reason,
                             "artifacts": artifacts,
                             "agent_steps": [],
-                        })
+                        }
+                        return
                     except Exception:
                         pass
                 if status in (400, 401, 402, 403, 404, 429, 503) or status is None:
@@ -1980,17 +1998,44 @@ def chat_api():
     print(f"خطأ API: {last_error}")
     # رسالة صادقة وواضحة حسب السبب
     if isinstance(last_error, OpenAIError) and getattr(last_error, "status_code", None) == 400 and has_image:
-        return jsonify({
-            "error": "النموذج المختار لا يدعم الصور — جرّب Al-Khwarizmi Flash أو Gemini 2.5 Flash"
-        }), 400
+        yield {"type": "error", "error": "النموذج المختار لا يدعم الصور — جرّب Gemini 2.5 Flash"}
+        return
     # النموذج الخاص على Colab غير متاح (الجلسة منقطعة أو النفق لم يُربط بعد)
     if requested in COLABC_MODEL_IDS and not _colab_is_live():
-        return jsonify({
-            "error": "الخوارزمي الخاص غير متاح حالياً — شغّل النوتبوك على Colab ليشتغل تلقائياً"
-        }), 503
-    return jsonify({
-        "error": "النماذج المجانية مشبعّة حالياً — جرّب مرة ثانية بعد دقيقة"
-    }), 503
+        yield {"type": "error", "error": "الخوارزمي الخاص غير متاح حالياً — شغّل النوتبوك على Colab ليشتغل تلقائياً"}
+        return
+    yield {"type": "error", "error": "النماذج المجانية مشبعّة حالياً — جرّب مرة ثانية بعد دقيقة"}
+    return
+
+
+@app.route("/api/chat", methods=["POST"])
+@login_required
+def api_chat_json():
+    data = request.get_json(force=True, silent=True) or {}
+    email = session.get("email", "")
+    events = list(_chat_events(data))
+    # ابحث عن حدث result أو error
+    for ev in reversed(events):
+        if ev.get("type") == "result":
+            payload = {k: v for k, v in ev.items() if k != "type"}
+            return jsonify(payload)
+        if ev.get("type") == "error":
+            return jsonify({"error": ev.get("error", "خطأ")}), 400
+    return jsonify({"error": "لا توجد نتيجة"}), 500
+
+
+@app.route("/api/chat/stream", methods=["POST"])
+@login_required
+def api_chat_sse():
+    data = request.get_json(force=True, silent=True) or {}
+
+    def gen():
+        for ev in _chat_events(data):
+            line = "data: " + json.dumps(ev, ensure_ascii=False)
+            yield line + "\n\n"
+
+    return Response(stream_with_context(gen()), mimetype="text/event-stream",
+                    headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
 # ===== توليد الصور عبر FLUX.1 (Pollinations) — مجاني بالكامل بدون أي مفتاح =====
